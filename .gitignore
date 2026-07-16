@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Hardhat build artifacts
+artifacts/
+cache/
+typechain-types/
+
+# Local deployment state (contains addresses, not secrets)
+deployments.json
+
+# Environment / secrets
+.env
+.env.local
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+*.log
