@@ -140,8 +140,8 @@ main {
 	border: 1px solid var(--border);
 	border-radius: 16px;
 	padding: 2rem;
-	width: 100%;
-	max-width: 520px;
+	width: 75%;
+	max-width: 960px;
 	position: relative;
 }
 
@@ -366,8 +366,8 @@ main {
 
 .contract-item .contract-addr {
 	color: var(--text2);
-	font-size: 0.65rem;
-	max-width: 200px;
+	font-size: 0.72rem;
+	max-width: 340px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -478,6 +478,11 @@ main {
 	25% { content: "."; }
 	50% { content: ".."; }
 	75% { content: "..."; }
+}
+
+@media (max-width: 768px) {
+	.bridge-card { width: 100%; }
+	main { padding: 1.25rem; }
 }
 
 @media (max-width: 540px) {
