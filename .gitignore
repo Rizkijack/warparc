@@ -1,1 +1,35 @@
-AGENTS.md
+# Dependencies
+node_modules/
+
+# Hardhat build artifacts
+artifacts/
+cache/
+typechain-types/
+
+# Local deployment state (contains addresses, not secrets)
+deployments.json
+
+# Environment / secrets
+.env
+.env.local
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+*.log
+
+.vercel
+.env*
+
+# Worktrees & docs
+PekerjaanAgents/
+DEPLOY.md
+IDEA.md
+MAINNET-CHECKLIST.md
+ARC-SOURCES.md
+
+# Agent skill packs (installed via npx skills add; global mirror at ~/.agents)
+.agents/
+.claude/
+agent/
+skills-lock.json
