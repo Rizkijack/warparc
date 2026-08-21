@@ -35,7 +35,9 @@ function toBytes32(addr) {
 async function setPeersFor(contractName, deployments) {
 	const network = hre.network.name;
 	const myAddr = deployments[network];
-	if (!myAddr) return;
+	if (!myAddr) return [];
+
+	const failures = [];
 
 	console.log(`\n=== Configuring peers on ${network} for ${contractName} ===`);
 	console.log(`Contract: ${myAddr}`);
@@ -54,24 +56,35 @@ async function setPeersFor(contractName, deployments) {
 			console.log(`  Peer set: ${chain} (EID ${eid}) -> ${addr}`);
 		} catch (err) {
 			console.error(`  Failed to set peer ${chain}:`, err.message);
+			failures.push({ chain, contractName, message: err.message });
 		}
 	}
+
+	return failures;
 }
 
 async function main() {
 	const network = hre.network.name;
 
 	// Set peers for OFT
-	await setPeersFor("BridgeToken", DEPLOYMENTS);
-
-	// Set peers for OFTAdapter
-	await setPeersFor("BridgeAdapter", ADAPTER_DEPLOYMENTS);
+	const failures = [
+		...(await setPeersFor("BridgeToken", DEPLOYMENTS)),
+		// Set peers for OFTAdapter
+		...(await setPeersFor("BridgeAdapter", ADAPTER_DEPLOYMENTS))
+	];
 
 	console.log(`\nPeer configuration complete for ${network}`);
+
+	if (failures.length > 0) {
+		console.error(`\n${failures.length} peer configuration(s) failed:`);
+		for (const f of failures) {
+			console.error(`Failed to set peer on ${f.chain} (${f.contractName}): ${f.message}`);
+		}
+		process.exitCode = 1;
+	}
 }
 
 main()
-	.then(() => process.exit(0))
 	.catch((error) => {
 		console.error(error);
 		process.exit(1);

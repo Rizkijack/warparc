@@ -13,7 +13,7 @@ module.exports = {
 	},
 	networks: {
 		ethereum: {
-			url: process.env.ETH_RPC || "https://cloudflare-eth.com",
+			url: process.env.ETH_RPC || "https://rpc.ankr.com/eth",
 			chainId: 1,
 			accounts: [PRIVATE_KEY]
 		},

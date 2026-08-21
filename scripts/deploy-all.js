@@ -1,3 +1,4 @@
+require("dotenv").config();
 const { execSync } = require("child_process");
 
 const CHAINS = [
@@ -9,12 +10,15 @@ const CHAINS = [
 	{ name: "arc",       chainId: 5042,  eid: 30417, endpoint: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b" }
 ];
 
+// ARC is a placeholder in DEPLOY.md (mainnet RPC unreachable) — skip it.
+const DEPLOY_CHAINS = CHAINS.filter(c => c.name !== "arc");
+
 async function main() {
 	console.log("ARC Bridge - Full Deployment Script");
 	console.log("===================================\n");
-	console.log("This script will deploy BridgeToken to all 6 chains.\n");
+	console.log(`This script will deploy BridgeToken to ${DEPLOY_CHAINS.length} chains (ARC skipped, RPC unreachable — see DEPLOY.md).\n`);
 	console.log("Chains to deploy:");
-	CHAINS.forEach(c => console.log(`  - ${c.name} (chain ${c.chainId}, EID ${c.eid})`));
+	DEPLOY_CHAINS.forEach(c => console.log(`  - ${c.name} (chain ${c.chainId}, EID ${c.eid})`));
 	console.log("");
 
 	if (!process.env.PRIVATE_KEY || process.env.PRIVATE_KEY === "your_private_key_here") {
@@ -24,7 +28,7 @@ async function main() {
 
 	const results = {};
 
-	for (const chain of CHAINS) {
+	for (const chain of DEPLOY_CHAINS) {
 		console.log(`\n--- Deploying to ${chain.name} ---`);
 		try {
 			const output = execSync(

@@ -34,7 +34,7 @@ const CONFIG = {
 			name: "Ethereum Mainnet",
 			shortName: "Ethereum",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://cloudflare-eth.com",
+			rpcUrl: "https://rpc.ankr.com/eth",
 			explorer: "https://etherscan.io",
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/ethereum.svg",
 			layerZero: {
@@ -130,6 +130,7 @@ const CONFIG = {
 			}
 		},
 		arc: {
+			// PLACEHOLDER — RPC 5042.rpc.thirdweb.com unreachable; layerZero values copied from robinhood (DEPLOY.md § status)
 			chainId: 5042,
 			eid: 30417,
 			name: "ARC Mainnet",

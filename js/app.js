@@ -110,6 +110,8 @@ function onAccountChange() {
 		badge.style.display = "none";
 		bridgeArea.style.display = "none";
 	}
+
+	renderTxHistory();
 }
 
 function getChainConfig(chainId) {
@@ -167,9 +169,6 @@ async function loadBalances() {
 			} else {
 				el("from-balance").textContent = "N/A";
 			}
-		} else if (token === "ETH" && CONFIG.chains[fromKey].nativeCurrency.symbol === "ETH") {
-			const bal = await state.provider.getBalance(state.account);
-			el("from-balance").textContent = formatUnits(bal, 18, 4);
 		} else {
 			el("from-balance").textContent = "0.00";
 		}
@@ -324,7 +323,7 @@ async function bridge() {
 	btn.disabled = true;
 	btn.textContent = `Bridging ${amount} ${token}...`;
 
-	addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName}`, "pending");
+	addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName}`, "pending", fromKey);
 
 	try {
 		const dstEid = toChain.eid;
@@ -383,11 +382,22 @@ function updateBridgeBtn() {
 	if (!account) { btn.textContent = "Connect Wallet"; btn.disabled = true; return; }
 	if (fromKey === toKey) { btn.textContent = "Same chain selected"; btn.disabled = true; return; }
 
-	const bridgeDeployed = CONFIG.bridgeToken.deployments[fromKey] !== null;
-	if (!bridgeDeployed) {
-		btn.textContent = "Bridge not deployed on " + CONFIG.chains[fromKey].shortName;
-		btn.disabled = true;
-		return;
+	const token = getSelectedToken();
+	if (token === "USDC") {
+		const usdcAddr = CONFIG.tokens.USDC.addresses[fromKey];
+		const usdcValid = usdcAddr && usdcAddr !== "0x0000000000000000000000000000000000000000";
+		if (CONFIG.bridgeAdapter.deployments[fromKey] === null || !usdcValid) {
+			btn.textContent = "USDC adapter not deployed on " + CONFIG.chains[fromKey].shortName;
+			btn.disabled = true;
+			return;
+		}
+	} else {
+		const bridgeDeployed = CONFIG.bridgeToken.deployments[fromKey] !== null;
+		if (!bridgeDeployed) {
+			btn.textContent = "Bridge not deployed on " + CONFIG.chains[fromKey].shortName;
+			btn.disabled = true;
+			return;
+		}
 	}
 
 	if (!amount || Number(amount) <= 0) { btn.textContent = "Enter amount"; btn.disabled = true; return; }
@@ -407,7 +417,7 @@ function populateChainSelects() {
 		to.insertAdjacentHTML("beforeend", opt);
 	});
 	from.value = "ethereum";
-	to.value = "arc";
+	to.value = "base";
 }
 
 function onChainChange() {
@@ -453,6 +463,41 @@ function setMax() {
 	}
 }
 
+function addTxEntry(txId, label, status, chainKey) {
+	state.txHistory.push({ id: txId, label, status, hash: "", chainKey });
+	renderTxHistory();
+}
+
+function updateTxEntry(txId, status, hash) {
+	const entry = state.txHistory.find(t => t.id === txId);
+	if (!entry) return;
+	entry.status = status;
+	entry.hash = hash || "";
+	renderTxHistory();
+}
+
+function renderTxHistory() {
+	const list = el("tx-list");
+	if (!state.txHistory.length) {
+		list.innerHTML = '<div class="empty-state">No transactions yet</div>';
+		return;
+	}
+	list.innerHTML = state.txHistory.slice().reverse().map(tx => {
+		const chain = CONFIG.chains[tx.chainKey];
+		const hashHtml = tx.hash && chain
+			? `<div class="tx-hash"><a href="${chain.explorer}/tx/${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0, 6)}…${tx.hash.slice(-4)}</a></div>`
+			: "";
+		return `<div class="tx-item">
+			<span class="tx-status ${tx.status}"></span>
+			<div class="tx-detail">
+				<div class="tx-action">${tx.label}</div>
+				${hashHtml}
+			</div>
+			<span class="tx-badge ${tx.status}">${tx.status}</span>
+		</div>`;
+	}).join("");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 	if (window.ethereum) {
 		window.ethereum.on("accountsChanged", async (accounts) => {
@@ -469,8 +514,6 @@ document.addEventListener("DOMContentLoaded", () => {
 			onAccountChange();
 		});
 	}
-
-	// ABT option already exists in HTML; no need to inject
 
 	el("from-chain").addEventListener("change", onChainChange);
 	el("to-chain").addEventListener("change", onChainChange);

@@ -42,11 +42,11 @@ cp .env.example .env
 ```
 PRIVATE_KEY=0xyour_deployer_private_key
 # Optional per-chain RPC overrides (defaults are set in hardhat.config.js)
-ETHEREUM_RPC=https://rpc.ankr.com/eth
+ETH_RPC=https://rpc.ankr.com/eth
 BASE_RPC=https://mainnet.base.org
 ARBITRUM_RPC=https://arb1.arbitrum.io/rpc
 OPTIMISM_RPC=https://mainnet.optimism.io
-ROBINHOOD_RPC=https://rpc.mainnet.chain.robinhood.com
+RHC_RPC=https://rpc.mainnet.chain.robinhood.com
 # ARC not reachable yet — leave placeholder
 ARC_RPC=https://5042.rpc.thirdweb.com
 ```
