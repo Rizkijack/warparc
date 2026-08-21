@@ -46,9 +46,7 @@ async function main() {
 	const totalSupply = await token.totalSupply();
 	const delegate = await endpoint.delegate();
 
-	// Mint some ABT to the deployer so balanceOf returns non-zero (OFT._mint path)
-	const mintAmount = hre.ethers.utils.parseUnits("1000", 18);
-	// BridgeToken has no public mint; use transferFrom? No. Instead just check balanceOf = 0 initially.
+	// BridgeToken has no public mint; just check balanceOf (0 initially).
 	const balance = await token.balanceOf(deployer.address);
 
 	console.log("name()        =", name);
@@ -79,7 +77,13 @@ async function main() {
 
 	// The real OFT base ABI (where quoteSend/send are declared) must contain the same
 	// selectors — proving our frontend OFT_ABI is the standard OFT interface.
-	const oftArtifact = require("../artifacts/@layerzerolabs/lz-evm-oapp-v2/contracts/oft/OFT.sol/OFT.json");
+	let oftArtifact;
+	try {
+		oftArtifact = require("../artifacts/@layerzerolabs/lz-evm-oapp-v2/contracts/oft/OFT.sol/OFT.json");
+	} catch (err) {
+		console.error("Artifacts not found. Run 'npx hardhat compile' first");
+		process.exit(1);
+	}
 	const oftIfaceReal = new hre.ethers.utils.Interface(oftArtifact.abi);
 	const realQuoteSel = oftIfaceReal.getSighash("quoteSend");
 	const realSendSel = oftIfaceReal.getSighash("send");

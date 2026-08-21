@@ -424,6 +424,18 @@ main {
 
 .tx-time { color: var(--text3); font-size: 0.6rem; white-space: nowrap; }
 
+.tx-badge {
+	font-size: 0.6rem;
+	font-weight: 600;
+	letter-spacing: 0.4px;
+	text-transform: uppercase;
+	color: var(--text3);
+	white-space: nowrap;
+}
+.tx-badge.pending { color: #f5a623; }
+.tx-badge.success { color: var(--green); }
+.tx-badge.failed { color: var(--red); }
+
 @keyframes pulse {
 	0%, 100% { opacity: 1; }
 	50% { opacity: 0.3; }
