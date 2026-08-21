@@ -20,3 +20,8 @@ Thumbs.db
 
 .vercel
 .env*
+
+# Worktrees & docs
+PekerjaanAgents/
+DEPLOY.md
+IDEA.md

@@ -1,1 +1,1 @@
-ARC Bridge Mainnet
+cross-chain bridge platform for stablecoin across all evm network.

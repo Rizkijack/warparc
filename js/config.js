@@ -130,15 +130,27 @@ const CONFIG = {
 			}
 		},
 		arc: {
-			chainId: 5042,
-			eid: 30417,
-			name: "ARC Mainnet",
+			// Arc Testnet — official docs https://docs.arc.io/arc/references/connect-to-arc
+			// Gas token = USDC (native 18 dec / ERC-20 iface 6 dec, same balance)
+			chainId: 5042002,
+			cctpDomain: 26,
+			name: "Arc Testnet",
 			shortName: "ARC",
 			nativeCurrency: { name: "USDC Token", symbol: "USDC", decimals: 18 },
-			rpcUrl: "https://5042.rpc.thirdweb.com",
-			explorer: "https://arcscan.app",
+			rpcUrl: "https://rpc.testnet.arc.io",
+			explorer: "https://testnet.arcscan.app",
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/arc.svg",
-			layerZero: {
+			cctp: {
+				// Canonical CCTP V2 contracts on Arc Testnet (https://docs.arc.io/arc/references/contract-addresses)
+				usdc: "0x3600000000000000000000000000000000000000",
+				tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+				messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+				tokenMinterV2: "0xb43db544E2c27092c107639Ad201b3dEfAbcF192",
+				messageV2: "0xbaC0179bB358A8936169a63408C8481D582390C4",
+				gatewayWallet: "0x0077777d7EBA4688BDeF3E311b846F25870A19B9",
+				gatewayMinter: "0x0022222ABE238Cc2C7Bb1f21003F0a260052475B"
+			},
+			layerZero: { // LEGACY — deprecated with the OFT path; kept for reference only
 				endpointV2: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b",
 				sendUln302: "0xc39161c743d0307eb9bcc9fef03eeb9dc4802de7",
 				receiveUln302: "0xe1844c5d63a9543023008d332bd3d2e6f1fe1043",
@@ -175,7 +187,8 @@ const CONFIG = {
 				arbitrum: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
 				optimism: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
 				robinhood: null,
-				arc: null
+				// Arc Testnet ERC-20 interface (native USDC is the same asset, 18 dec native view)
+				arc: "0x3600000000000000000000000000000000000000"
 			},
 			icon: "https://icons-ckg.pages.dev/lz-scan/protocols/usd-coin.svg"
 		},
