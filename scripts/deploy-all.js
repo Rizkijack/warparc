@@ -7,7 +7,8 @@ const CHAINS = [
 	{ name: "arbitrum",  chainId: 42161, eid: 30110, endpoint: "0x1a44076050125825900e736c501f859c50fe728c" },
 	{ name: "optimism",  chainId: 10,    eid: 30111, endpoint: "0x1a44076050125825900e736c501f859c50fe728c" },
 	{ name: "robinhood", chainId: 4663,  eid: 30416, endpoint: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b" },
-	{ name: "arc",       chainId: 5042,  eid: 30417, endpoint: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b" }
+	// UNVERIFIED: Arc EID 30417 / endpoint 0x6f4756... — confirm against official LayerZero registry before mainnet deployment
+	{ name: "arc",       chainId: 5042002, eid: 30417, endpoint: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b" }
 ];
 
 // ARC is a placeholder in DEPLOY.md (mainnet RPC unreachable) — skip it.
@@ -27,6 +28,7 @@ async function main() {
 	}
 
 	const results = {};
+	const failedDeploys = [];
 
 	for (const chain of DEPLOY_CHAINS) {
 		console.log(`\n--- Deploying to ${chain.name} ---`);
@@ -43,6 +45,7 @@ async function main() {
 			}
 		} catch (err) {
 			console.error(`Deployment failed on ${chain.name}:`, err.message);
+			failedDeploys.push(chain.name);
 		}
 	}
 
@@ -50,6 +53,14 @@ async function main() {
 	Object.entries(results).forEach(([chain, addr]) => {
 		console.log(`${chain.padEnd(12)} ${addr}`);
 	});
+
+	// Chains attempted but missing from results (deploy error or no address match) count as failed.
+	const failedChains = [...new Set([...failedDeploys, ...DEPLOY_CHAINS.filter((c) => !results[c.name])])];
+	if (failedChains.length > 0) {
+		console.error("\nDeployment failed for:");
+		failedChains.forEach((c) => console.error(`  - ${c.name}`));
+		process.exit(1);
+	}
 
 	console.log("\n\nTo configure peers, update DEPLOYMENTS in scripts/configure.js");
 	console.log("with the addresses above, then run:");

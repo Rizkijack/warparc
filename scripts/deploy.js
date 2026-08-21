@@ -26,12 +26,14 @@ const CHAIN_CONFIG = {
 		mode: "oft"
 	},
 	robinhood: {
+		// UNVERIFIED: same endpoint used for Robinhood Chain and Arc testnet — confirm against official LayerZero registry before mainnet deployment
 		lzEndpoint: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b",
 		tokenName: "ARC Bridge Token",
 		tokenSymbol: "ABT",
 		mode: "oft"
 	},
 	arc: {
+		// UNVERIFIED: same endpoint used for Robinhood Chain and Arc testnet — confirm against official LayerZero registry before mainnet deployment
 		lzEndpoint: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b",
 		tokenName: "ARC Bridge Token",
 		tokenSymbol: "ABT",
@@ -41,6 +43,20 @@ const CHAIN_CONFIG = {
 
 async function main() {
 	const network = hre.network.name;
+
+	// Guard (pentest F2 HIGH): live networks MUST have a real PRIVATE_KEY.
+	// A missing, placeholder, or all-zero key would deploy with a null signer.
+	const LIVE_NETWORKS = new Set(["ethereum", "base", "arbitrum", "optimism", "robinhood", "arc"]);
+	if (LIVE_NETWORKS.has(network)) {
+		const rawKey = (process.env.PRIVATE_KEY || "").trim();
+		const strippedKey = rawKey.replace(/^0x/i, "");
+		const isZeroKey = strippedKey === "" || /^0+$/.test(strippedKey);
+		if (rawKey === "" || rawKey === "your_private_key_here" || isZeroKey) {
+			console.error(`ERROR: PRIVATE_KEY required for live network ${network} — set it in .env`);
+			process.exit(1);
+		}
+	}
+
 	const config = CHAIN_CONFIG[network];
 
 	if (!config) {

@@ -133,6 +133,7 @@ const CONFIG = {
 			// Arc Testnet — official docs https://docs.arc.io/arc/references/connect-to-arc
 			// Gas token = USDC (native 18 dec / ERC-20 iface 6 dec, same balance)
 			chainId: 5042002,
+			eid: 30417, // UNVERIFIED against official LayerZero registry — confirm before mainnet
 			cctpDomain: 26,
 			name: "Arc Testnet",
 			shortName: "ARC",

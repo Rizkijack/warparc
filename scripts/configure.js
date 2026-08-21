@@ -54,6 +54,14 @@ async function setPeersFor(contractName, deployments) {
 			const tx = await contract.setPeer(eid, peer);
 			await tx.wait();
 			console.log(`  Peer set: ${chain} (EID ${eid}) -> ${addr}`);
+
+			// Readback verification (pentest F4): `peers` is a public mapping in OAppCore v3
+			const stored = await contract.peers(eid);
+			if (stored.toLowerCase() !== peer.toLowerCase()) {
+				const msg = `Peer readback mismatch after setPeer ${chain}: expected ${peer}, got ${stored}`;
+				console.error(`  ${msg}`);
+				failures.push({ chain, contractName, message: msg });
+			}
 		} catch (err) {
 			console.error(`  Failed to set peer ${chain}:`, err.message);
 			failures.push({ chain, contractName, message: err.message });
@@ -65,6 +73,12 @@ async function setPeersFor(contractName, deployments) {
 
 async function main() {
 	const network = hre.network.name;
+
+	// Only comments in both address maps — nothing to configure (pentest F3).
+	if (Object.keys(DEPLOYMENTS).length === 0 && Object.keys(ADAPTER_DEPLOYMENTS).length === 0) {
+		console.error("DEPLOYMENTS empty — nothing to configure. Fill addresses after deployment.");
+		process.exit(1);
+	}
 
 	// Set peers for OFT
 	const failures = [
