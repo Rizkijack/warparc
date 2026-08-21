@@ -34,7 +34,7 @@ const CONFIG = {
 			name: "Ethereum Mainnet",
 			shortName: "Ethereum",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://cloudflare-eth.com",
+			rpcUrl: "https://rpc.ankr.com/eth",
 			explorer: "https://etherscan.io",
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/ethereum.svg",
 			layerZero: {
@@ -130,14 +130,19 @@ const CONFIG = {
 			}
 		},
 		arc: {
-			chainId: 5042,
+			chainId: 5042002,
 			eid: 30417,
-			name: "ARC Mainnet",
+			name: "ARC Testnet",
 			shortName: "ARC",
 			nativeCurrency: { name: "USDC Token", symbol: "USDC", decimals: 18 },
-			rpcUrl: "https://5042.rpc.thirdweb.com",
-			explorer: "https://arcscan.app",
+			rpcUrl: "https://rpc.testnet.arc.io",
+			explorer: "https://testnet.arcscan.app",
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/arc.svg",
+			cctpDomain: 26,
+			cctp: {
+				tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+				messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275"
+			},
 			layerZero: {
 				endpointV2: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b",
 				sendUln302: "0xc39161c743d0307eb9bcc9fef03eeb9dc4802de7",
@@ -175,7 +180,7 @@ const CONFIG = {
 				arbitrum: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
 				optimism: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
 				robinhood: null,
-				arc: null
+				arc: "0x3600000000000000000000000000000000000000"
 			},
 			icon: "https://icons-ckg.pages.dev/lz-scan/protocols/usd-coin.svg"
 		},

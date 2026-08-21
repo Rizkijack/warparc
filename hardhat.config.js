@@ -13,7 +13,7 @@ module.exports = {
 	},
 	networks: {
 		ethereum: {
-			url: process.env.ETH_RPC || "https://cloudflare-eth.com",
+			url: process.env.ETH_RPC || "https://rpc.ankr.com/eth",
 			chainId: 1,
 			accounts: [PRIVATE_KEY]
 		},
@@ -38,8 +38,8 @@ module.exports = {
 			accounts: [PRIVATE_KEY]
 		},
 		arc: {
-			url: process.env.ARC_RPC || "https://5042.rpc.thirdweb.com",
-			chainId: 5042,
+			url: process.env.ARC_RPC || "https://rpc.testnet.arc.io",
+			chainId: 5042002,
 			accounts: [PRIVATE_KEY]
 		},
 		localhost: {
