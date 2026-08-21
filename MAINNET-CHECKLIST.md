@@ -68,7 +68,7 @@ cast block latest --rpc-url <MAINNET_RPC>   # check baseFeePerGas vs docs
 
 Add mainnet as a NEW entry alongside testnet (do not overwrite testnet):
 
-**js/config.js**
+**frontend/js/config.js**
 - [ ] New `chains.arcMainnet` (or per final naming): chainId, rpcUrl, explorer,
       `cctpDomain`, full `cctp{}` block from Phase 1
 - [ ] `tokens.USDC.addresses.arcMainnet = <mainnet USDC>`

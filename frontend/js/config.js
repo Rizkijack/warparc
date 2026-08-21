@@ -34,7 +34,7 @@ const CONFIG = {
 			name: "Ethereum Mainnet",
 			shortName: "Ethereum",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://cloudflare-eth.com",
+			rpcUrl: "https://rpc.ankr.com/eth",
 			explorer: "https://etherscan.io",
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/ethereum.svg",
 			layerZero: {

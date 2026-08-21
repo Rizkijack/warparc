@@ -1,7 +1,7 @@
 # WarpArc — Official Arc Data Sources
 
 Single source of truth for every Arc value used in this repo. All facts in
-`DEPLOY.md`, `MAINNET-CHECKLIST.md`, `js/config.js`, and `hardhat.config.js`
+`DEPLOY.md`, `MAINNET-CHECKLIST.md`, `frontend/js/config.js`, and `hardhat.config.js`
 trace back to the URLs below.
 
 **Rule:** never fill an unknown Arc value from memory or assumption — always

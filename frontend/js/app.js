@@ -18,6 +18,35 @@ const toast = (msg, type = "info") => {
 	setTimeout(() => t.remove(), 4000);
 };
 
+function addTxEntry(txId, label, status, chainKey) {
+	state.txHistory.push({ id: txId, label, status, hash: "", chainKey });
+	renderTxHistory();
+}
+
+function updateTxEntry(txId, status, hash) {
+	const entry = state.txHistory.find(e => e.id === txId);
+	if (!entry) return;
+	entry.status = status;
+	entry.hash = hash;
+	renderTxHistory();
+}
+
+function renderTxHistory() {
+	const list = el("tx-list");
+	if (!list) return;
+	if (state.txHistory.length === 0) {
+		list.innerHTML = '<div class="empty-state">No transactions yet</div>';
+		return;
+	}
+	const esc = (s) => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+	const items = state.txHistory.slice().reverse().map(entry => {
+		const hash = entry.hash;
+		const shortHash = hash ? hash.slice(0, 6) + "…" + hash.slice(-4) : "";
+		return `<div class="tx-item"><span class="tx-status ${entry.status}"></span><div class="tx-detail"><div class="tx-action">${esc(entry.label)}</div>${hash ? `<a class="tx-hash" href="${CONFIG.chains[entry.chainKey].explorer}/tx/${hash}" target="_blank" rel="noopener">${shortHash}</a>` : ""}</div><span class="tx-badge ${entry.status}">${entry.status}</span></div>`;
+	}).join("");
+	list.innerHTML = items;
+}
+
 function getChainKey(chainId) {
 	return Object.keys(CONFIG.chains).find(k => CONFIG.chains[k].chainId === chainId) || null;
 }
@@ -105,11 +134,13 @@ function onAccountChange() {
 		bridgeArea.style.display = "block";
 		loadBalances();
 		updateContractInfo();
+		renderTxHistory();
 	} else {
 		btn.textContent = "Connect Wallet";
 		btn.className = "btn btn-primary btn-sm";
 		badge.style.display = "none";
 		bridgeArea.style.display = "none";
+		renderTxHistory();
 	}
 }
 
@@ -168,9 +199,6 @@ async function loadBalances() {
 			} else {
 				el("from-balance").textContent = "N/A";
 			}
-		} else if (token === "ETH" && CONFIG.chains[fromKey].nativeCurrency.symbol === "ETH") {
-			const bal = await state.provider.getBalance(state.account);
-			el("from-balance").textContent = formatUnits(bal, 18, 4);
 		} else {
 			el("from-balance").textContent = "0.00";
 		}
@@ -325,7 +353,7 @@ async function bridge() {
 	btn.disabled = true;
 	btn.textContent = `Bridging ${amount} ${token}...`;
 
-	addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName}`, "pending");
+	addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName}`, "pending", fromKey);
 
 	try {
 		const dstEid = toChain.eid;
@@ -380,15 +408,27 @@ function updateBridgeBtn() {
 	const fromKey = el("from-chain").value;
 	const toKey = el("to-chain").value;
 	const amount = el("amount").value.trim();
+	const token = getSelectedToken();
 
 	if (!account) { btn.textContent = "Connect Wallet"; btn.disabled = true; return; }
 	if (fromKey === toKey) { btn.textContent = "Same chain selected"; btn.disabled = true; return; }
 
-	const bridgeDeployed = CONFIG.bridgeToken.deployments[fromKey] !== null;
-	if (!bridgeDeployed) {
-		btn.textContent = "Bridge not deployed on " + CONFIG.chains[fromKey].shortName;
-		btn.disabled = true;
-		return;
+	if (token === "USDC") {
+		const usdcAddr = CONFIG.tokens.USDC.addresses[fromKey];
+		const adapterDeployed = CONFIG.bridgeAdapter.deployments[fromKey] !== null;
+		const usdcValid = usdcAddr && usdcAddr !== "0x0000000000000000000000000000000000000000";
+		if (!adapterDeployed || !usdcValid) {
+			btn.textContent = "USDC adapter not deployed on " + CONFIG.chains[fromKey].shortName;
+			btn.disabled = true;
+			return;
+		}
+	} else {
+		const bridgeDeployed = CONFIG.bridgeToken.deployments[fromKey] !== null;
+		if (!bridgeDeployed) {
+			btn.textContent = "Bridge not deployed on " + CONFIG.chains[fromKey].shortName;
+			btn.disabled = true;
+			return;
+		}
 	}
 
 	if (!amount || Number(amount) <= 0) { btn.textContent = "Enter amount"; btn.disabled = true; return; }
@@ -483,8 +523,6 @@ document.addEventListener("DOMContentLoaded", () => {
 			onAccountChange();
 		});
 	}
-
-	// ABT option already exists in HTML; no need to inject
 
 	el("from-chain").addEventListener("change", onChainChange);
 	el("to-chain").addEventListener("change", onChainChange);

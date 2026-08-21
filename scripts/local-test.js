@@ -8,7 +8,7 @@ const hre = require("hardhat");
  *   2. BridgeToken   (the OFT the frontend integrates with)
  *
  * Then it calls the exact functions the frontend relies on (balanceOf, name,
- * symbol, decimals, setPeer) to prove the OFT_ABI encoding in js/config.js is
+ * symbol, decimals, setPeer) to prove the OFT_ABI encoding in frontend/js/config.js is
  * correct against the real compiled bytecode. Cross-chain quote/send is NOT
  * exercised (that needs the full LZ stack or a live network).
  */
