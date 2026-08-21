@@ -25,3 +25,9 @@ Thumbs.db
 PekerjaanAgents/
 DEPLOY.md
 IDEA.md
+
+# Agent skill packs (installed via npx skills add; global mirror at ~/.agents)
+.agents/
+.claude/
+agent/
+skills-lock.json
