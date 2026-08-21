@@ -25,6 +25,8 @@ Thumbs.db
 PekerjaanAgents/
 DEPLOY.md
 IDEA.md
+MAINNET-CHECKLIST.md
+ARC-SOURCES.md
 
 # Agent skill packs (installed via npx skills add; global mirror at ~/.agents)
 .agents/
