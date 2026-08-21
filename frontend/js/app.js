@@ -443,7 +443,12 @@ function isTestnetChain(chainKey) {
 }
 
 function getFilteredChains() {
-	return Object.keys(CONFIG.chains).filter(k => state.testnetMode ? isTestnetChain(k) : !isTestnetChain(k));
+	// Chain with null chainId = launch-day placeholder (arcMainnet) — never render.
+	return Object.keys(CONFIG.chains).filter(k => {
+		const c = CONFIG.chains[k];
+		if (c.chainId == null) return false;
+		return state.testnetMode ? isTestnetChain(k) : !isTestnetChain(k);
+	});
 }
 
 function populateChainSelects() {

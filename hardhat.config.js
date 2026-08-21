@@ -37,6 +37,17 @@ module.exports = {
 			chainId: 4663,
 			accounts: [PRIVATE_KEY]
 		},
+		arcMainnet: {
+			// LAUNCH-DAY (MAINNET-CHECKLIST Phase 2): fill url ONLY from
+			// https://docs.arc.io/arc/references/connect-to-arc once mainnet is public.
+			// chainId intentionally absent — Hardhat infers it from the RPC response, so a
+			// mismatched guess can never slip through the chainId validator. Empty url =
+			// fail closed: any run against this network errors out at connect time.
+			url: process.env.ARC_MAINNET_RPC || "",
+			accounts: [PRIVATE_KEY]
+			// chainId: TBD — do NOT hardcode (MAINNET-CHECKLIST Phase 2)
+			// gasPrice: set on launch day to >= mainnet min base fee + margin (testnet floor 20 Gwei, used 30)
+		},
 		arc: {
 			// Arc Testnet (official docs: https://docs.arc.io/arc/references/connect-to-arc)
 			// Gas token = USDC (18 dec native / 6 dec ERC-20 iface). Gas floor 20 Gwei.

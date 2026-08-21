@@ -129,6 +129,30 @@ const CONFIG = {
 				lzExecutor: "0x41bdb4aa4a63a5b2efc531858d3118392b1a1c3d"
 			}
 		},
+		arcMainnet: {
+			// LAUNCH-DAY entry (MAINNET-CHECKLIST Phase 1/2): fill every ?TBD? ONLY from
+			// https://docs.arc.io + developers.circle.com. chainId stays null until mainnet
+			// values are published (target 16 Sep 2026) — getFilteredChains() hides chains
+			// with a null chainId, so this entry never reaches the UI while incomplete.
+			chainId: null,
+			eid: null, // UNVERIFIED — do NOT set from testnet value
+			cctpDomain: null,
+			name: "Arc Mainnet",
+			shortName: "ARC",
+			nativeCurrency: { name: "USDC Token", symbol: "USDC", decimals: 18 },
+			rpcUrl: "",
+			explorer: "",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/arc.svg",
+			cctp: {
+				usdc: null,
+				tokenMessengerV2: null,
+				messageTransmitterV2: null,
+				tokenMinterV2: null,
+				messageV2: null,
+				gatewayWallet: null,
+				gatewayMinter: null
+			}
+		},
 		arc: {
 			// Arc Testnet — official docs https://docs.arc.io/arc/references/connect-to-arc
 			// Gas token = USDC (native 18 dec / ERC-20 iface 6 dec, same balance)

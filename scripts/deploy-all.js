@@ -11,13 +11,13 @@ const CHAINS = [
 	{ name: "arc",       chainId: 5042002, eid: 30417, endpoint: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b" }
 ];
 
-// ARC is a placeholder in DEPLOY.md (mainnet RPC unreachable) — skip it.
+// ARC is CCTP-only (MAINNET-CHECKLIST Phase 3 pt 3) — no custom contract deployment; skip it.
 const DEPLOY_CHAINS = CHAINS.filter(c => c.name !== "arc");
 
 async function main() {
 	console.log("ARC Bridge - Full Deployment Script");
 	console.log("===================================\n");
-	console.log(`This script will deploy BridgeToken to ${DEPLOY_CHAINS.length} chains (ARC skipped, RPC unreachable — see DEPLOY.md).\n`);
+	console.log(`This script will deploy BridgeToken to ${DEPLOY_CHAINS.length} chains (ARC skipped — CCTP-only chain, no custom deployment, see MAINNET-CHECKLIST Phase 3 pt 3).\n`);
 	console.log("Chains to deploy:");
 	DEPLOY_CHAINS.forEach(c => console.log(`  - ${c.name} (chain ${c.chainId}, EID ${c.eid})`));
 	console.log("");

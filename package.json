@@ -5,7 +5,8 @@
 	"scripts": {
 		"compile": "hardhat compile",
 		"deploy": "hardhat run scripts/deploy.js",
-		"configure": "hardhat run scripts/configure.js"
+		"configure": "hardhat run scripts/configure.js",
+		"monitor:phase0": "node scripts/phase0-monitor.js"
 	},
 	"devDependencies": {
 		"@nomiclabs/hardhat-ethers": "^2.2.0",
