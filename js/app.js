@@ -4,6 +4,7 @@ const state = {
 	account: null,
 	chainId: null,
 	isConnecting: false,
+	testnetMode: false,
 	txHistory: []
 };
 
@@ -396,18 +397,31 @@ function updateBridgeBtn() {
 	btn.disabled = false;
 }
 
+function isTestnetChain(chainKey) {
+	const chain = CONFIG.chains[chainKey];
+	return chain.chainId === 5042002;
+}
+
+function getFilteredChains() {
+	return Object.keys(CONFIG.chains).filter(k => state.testnetMode ? isTestnetChain(k) : !isTestnetChain(k));
+}
+
 function populateChainSelects() {
 	const from = el("from-chain");
 	const to = el("to-chain");
-	const keys = Object.keys(CONFIG.chains);
+	from.innerHTML = "";
+	to.innerHTML = "";
+	const keys = getFilteredChains();
 	keys.forEach(k => {
 		const c = CONFIG.chains[k];
 		const opt = `<option value="${k}">${c.name}</option>`;
 		from.insertAdjacentHTML("beforeend", opt);
 		to.insertAdjacentHTML("beforeend", opt);
 	});
-	from.value = "ethereum";
-	to.value = "arc";
+	if (keys.length > 0) {
+		from.value = keys[0];
+		to.value = keys.length > 1 ? keys[1] : keys[0];
+	}
 }
 
 function onChainChange() {
@@ -476,6 +490,15 @@ document.addEventListener("DOMContentLoaded", () => {
 	el("to-chain").addEventListener("change", onChainChange);
 	el("token-select").addEventListener("change", onTokenChange);
 	el("amount").addEventListener("input", onAmountChange);
+
+	const toggle = el("network-mode-toggle");
+	if (toggle) {
+		toggle.addEventListener("change", () => {
+			state.testnetMode = toggle.checked;
+			populateChainSelects();
+			onChainChange();
+		});
+	}
 
 	populateChainSelects();
 	onTokenChange();

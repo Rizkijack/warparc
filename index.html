@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ARC Bridge · LayerZero V2</title>
+<title>WarpArc Bridge · LayerZero V2</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -16,9 +16,17 @@
 			<rect x="3" y="14" width="7" height="7" rx="1.5" fill="#10b981"/>
 			<rect x="14" y="14" width="7" height="7" rx="1.5" fill="#10b981" opacity="0.5"/>
 		</svg>
-		ARC Bridge
+		WarpArc
 	</div>
 	<div class="nav-right">
+		<div class="network-toggle">
+			<span class="toggle-label">Mainnet</span>
+			<label class="toggle-switch">
+				<input type="checkbox" id="network-mode-toggle">
+				<span class="toggle-slider"></span>
+			</label>
+			<span class="toggle-label">Testnet</span>
+		</div>
 		<span class="network-badge" id="network-badge" style="display:none">
 			<span class="dot"></span> Not Connected
 		</span>
@@ -32,7 +40,7 @@
 			<h1>Cross-Chain Bridge</h1>
 			<select id="token-select" class="chain-select" style="width:auto;padding:0.35rem 1.5rem 0.35rem 0.5rem;font-size:0.7rem">
 				<option value="USDC">USDC</option>
-				<option value="ETH">ETH</option>
+				<option value="ABT">ABT</option>
 			</select>
 		</div>
 
@@ -64,8 +72,12 @@
 			</div>
 
 			<div class="gas-estimate">
-				<span>Estimated Gas Fee</span>
+				<span>Estimated Gas Fee (ETH)</span>
 				<span id="gas-fee">N/A</span>
+			</div>
+			<div class="gas-estimate">
+				<span>Network Fee (~$0.01 USDC)</span>
+				<span id="gas-fee-usdc">N/A</span>
 			</div>
 
 			<button class="bridge-btn" id="bridge-btn" onclick="bridge()" disabled>Enter amount</button>
@@ -99,6 +111,14 @@
 		</div>
 	</div>
 </main>
+
+<footer>
+	<span>WarpArc Bridge</span>
+	<div class="footer-links">
+		<a href="https://status.circle.com" target="_blank" rel="noopener">System Status</a>
+		<a href="https://layerzeroscan.com" target="_blank" rel="noopener">LayerZero Scan</a>
+	</div>
+</footer>
 
 <div class="toast-container" id="toast-container"></div>
 
