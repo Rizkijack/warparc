@@ -1,19 +1,23 @@
 {
 	"name": "arc-bridge",
 	"version": "1.0.0",
-	"description": "Cross-chain bridge using LayerZero V2 - Ethereum / Base / Arbitrum / Optimism / Robinhood / ARC",
+	"description": "WarpArc — USDC bridge to/from Arc via Circle CCTP V2 (legacy LayerZero OFT kept for ABT demo)",
 	"scripts": {
 		"compile": "hardhat compile",
 		"deploy": "hardhat run scripts/deploy.js",
-		"configure": "hardhat run scripts/configure.js"
+		"configure": "hardhat run scripts/configure.js",
+		"monitor:phase0": "node scripts/phase0-monitor.js",
+		"cctp:test": "node scripts/cctp-test.js",
+		"watch:usdc": "node scripts/watch-usdc.js",
+		"dev": "npx -y serve@14.2.5 . -l 8931"
 	},
 	"devDependencies": {
+		"@layerzerolabs/lz-evm-oapp-v2": "3.0.168",
+		"@layerzerolabs/lz-evm-protocol-v2": "3.0.168",
 		"@nomiclabs/hardhat-ethers": "^2.2.0",
+		"@openzeppelin/contracts": "4.9.6",
+		"dotenv": "^16.4.0",
 		"ethers": "^5.7.0",
-		"@openzeppelin/contracts": "^4.9.0",
-		"@layerzerolabs/lz-evm-oapp-v2": "^3.0.0",
-		"@layerzerolabs/lz-evm-protocol-v2": "^3.0.0",
-		"hardhat": "^2.22.0",
-		"dotenv": "^16.4.0"
+		"hardhat": "^2.22.0"
 	}
 }

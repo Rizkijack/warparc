@@ -68,22 +68,26 @@ cast block latest --rpc-url <MAINNET_RPC>   # check baseFeePerGas vs docs
 
 Add mainnet as a NEW entry alongside testnet (do not overwrite testnet):
 
-**js/config.js**
-- [ ] New `chains.arcMainnet` (or per final naming): chainId, rpcUrl, explorer,
-      `cctpDomain`, full `cctp{}` block from Phase 1
-- [ ] `tokens.USDC.addresses.arcMainnet = <mainnet USDC>`
-- [ ] Keep `chains.arc` (testnet) intact for regression testing
+**frontend/js/config.js**
+- [x] New `chains.arcMainnet` skeleton exists (structure done 2026-08-22) — values
+      stay `null`/`disabled: true` until filled from Phase 1; removing `disabled`
+      and filling `cctp{}` flips it live
+- [x] `tokens.USDC.addresses.arcMainnet` slot exists (null until Phase 1)
+- [x] `chains.arc` (testnet) kept intact for regression testing
 
 **hardhat.config.js**
-- [ ] New network entry `arcMainnet`: url + chainId + accounts
-- [ ] `gasPrice`: set ≥ mainnet min base fee + margin (testnet used 30 Gwei vs 20 floor)
+- [x] Network entry `arcMainnet` exists, gated on `ARC_MAINNET_RPC` +
+      `ARC_MAINNET_CHAIN_ID` env vars (activates without code changes on launch day)
+- [ ] `gasPrice`: set ≥ mainnet min base fee + margin (testnet used 30 Gwei vs 20
+      floor) — intentionally UNSET until the official mainnet floor is known
 
 **.env.example**
-- [ ] Add `ARC_MAINNET_RPC=<mainnet rpc>`
+- [x] `ARC_MAINNET_RPC` / `ARC_MAINNET_CHAIN_ID` placeholders added
 
 **Frontend wallet config**
-- [ ] Wallet add-network fields for mainnet (name/RPC/chain ID/symbol/explorer)
-- [ ] Keep testnet option available behind a "Testnet mode" toggle if UI supports it
+- [x] Wallet add-network fields derive from `chains.*` config (mainnet works once
+      the skeleton is filled)
+- [x] "Testnet mode" toggle exists and is the DEFAULT (flips default on go-live)
 
 ---
 

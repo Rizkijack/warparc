@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.22;
+
+import { OFT } from "@layerzerolabs/lz-evm-oapp-v2/contracts/oft/OFT.sol";
+
+// DEPRECATED legacy LayerZero OFT path (DEPLOY.md Appendix A) — the canonical
+// USDC route is Circle CCTP V2. Deployment is intentionally blocked so the
+// deprecated path cannot end up half-configured by accident. Reviving the path
+// means deleting the guard below — a conscious, reviewable change.
+contract BridgeToken is OFT {
+	constructor(
+		string memory _name,
+		string memory _symbol,
+		address _lzEndpoint,
+		address _delegate
+	) OFT(_name, _symbol, _lzEndpoint, _delegate) {
+		revert("BridgeToken: deprecated - canonical USDC route is Circle CCTP V2");
+	}
+}

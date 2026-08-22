@@ -6,6 +6,9 @@ artifacts/
 cache/
 typechain-types/
 
+# App Kit (Path A) build output — source lives in appkit/, build via npm run build
+appkit/dist/
+
 # Local deployment state (contains addresses, not secrets)
 deployments.json
 
@@ -21,15 +24,18 @@ Thumbs.db
 .vercel
 .env*
 
-# Worktrees & docs
+# Worktrees & docs (operational runbooks stay local-only — never commit)
 PekerjaanAgents/
 DEPLOY.md
 IDEA.md
 MAINNET-CHECKLIST.md
 ARC-SOURCES.md
+.commandcode
+ARC-REFERENCE.md
 
 # Agent skill packs (installed via npx skills add; global mirror at ~/.agents)
 .agents/
 .claude/
 agent/
 skills-lock.json
+

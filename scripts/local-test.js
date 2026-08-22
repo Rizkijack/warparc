@@ -8,12 +8,22 @@ const hre = require("hardhat");
  *   2. BridgeToken   (the OFT the frontend integrates with)
  *
  * Then it calls the exact functions the frontend relies on (balanceOf, name,
- * symbol, decimals, setPeer) to prove the OFT_ABI encoding in js/config.js is
+ * symbol, decimals, setPeer) to prove the OFT_ABI encoding in frontend/js/config.js is
  * correct against the real compiled bytecode. Cross-chain quote/send is NOT
  * exercised (that needs the full LZ stack or a live network).
  */
 async function main() {
 	console.log("ARC Bridge — Local Contract Validation\n");
+
+	// Contracts are disabled (BridgeToken.sol.disabled) — the OFT path is
+	// deprecated; canonical USDC route is Circle CCTP V2.
+	const fs = require("fs");
+	const path = require("path");
+	if (!fs.existsSync(path.join(__dirname, "..", "contracts", "BridgeToken.sol"))) {
+		console.error("BLOCKED: BridgeToken/BridgeAdapter are DISABLED (.sol.disabled) — the LayerZero OFT");
+		console.error("path is deprecated; the canonical USDC route is Circle CCTP V2.");
+		process.exit(1);
+	}
 
 	const [deployer] = await hre.ethers.getSigners();
 	console.log("Deployer:", deployer.address);

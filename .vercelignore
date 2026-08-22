@@ -1,0 +1,27 @@
+# Vercel serves ONLY the static frontend (index.html + js/ + css/).
+# Everything below is backend tooling / local docs / build internals that must
+# never be publicly downloadable from the deployment root (vercel.json sets
+# outputDirectory "." — this file is the guard rail for that).
+contracts/
+scripts/
+appkit/
+frontend/
+artifacts/
+cache/
+test-npm/
+.commandcode/
+.agents/
+.claude/
+vercel.json.bak
+hardhat.config.js
+package.json
+package-lock.json
+AGENTS.md
+DEPLOY.md
+IDEA.md
+ARC-SOURCES.md
+ARC-REFERENCE.md
+MAINNET-CHECKLIST.md
+*.log
+.env
+.env.*

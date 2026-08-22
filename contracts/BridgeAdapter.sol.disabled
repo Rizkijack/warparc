@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.22;
+
+import { OFTAdapter } from "@layerzerolabs/lz-evm-oapp-v2/contracts/oft/OFTAdapter.sol";
+
+// DEPRECATED legacy LayerZero OFT path (DEPLOY.md Appendix A) — the canonical
+// USDC route is Circle CCTP V2. Deployment is intentionally blocked: there is
+// no functional pause/circuit-breaker on this escrow, so a half-configured
+// deployment must be impossible. Reviving the path means deleting the guard
+// below AND implementing real emergency controls — both reviewable in a diff.
+contract BridgeAdapter is OFTAdapter {
+	constructor(
+		address _token,
+		address _lzEndpoint,
+		address _delegate
+	) OFTAdapter(_token, _lzEndpoint, _delegate) {
+		revert("BridgeAdapter: deprecated - canonical USDC route is Circle CCTP V2");
+	}
+}

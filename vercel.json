@@ -4,5 +4,20 @@
   "framework": null,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://icons-ckg.pages.dev; connect-src 'self' https://iris-api.circle.com https://iris-api-sandbox.circle.com https://rpc.ankr.com https://mainnet.base.org https://arb1.arbitrum.io https://mainnet.optimism.io https://rpc.mainnet.chain.robinhood.com https://rpc.testnet.arc.io https://ethereum-sepolia-rpc.publicnode.com https://sepolia.base.org https://sepolia.arbitrum.io https://sepolia.optimism.io; frame-ancestors 'none';"
+        },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "clipboard-write=(self)" }
+      ]
+    }
   ]
 }

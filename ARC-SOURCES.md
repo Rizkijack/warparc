@@ -1,7 +1,7 @@
 # WarpArc — Official Arc Data Sources
 
 Single source of truth for every Arc value used in this repo. All facts in
-`DEPLOY.md`, `MAINNET-CHECKLIST.md`, `js/config.js`, and `hardhat.config.js`
+`DEPLOY.md`, `MAINNET-CHECKLIST.md`, `frontend/js/config.js`, and `hardhat.config.js`
 trace back to the URLs below.
 
 **Rule:** never fill an unknown Arc value from memory or assumption — always
@@ -33,6 +33,11 @@ UNVERIFIED instead of guessing.
 | **EVM differences** | https://docs.arc.io/arc/references/evm-differences.md | PREVRANDAO=0, blob-tx rejection, SELFDESTRUCT rules, value-transfer revert rules |
 | **USDC system events** | https://docs.arc.io/arc/references/usdc-system-events.md | Dual emitters (`0x3600…0000` 6-dec + `0xffff…fffe` 18-dec EIP-7708), topic0 hashes |
 | **Supported blockchains** | https://docs.arc.io/app-kit/references/supported-blockchains.md | App Kit mainnet/testnet tables, `Arc_Testnet` identifier, USDC-only bridge scope |
+| **CCTP V2 contracts (Circle)** | https://developers.circle.com/cctp/evm-smart-contracts | Canonical TokenMessengerV2/MessageTransmitterV2 per network (mainnet `0x28b5…cf5d` / `0x81D4…4B64`, testnets `0x8FE6…2DAA` / `0xE737…e275`) |
+| **CCTP V2 quickstart (ETH→Arc)** | https://developers.circle.com/cctp/quickstarts/transfer-usdc-ethereum-to-arc | `depositForBurn` args (`maxFee` 500 subunits, `minFinalityThreshold` 1000 = fast), Iris polling, `receiveMessage`, Forwarding Service (`depositForBurnWithHook` + `cctp-forward` hook, fee quote `?forward=true`) |
+| **CCTP technical guide** | https://developers.circle.com/cctp/references/technical-guide | Iris base URLs (`iris-api.circle.com` mainnet, `iris-api-sandbox.circle.com` testnet), finality thresholds, fee units |
+| **USDC contract addresses (Circle)** | https://developers.circle.com/stablecoins/usdc-contract-addresses | Testnet USDC per chain (Sepolia/Base/Arb/OP) used in `js/config.js` |
+| **CCTP V2 interfaces (GitHub)** | https://github.com/circlefin/evm-cctp-contracts | Exact `depositForBurn` / `receiveMessage` signatures verified against source |
 
 ## Build & integration guides
 
@@ -73,4 +78,5 @@ Update them with: `npx skills update -p -y` (project) / `-g` (global).
 
 ---
 
-*Last verified against sources: 2026-08-21.*
+*Last verified against sources: 2026-08-22 (Arc pages 2026-08-21; Circle CCTP V2
+addresses/ABI/quickstart/Iris endpoints 2026-08-22).*
