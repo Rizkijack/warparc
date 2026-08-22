@@ -91,13 +91,15 @@ class Store {
 
   /**
    * Query the event log, newest first (reverse append order).
-   * @param {{ chain?: string, address?: string, limit?: number }} q
+   * @param {{ chain?: string, address?: string, kind?: string, limit?: number }} q
    *        chain   — exact match on entry.chain
    *        address — lowercase match against entry.from OR entry.to
+   *        kind    — exact match on entry.kind ("erc20" | "system"); without it
+   *                  both dual-emitter views are returned and amounts double-count
    *        limit   — keep only the newest N (default 100)
    * @returns {object[]} matching entries, newest first
    */
-  queryEvents({ chain, address, limit = 100 } = {}) {
+  queryEvents({ chain, address, kind, limit = 100 } = {}) {
     if (this._events === null) {
       this._events = this._readEvents();
       this._eventsMtimeMs = this._statEventsMtime();
@@ -105,18 +107,29 @@ class Store {
       this._refreshEventsIfChanged();
     }
     const want = address ? address.toLowerCase() : null;
-    const filtered = this._events.filter((e) => {
-      if (chain != null && e.chain !== chain) return false;
+    const seen = new Set();
+    const filtered = [];
+    // Scan is append-ordered, so the first occurrence of a composite key wins —
+    // a crash between appending a chunk and advancing its watermark replays the
+    // chunk on restart; skipping already-yielded keys keeps queries duplicate-proof.
+    for (let i = this._events.length - 1; i >= 0; i--) {
+      const e = this._events[i];
+      if (chain != null && e.chain !== chain) continue;
       if (want !== null) {
         const from = typeof e.from === "string" ? e.from.toLowerCase() : null;
         const to = typeof e.to === "string" ? e.to.toLowerCase() : null;
-        if (from !== want && to !== want) return false;
+        if (from !== want && to !== want) continue;
       }
-      return true;
-    });
+      if (kind != null && e.kind !== kind) continue;
+      const key = `${e.chain}|${e.txHash}|${e.logIndex}|${e.emitter}`;
+      if (!key.includes("undefined")) {
+        if (seen.has(key)) continue;
+        seen.add(key);
+      }
+      filtered.push(e);
+    }
     const n = Math.max(0, limit | 0);
-    const tail = n === 0 ? [] : filtered.slice(-n);
-    return tail.reverse();
+    return n === 0 ? [] : filtered.slice(0, n);
   }
 
   /** Total indexed events, optionally per chain — cheap view over the cache. */
