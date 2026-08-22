@@ -19,6 +19,7 @@
 "use strict";
 
 const fs = require("fs");
+const crypto = require("crypto");
 const path = require("path");
 
 const TIMEOUT_MS = 10_000; // timeout per fetch via AbortController
@@ -33,12 +34,17 @@ const REF_PAGES = [
 	{
 		key: "docs/connect-to-arc",
 		url: "https://docs.arc.io/arc/references/connect-to-arc.md",
-		keywords: ["mainnet RPC", "mainnet"], // section "mainnet RPC" mulai muncul menjelang launch
+		keywords: ["mainnet RPC"], // section "mainnet RPC" mulai muncul menjelang launch
+		// NB: kata "mainnet" polos tidak dipantau — contoh viem di halaman ini selalu
+		// mengimpor `mainnet` dari viem/chains, jadi selalu FOUND (noise permanen).
 	},
 	{
 		key: "docs/contract-addresses",
 		url: "https://docs.arc.io/arc/references/contract-addresses.md",
-		keywords: ["Mainnet addresses"], // section "Mainnet addresses" ditambahkan?
+		// Section "Mainnet addresses" dianggap muncul HANYA bila disclaimer pre-launch
+		// "not yet available" sudah hilang dari halaman.
+		keywords: ["Mainnet addresses"],
+		absentKeywords: ["not yet available"],
 	},
 	{
 		key: "docs/bridges",
@@ -48,7 +54,13 @@ const REF_PAGES = [
 	{
 		key: "docs/supported-blockchains",
 		url: "https://docs.arc.io/app-kit/references/supported-blockchains.md",
-		keywords: ["Arc_Mainnet", "mainnet"], // Arc muncul/dipindah ke tabel MAINNET?
+		keywords: ["Arc_Mainnet", "mainnet", "Robinhood"], // Robinhood Chain masuk tabel CCTP/App Kit? (checklist Phase 0)
+	},
+	{
+		key: "docs/gas-and-fees",
+		url: "https://docs.arc.io/arc/references/gas-and-fees.md",
+		mode: "snapshot", // checklist: "Note any change to fee parameters" — diff per-key
+		                 // otomatis CHANGED bila sha256 body halaman berubah sedikit pun.
 	},
 ];
 
@@ -69,15 +81,24 @@ async function fetchText(url, options = {}) {
 		clearTimeout(timer);
 	}
 }
-
-// cek kehadiran kata kunci (case-insensitive)
+// cek kehadiran kata kunci (case-insensitive). Whitespace dinormalisasi karena
+// markdown sering memotong frasa di tengah baris (mis. disclaimer dalam <Note>).
 function has(text, keyword) {
-	return text.toLowerCase().includes(keyword.toLowerCase());
+	const norm = (s) => s.toLowerCase().replace(/\s+/g, " ");
+	return norm(text).includes(norm(keyword));
 }
 
-// temuan standar untuk satu kata kunci: `"<kw>": FOUND | absent`
-function keywordFinding(keyword, text) {
-	return `"${keyword}": ${has(text, keyword) ? "FOUND" : "absent"}`;
+// temuan standar untuk satu kata kunci: `"<kw>": FOUND | absent`.
+// Bila absentKeywords diberikan, FOUND mensyaratkan keyword ADA dan SEMUA
+// absentKeywords TIDAK ADA (mis. disclaimer "not yet available" masih menutupi section).
+function keywordFinding(keyword, text, absentKeywords = []) {
+	const found = has(text, keyword) && !absentKeywords.some((kw) => has(text, kw));
+	return `"${keyword}": ${found ? "FOUND" : "absent"}`;
+}
+
+// sha256 hex dari body halaman — dipakai mode snapshot untuk mendeteksi perubahan apa pun.
+function sha256Hex(text) {
+	return crypto.createHash("sha256").update(text).digest("hex");
 }
 
 // --- cek per sumber -----------------------------------------------------------
@@ -138,15 +159,23 @@ async function checkDocsScan() {
 	};
 }
 
-// 3. Cek 1 halaman referensi: fetch + cek setiap kata kunci.
+// 3. Cek 1 halaman referensi: fetch + cek setiap kata kunci (atau snapshot sha256).
 async function checkPage(page) {
 	const res = await fetchText(page.url);
 	if (!res.ok) {
 		return { key: page.key, ok: false, findings: [`error: ${res.error}`], error: res.error };
 	}
-	return { key: page.key, ok: true, findings: page.keywords.map((kw) => keywordFinding(kw, res.text)) };
+	if (page.mode === "snapshot") {
+		// Tanpa kata kunci: simpan hash body — diff per-key melapor CHANGED bila
+		// konten halaman (parameter fee, dst.) berubah sedikit pun.
+		return { key: page.key, ok: true, findings: [`sha256=${sha256Hex(res.text)}`] };
+	}
+	return {
+		key: page.key,
+		ok: true,
+		findings: page.keywords.map((kw) => keywordFinding(kw, res.text, page.absentKeywords)),
+	};
 }
-
 // 4. Blog announcement mainnet — cek kata "mainnet" & "September 16" (deteksi perubahan tanggal).
 async function checkBlog() {
 	const res = await fetchText(BLOG_URL);

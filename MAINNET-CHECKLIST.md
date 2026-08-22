@@ -146,7 +146,7 @@ ABORT criteria — stop and investigate if ANY occur:
 
 ---
 
-## Standing rules (from DEPLOY.md, still apply on mainnet)
+## Standing rules (sources: docs.arc.io — bridges, evm-differences, gas-and-fees; still apply on mainnet)
 
 - USDC is gas. ETH has no function on Arc.
 - No wrapped USDC variants, ever — CCTP burn-and-mint only.

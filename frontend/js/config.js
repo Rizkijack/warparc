@@ -232,6 +232,32 @@ const CONFIG = {
 			icon: "https://icons-ckg.pages.dev/lz-scan/protocols/ether.svg"
 		}
 	},
+	// CCTP V2 registry — canonical values from developers.circle.com/cctp/references/
+	// contract-addresses + contract-interfaces (fetched 2026-08-22). Contract addresses
+	// are shared per network tier (Circle bridges testnet<->testnet, mainnet<->mainnet).
+	cctp: {
+		domains: {
+			ethereum: 0,
+			optimism: 2,
+			arbitrum: 3,
+			base: 6,
+			robinhood: null, // not in the CCTP domain registry
+			arc: 26,
+			arcMainnet: null // UNVERIFIED until the Arc mainnet domain publishes
+		},
+		contracts: {
+			testnet: {
+				tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+				messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275"
+			},
+			mainnet: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		attestationApi: "https://iris-api.circle.com/v2/attestations",
+		MESSAGE_SENT_TOPIC0: "0x2fa9ca894982930190727e75500a97d8dc500233a5065e0f3126c48fbe0343c0"
+	},
 	lzScan: "https://layerzeroscan.com"
 };
 
@@ -265,4 +291,15 @@ const OFT_ABI = [
 	"function decimals() external view returns (uint8)",
 	"function symbol() external view returns (string)",
 	"function name() external view returns (string)"
+];
+
+const TOKEN_MESSENGER_V2_ABI = [
+	// Canonical CCTP V2 burn call — the real V2 contract takes 7 args per
+	// developers.circle.com/cctp/references/contract-interfaces (docs.arc.io examples
+	// show a simplified legacy 4-arg form). minFinalityThreshold: 1000=Fast, 2000=Standard(finalized).
+	"function depositForBurn(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold) external returns (uint64 nonce)"
+];
+
+const MESSAGE_TRANSMITTER_V2_ABI = [
+	"function receiveMessage(bytes message, bytes attestation) external returns (bool)"
 ];

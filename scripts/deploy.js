@@ -152,7 +152,7 @@ function getExplorerUrl(network, addr) {
 		arbitrum: `https://arbiscan.io/address/${addr}`,
 		optimism: `https://optimistic.etherscan.io/address/${addr}`,
 		robinhood: `https://robinhoodchain.blockscout.com/address/${addr}`,
-		arc: `https://arcscan.app/address/${addr}`
+		arc: `https://testnet.arcscan.app/address/${addr}`
 	};
 	return explorers[network] || addr;
 }
