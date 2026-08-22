@@ -3,7 +3,7 @@
 // an unknown value from memory — re-fetch from the official docs instead.
 //
 // Legacy LayerZero V2 OFT data (chains.*.layerZero, OFT_ABI) is DEPRECATED and
-// kept for the ABT demo path only (DEPLOY.md Appendix A).
+// kept for the ABT demo path only (deprecated legacy OFT path).
 const CONFIG = {
 	bridgeToken: {
 		deployments: {
@@ -170,6 +170,7 @@ const CONFIG = {
 			// Show balances via the 6-dec ERC-20 view; never sum the two views.
 			network: "testnet",
 			chainId: 5042002,
+			eid: 30417, // UNVERIFIED against official LayerZero registry — confirm before mainnet
 			cctpDomain: 26,
 			name: "Arc Testnet",
 			shortName: "ARC",
@@ -238,7 +239,7 @@ const CONFIG = {
 			name: "Arbitrum Sepolia",
 			shortName: "Arb Sepolia",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://sepolia-rollup.arbitrum.io/rpc/v1",
+			rpcUrl: "https://sepolia.arbitrum.io",
 			explorer: "https://sepolia.arbiscan.io",
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/arbitrum.svg",
 			cctp: {
@@ -269,6 +270,7 @@ const CONFIG = {
 			disabled: true,
 			network: "mainnet",
 			chainId: null,           // ?TBD?
+			eid: null,               // UNVERIFIED — do NOT set from testnet value
 			cctpDomain: null,        // ?TBD?
 			name: "Arc Mainnet",
 			shortName: "Arc",
@@ -355,6 +357,32 @@ const CONFIG = {
 		// infra submits the destination mint. Fee quote: /v2/burn/USDC/fees/...?forward=true
 		forwardHook: "0x636374702d666f72776172640000000000000000000000000000000000000000"
 	},
+	// CCTP V2 registry — canonical values from developers.circle.com/cctp/references/
+	// contract-addresses + contract-interfaces (fetched 2026-08-22). Contract addresses
+	// are shared per network tier (Circle bridges testnet<->testnet, mainnet<->mainnet).
+	cctp: {
+		domains: {
+			ethereum: 0,
+			optimism: 2,
+			arbitrum: 3,
+			base: 6,
+			robinhood: null, // not in the CCTP domain registry
+			arc: 26,
+			arcMainnet: null // UNVERIFIED until the Arc mainnet domain publishes
+		},
+		contracts: {
+			testnet: {
+				tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+				messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275"
+			},
+			mainnet: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		attestationApi: "https://iris-api.circle.com/v2/attestations",
+		MESSAGE_SENT_TOPIC0: "0x2fa9ca894982930190727e75500a97d8dc500233a5065e0f3126c48fbe0343c0"
+	},
 	lzScan: "https://layerzeroscan.com"
 };
 
@@ -378,7 +406,7 @@ const ERC20_ABI = [
 // Circle CCTP V2 — verified against circlefin/evm-cctp-contracts
 // (src/v2/TokenMessengerV2.sol, src/interfaces/IReceiver.sol)
 const TOKEN_MESSENGER_V2_ABI = [
-	"function depositForBurn(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold) external",
+	"function depositForBurn(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold) external returns (uint64 nonce)",
 	"function depositForBurnWithHook(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold, bytes calldata hookData) external"
 ];
 
@@ -402,3 +430,5 @@ const OFT_ABI = [
 	"function symbol() external view returns (string)",
 	"function name() external view returns (string)"
 ];
+
+

@@ -15,7 +15,7 @@
     "backend:server": "node backend/src/index.js --role=server",
     "backend:smoke": "node backend/test/smoke.js",
     "backend:integration": "node backend/test/integration-smoke.js",
-    "dev": "npx -y serve@14.2.5 . -l 8931"
+    "dev": "npx -y serve@14.2.5 frontend -l 8931"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.0",
