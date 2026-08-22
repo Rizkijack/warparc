@@ -6,8 +6,10 @@ const DEPLOYMENTS = {
 	// base: "0x...",
 	// arbitrum: "0x...",
 	// optimism: "0x...",
-	// robinhood: "0x...",
-	// arc: "0x..."
+	// robinhood: "0x..."
+	// NOTE: no `arc` entry — intentionally absent/unused. Arc is CCTP-only
+	// (no OFT peer); see MAINNET-CHECKLIST.md Phase 3 pt 3 and the
+	// disabled-contract hard-block below.
 };
 
 const ADAPTER_DEPLOYMENTS = {
@@ -24,7 +26,7 @@ const CHAIN_EIDS = {
 	arbitrum: 30110,
 	optimism: 30111,
 	robinhood: 30416,
-	arc: 30417
+	arc: 30417 // UNVERIFIED against official LayerZero registry — confirm before mainnet
 };
 
 // Returns the bytes32 left-padded address

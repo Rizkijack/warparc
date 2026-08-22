@@ -4,7 +4,7 @@
 // Forwarding Service: approve → depositForBurnWithHook("cctp-forward") → Circle
 // submits the destination mint (no destination gas needed). See the official
 // quickstart: developers.circle.com/cctp/quickstarts/transfer-usdc-ethereum-to-arc
-// The ABT token keeps the DEPRECATED LayerZero OFT path (DEPLOY.md Appendix A).
+// The ABT token keeps the DEPRECATED legacy LayerZero OFT path (ABT demo only).
 const HISTORY_KEY = "warparc:txHistory";
 const PENDING_KEY = "warparc:pendingCctp";
 
@@ -409,7 +409,7 @@ function renderContractList(chainKey) {
 	const c = chain.cctp || {};
 	const entries = [];
 	if (getSelectedToken() === "ABT") {
-		// Legacy OFT deployments (DEPLOY.md Appendix A) — addresses are filled
+		// Legacy LayerZero OFT deployments (deprecated; ABT demo only) — addresses are filled
 		// by scripts/deploy-all.js; null means not deployed on this chain.
 		entries.push(["BridgeToken (OFT)", CONFIG.bridgeToken.deployments[chainKey]]);
 		entries.push(["BridgeAdapter (OFT)", CONFIG.bridgeAdapter.deployments[chainKey]]);
@@ -590,7 +590,7 @@ async function estimateGas() {
 			return;
 		}
 
-		// ABT — legacy LayerZero OFT quote (DEPLOY.md Appendix A)
+		// ABT — deprecated legacy LayerZero OFT quote (ABT demo only)
 		const contract = getBridgeContract(fromKey, state.provider, token);
 		if (!contract) { elEst.textContent = "N/A (deploy first)"; return; }
 

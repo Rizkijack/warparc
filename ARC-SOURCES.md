@@ -1,7 +1,7 @@
 # WarpArc — Official Arc Data Sources
 
 Single source of truth for every Arc value used in this repo. All facts in
-`DEPLOY.md`, `MAINNET-CHECKLIST.md`, `frontend/js/config.js`, and `hardhat.config.js`
+`MAINNET-CHECKLIST.md`, `frontend/js/config.js`, and `hardhat.config.js`
 trace back to the URLs below.
 
 **Rule:** never fill an unknown Arc value from memory or assumption — always
@@ -65,8 +65,9 @@ UNVERIFIED instead of guessing.
 ## Installed skills (local mirror of official guidance)
 
 Circle's official skill pack (repo: https://github.com/circlefin/skills) is
-installed both globally (`~/.agents/skills/`) and in this repo (`.agents/skills/`,
-locked via `skills-lock.json`). Key skills:
+installed globally (`~/.agents/skills/`) and at the project root checkout
+`G:/PROJECT/warparc/` (`.agents/skills/`, one level above this worktree; locked
+via `skills-lock.json`). Key skills:
 
 - `use-arc` — chain config, RPC setup, deployment, USDC bridging on Arc
 - `bridge-stablecoin` — App Kit / Bridge Kit bridging flows (CCTP)
@@ -78,5 +79,5 @@ Update them with: `npx skills update -p -y` (project) / `-g` (global).
 
 ---
 
-*Last verified against sources: 2026-08-22 (Arc pages 2026-08-21; Circle CCTP V2
+*Last verified against sources: 2026-08-22 (Arc pages re-fetched 2026-08-22 via Arc MCP; Circle CCTP V2
 addresses/ABI/quickstart/Iris endpoints 2026-08-22).*

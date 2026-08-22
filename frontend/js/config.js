@@ -3,7 +3,7 @@
 // an unknown value from memory — re-fetch from the official docs instead.
 //
 // Legacy LayerZero V2 OFT data (chains.*.layerZero, OFT_ABI) is DEPRECATED and
-// kept for the ABT demo path only (DEPLOY.md Appendix A).
+// kept for the ABT demo path only (deprecated legacy OFT path).
 const CONFIG = {
 	bridgeToken: {
 		deployments: {
