@@ -24,7 +24,7 @@ const IRIS_TIMEOUT_MS = 600_000; // 10 min cap for attestation polling
 const POLL_MS = 5_000;           // far below Iris's 40 req/s limit
 
 // --- load frontend CONFIG (single source of truth for chains/addresses) ------
-const configSrc = fs.readFileSync(path.join(__dirname, "..", "js", "config.js"), "utf8");
+const configSrc = fs.readFileSync(path.join(__dirname, "..", "frontend", "js", "config.js"), "utf8");
 const { CONFIG, TOKEN_MESSENGER_V2_ABI, MESSAGE_TRANSMITTER_V2_ABI, ERC20_ABI } =
 	(0, eval)(configSrc + "\n;({ CONFIG, TOKEN_MESSENGER_V2_ABI, MESSAGE_TRANSMITTER_V2_ABI, ERC20_ABI });");
 
@@ -61,9 +61,9 @@ async function quoteMaxFee() {
 	const data = await res.json();
 	const fast = (Array.isArray(data) ? data : [data]).find(e => e && Number(e.finalityThreshold) === 1000);
 	if (!fast || fast.minimumFee == null) throw new Error(`unexpected fee quote ${JSON.stringify(data)}`);
-	const minFee = BigInt(fast.minimumFee);
-	const buffered = minFee * 10n;
-	return { minFee, maxFee: buffered > 500n ? buffered : 500n };
+	const minFee = ethers.BigNumber.from(BigInt(fast.minimumFee));
+	const buffered = BigInt(fast.minimumFee) * 10n;
+	return { minFee, maxFee: ethers.BigNumber.from(buffered > 500n ? buffered : 500n) };
 }
 
 async function pollAttestation(burnHash) {
@@ -117,16 +117,17 @@ async function main() {
 	log(`USDC balance on ${fromChain.shortName}: ${ethers.utils.formatUnits(balance, 6)}`);
 	// On Arc, USDC is also the GAS token — budget for burn + mint gas on top of
 	// amount + fee cap (1.5M gas × 30 Gwei ≈ 0.045 USDC per tx, 2 txs worst case).
-	const gasBudget = fromKey === "arc" ? ethers.utils.parseUnits("0.1", 6) : 0;
-	if (balance.lt(amount + maxFee + gasBudget)) {
-		fail(`insufficient USDC: need ${ethers.utils.formatUnits(amount + maxFee + gasBudget, 6)} (amount + fee cap${fromKey === "arc" ? " + Arc gas" : ""}) — use https://faucet.circle.com`);
+	const gasBudget = fromKey === "arc" ? ethers.utils.parseUnits("0.1", 6) : ethers.constants.Zero;
+	const need = amount.add(maxFee).add(gasBudget);
+	if (balance.lt(need)) {
+		fail(`insufficient USDC: need ${ethers.utils.formatUnits(need, 6)} (amount + fee cap${fromKey === "arc" ? " + Arc gas" : ""}) — use https://faucet.circle.com`);
 	}
 
 	// 1. approve
 	const messengerAddr = fromChain.cctp.tokenMessengerV2;
-	if ((await usdc.allowance(wallet.address, messengerAddr)).lt(amount + maxFee)) {
+	if ((await usdc.allowance(wallet.address, messengerAddr)).lt(amount.add(maxFee))) {
 		log("approving TokenMessengerV2...");
-		const atx = await usdc.approve(messengerAddr, amount + maxFee);
+		const atx = await usdc.approve(messengerAddr, amount.add(maxFee));
 		await atx.wait();
 		log(`approved: ${atx.hash}`);
 	}

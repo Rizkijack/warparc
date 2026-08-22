@@ -471,7 +471,7 @@ async function copyAddr(addr) {
 // feeExecuted at destination is capped by maxFee.
 // Forwarding mode REQUIRES a live quote: its fee is orders of magnitude above
 // the manual minimum, so no hardcoded fallback is ever used (returns null).
-async function quoteBurnFee(fromChain, toChain, forward) {
+async function quoteBurnFee(fromChain, toChain, forward, amountSubunits = 0n) {
 	try {
 		const url = `${CONFIG.iris[fromChain.network]}/v2/burn/USDC/fees/${fromChain.cctpDomain}/${toChain.cctpDomain}${forward ? "?forward=true" : ""}`;
 		const res = await fetch(url);
@@ -479,15 +479,20 @@ async function quoteBurnFee(fromChain, toChain, forward) {
 			const data = await res.json();
 			const q = extractFastQuote(data);
 			if (q) {
+				// Protocol component scales with the burn amount — canonical quickstart
+				// Step 4 math: protocolFee = amount × minimumFee × 100 / 1e6
+				// (developers.circle.com/cctp/quickstarts/transfer-usdc-ethereum-to-arc).
+				const protocolFee = (amountSubunits * BigInt(Math.round(Number(q.minimumFee) * 100))) / 1_000_000n;
 				if (forward) {
 					if (!q.forwardFee) return null; // forwarding not quoted for this route
-					// maxFee cap = minimum + 1.5× quoted-high; the executed fee is
-					// deducted from the transferred amount by Circle.
-					const maxFee = q.minimumFee + q.forwardFee.high * 3n / 2n;
-					return { maxFee, forwardFee: q.forwardFee.high, minimumFee: q.minimumFee };
+					// maxFee cap = forwarding fee (quoted med) + protocol component,
+					// mirroring the quickstart's maxFee = forwardFee + protocolFee.
+					const maxFee = BigInt(q.forwardFee.med) + protocolFee;
+					return { maxFee, forwardFee: q.forwardFee.med, minimumFee: q.minimumFee };
 				}
 				const buffered = q.minimumFee * 10n;
-				return { maxFee: buffered > 500n ? buffered : 500n, forwardFee: null, minimumFee: q.minimumFee };
+				const maxFee = buffered > protocolFee + 500n ? buffered : protocolFee + 500n;
+				return { maxFee, forwardFee: null, minimumFee: q.minimumFee };
 			}
 		}
 	} catch { /* fall through */ }
@@ -543,7 +548,7 @@ async function estimateGas() {
 			if (!usdcAddr || !fromChain.cctp) { elEst.textContent = "N/A"; if (elFeeUsdc) elFeeUsdc.textContent = "N/A"; return; }
 
 			const forward = isForwardEnabled();
-			const quote = await quoteBurnFee(fromChain, toChain, forward);
+			const quote = await quoteBurnFee(fromChain, toChain, forward, 1_000_000n);
 			if (isStale()) return;
 			if (elFeeUsdc) {
 				if (!quote) {
@@ -688,7 +693,7 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 		? { maxFeePerGas: ethers.parseUnits("30", "gwei"), maxPriorityFeePerGas: 0n }
 		: {};
 
-	const quote = await quoteBurnFee(fromChain, toChain, forward);
+	const quote = await quoteBurnFee(fromChain, toChain, forward, parsedAmount);
 	if (!quote) {
 		toast("Forwarding fee quote unavailable — turn off Forwarding Service or retry", "error");
 		return;
@@ -741,9 +746,13 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 		addTxEntry(burnTxId, `Burn ${amount} USDC on ${fromChain.shortName}`, "pending", fromKey);
 		const messenger = new ethers.Contract(messengerAddr, TOKEN_MESSENGER_V2_ABI, state.signer);
 		const mintRecipient = ethers.zeroPadValue(state.account, 32);
-		// destinationCaller = zero bytes32 → any address may submit receiveMessage
+		// destinationCaller = zero bytes32 → any address may submit receiveMessage.
+		// Forward path burns totalAmount = amount + maxFee (quickstart Step 3.2/3.3)
+		// so the recipient receives the nominal amount after Circle's fee deduction;
+		// the direct-mint path burns the plain amount exactly like the quickstart.
+		const burnAmount = forward ? parsedAmount + quote.maxFee : parsedAmount;
 		const burnArgs = [
-			parsedAmount,
+			burnAmount,
 			toChain.cctpDomain,
 			mintRecipient,
 			usdcAddr,

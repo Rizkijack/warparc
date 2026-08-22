@@ -72,29 +72,39 @@ function printLog(entry) {
 }
 
 async function fetchRange(fromBlock, toBlock) {
-	const logs = await rpc("eth_getLogs", [{
-		fromBlock: "0x" + fromBlock.toString(16),
-		toBlock: "0x" + toBlock.toString(16),
-		address: [ERC20_EMITTER, SYSTEM_EMITTER],
-		topics: [TRANSFER_TOPIC]
-	}]);
+	try {
+		const logs = await rpc("eth_getLogs", [{
+			fromBlock: "0x" + fromBlock.toString(16),
+			toBlock: "0x" + toBlock.toString(16),
+			address: [ERC20_EMITTER, SYSTEM_EMITTER],
+			topics: [TRANSFER_TOPIC]
+		}]);
 
-	for (const log of logs) {
-		const blockNum = parseInt(log.blockNumber, 16);
-		const key = `${blockNum}:${log.transactionHash}:${log.logIndex}`;
-		if (seen.has(key)) continue;
-		seen.set(key, true);
+		for (const log of logs) {
+			const blockNum = parseInt(log.blockNumber, 16);
+			const key = `${blockNum}:${log.transactionHash}:${log.logIndex}`;
+			if (seen.has(key)) continue;
+			seen.set(key, true);
 
-		const info = classify(log.address);
-		if (!info) continue; // unknown emitter — not one of the two USDC emitters
-		const from = topicToAddress(log.topics[1]);
-		const to = topicToAddress(log.topics[2]);
-		if (watchAddress && from !== watchAddress && to !== watchAddress) continue;
+			const info = classify(log.address);
+			if (!info) continue; // unknown emitter — not one of the two USDC emitters
+			const from = topicToAddress(log.topics[1]);
+			const to = topicToAddress(log.topics[2]);
+			if (watchAddress && from !== watchAddress && to !== watchAddress) continue;
 
-		const raw = BigInt(log.data);
-		// 18-dec native view = 6-dec ERC-20 view × 1e12; normalize both to USDC units
-		const amountHuman = Number(info.kind === "ERC20" ? raw : raw / 10n ** 12n) / 1e6;
-		printLog({ block: blockNum, kind: info.kind, amountHuman, from, to, txHash: log.transactionHash });
+			const raw = BigInt(log.data);
+			// 18-dec native view = 6-dec ERC-20 view × 1e12; normalize both to USDC units
+			const amountHuman = Number(info.kind === "ERC20" ? raw : raw / 10n ** 12n) / 1e6;
+			printLog({ block: blockNum, kind: info.kind, amountHuman, from, to, txHash: log.transactionHash });
+		}
+	} catch (e) {
+		// Arc caps eth_getLogs results (20000); on a range-too-large error split the
+		// window in half and retry each side (server hint names the allowed span).
+		if (fromBlock === toBlock || !/-32602|max results|max allowed range/i.test(e.message)) throw e;
+		const mid = Math.floor((fromBlock + toBlock) / 2);
+		console.error(`[watch-usdc] range ${fromBlock}-${toBlock} too large — splitting at ${mid}`);
+		await fetchRange(fromBlock, mid);
+		await fetchRange(mid + 1, toBlock);
 	}
 }
 

@@ -1,11 +1,9 @@
-# Vercel serves ONLY the static frontend (index.html + js/ + css/).
+# Vercel deploys frontend/ (vercel.json outputDirectory: "frontend").
 # Everything below is backend tooling / local docs / build internals that must
-# never be publicly downloadable from the deployment root (vercel.json sets
-# outputDirectory "." — this file is the guard rail for that).
+# never be uploaded with the deployment — but NEVER ignore frontend/ itself.
 contracts/
 scripts/
 appkit/
-frontend/
 artifacts/
 cache/
 test-npm/
