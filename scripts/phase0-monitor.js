@@ -19,6 +19,7 @@
 "use strict";
 
 const crypto = require("crypto");
+const fs = require("fs");
 const path = require("path");
 
 const TIMEOUT_MS = 10_000; // timeout per fetch via AbortController

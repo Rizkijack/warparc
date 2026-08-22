@@ -39,3 +39,6 @@ ARC-REFERENCE.md
 agent/
 skills-lock.json
 
+
+# Backend runtime data (events + watermarks + relayer jobs — local only)
+backend/data/

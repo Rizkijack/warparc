@@ -1,6 +1,9 @@
 /**
  * USDC event indexer for Arc (DEPLOY.md §6 — event indexing).
  *
+ * QUICK CLI — the production indexer lives in backend/src/indexer.js
+ * (dual-emitter + watermark persistence + HTTP API via `npm run backend`).
+ * Use this script for a fast terminal view; do not extend it.
  * Every native USDC movement on Arc emits TWO Transfer logs for one balance
  * change (docs.arc.io/arc/references/usdc-system-events):
  *   - ERC-20 emitter  0x3600000000000000000000000000000000000000  (6 decimals)

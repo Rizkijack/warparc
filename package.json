@@ -9,13 +9,16 @@
     "monitor:phase0": "node scripts/phase0-monitor.js",
     "cctp:test": "node scripts/cctp-test.js",
     "watch:usdc": "node scripts/watch-usdc.js",
+    "backend": "node backend/src/index.js",
+    "backend:indexer": "node backend/src/index.js --role=indexer",
+    "backend:relayer": "node backend/src/index.js --role=relayer",
+    "backend:server": "node backend/src/index.js --role=server",
+    "backend:smoke": "node backend/test/smoke.js",
+    "backend:integration": "node backend/test/integration-smoke.js",
     "dev": "npx -y serve@14.2.5 . -l 8931"
   },
   "devDependencies": {
-    "@layerzerolabs/lz-evm-oapp-v2": "^3.0.0",
-    "@layerzerolabs/lz-evm-protocol-v2": "^3.0.0",
     "@nomiclabs/hardhat-ethers": "^2.2.0",
-    "@openzeppelin/contracts": "^4.9.0",
     "dotenv": "^16.4.0",
     "ethers": "^5.7.0",
     "hardhat": "^2.22.0"

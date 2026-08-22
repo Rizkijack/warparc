@@ -162,170 +162,6 @@ const CONFIG = {
 				deadDVN: "0x6788f52439aca6bff597d3eec2dc9a44b8fee842",
 				endpointV2View: "0xaab5a48cfc03efa9cc34a2c1aacccb84b4b770e4",
 				lzExecutor: "0x41bdb4aa4a63a5b2efc531858d3118392b1a1c3d"
-// WarpArc configuration — canonical USDC route is Circle CCTP V2 (burn-and-mint).
-// Every Arc value traces to https://docs.arc.io (see ARC-SOURCES.md). Never fill
-// an unknown value from memory — re-fetch from the official docs instead.
-//
-// Legacy LayerZero V2 OFT data (chains.*.layerZero, OFT_ABI) is DEPRECATED and
-// kept for the ABT demo path only (DEPLOY.md Appendix A).
-const CONFIG = {
-	bridgeToken: {
-		deployments: {
-			ethereum:  null,
-			base:      null,
-			arbitrum:  null,
-			optimism:  null,
-			robinhood: null,
-			arc:       null
-		},
-		decimals: 18,
-		symbol: "ABT",
-		name: "ARC Bridge Token",
-		icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='10' height='10' rx='2' fill='%239b6ef0'/%3E%3Crect x='18' y='4' width='10' height='10' rx='2' fill='%239b6ef0' opacity='0.5'/%3E%3Crect x='4' y='18' width='10' height='10' rx='2' fill='%2310b981'/%3E%3Crect x='18' y='18' width='10' height='10' rx='2' fill='%2310b981' opacity='0.5'/%3E%3C/svg%3E"
-	},
-	bridgeAdapter: {
-		deployments: {
-			ethereum:  null,
-			base:      null,
-			arbitrum:  null,
-			optimism:  null,
-			robinhood: null,
-			arc:       null
-		},
-		decimals: 6,
-		symbol: "USDC",
-		name: "ARC Bridge USDC Adapter",
-		icon: "https://icons-ckg.pages.dev/lz-scan/protocols/usd-coin.svg"
-	},
-	chains: {
-		ethereum: {
-			network: "mainnet",
-			chainId: 1,
-			cctpDomain: 0,
-			eid: 30101,
-			name: "Ethereum Mainnet",
-			shortName: "Ethereum",
-			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://rpc.ankr.com/eth",
-			explorer: "https://etherscan.io",
-			icon: "https://icons-ckg.pages.dev/lz-scan/networks/ethereum.svg",
-			cctp: {
-				// Canonical CCTP V2 (https://developers.circle.com/cctp/evm-smart-contracts)
-				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
-				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
-			},
-			layerZero: {
-				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
-				sendUln302: "0xbb2ea70c9e858123480642cf96acbcce1372dce1",
-				receiveUln302: "0xc02ab410f0734efa3f14628780e6e695156024c2",
-				executor: "0x173272739bd7aa6e4e214714048a9fe699453059",
-				blockedMessageLib: "0x1ccbf0db9c192d969de57e25b3ff09a25bb1d862",
-				deadDVN: "0x747c741496a507e4b404b50463e691a8d692f6ac",
-				endpointV2View: "0x8fafc84caea1cef8475cb5cb344658d160c9ce0b",
-				lzExecutor: "0xbf2e102fb382d6ec52823c8f81a45e9caa951320",
-				readLib1002: "0x74f55bc2a79a27a0bf1d1a35db5d0fc36b9fdb9d"
-			}
-		},
-		base: {
-			network: "mainnet",
-			chainId: 8453,
-			cctpDomain: 6,
-			eid: 30184,
-			name: "Base Mainnet",
-			shortName: "Base",
-			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://mainnet.base.org",
-			explorer: "https://basescan.org",
-			icon: "https://icons-ckg.pages.dev/lz-scan/networks/base.svg",
-			cctp: {
-				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
-				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
-			},
-			layerZero: {
-				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
-				sendUln302: "0xb5320b0b3a13cc860893e2bd79fcd7e13484dda2",
-				receiveUln302: "0xc70ab6f32772f59fbfc23889caf4ba3376c84baf",
-				executor: "0x2cca08ae69e0c44b18a57ab2a87644234daebae4",
-				blockedMessageLib: "0x1ccbf0db9c192d969de57e25b3ff09a25bb1d862",
-				deadDVN: "0x6498b0632f3834d7647367334838111c8c889703",
-				endpointV2View: "0x5e2a88c385b86f00eb8f4d9f861649a6feb93f24",
-				lzExecutor: "0x125bd5c6c5066dcb4bb448b6ea8b9234ed60e160"
-			}
-		},
-		arbitrum: {
-			network: "mainnet",
-			chainId: 42161,
-			cctpDomain: 3,
-			eid: 30110,
-			name: "Arbitrum One",
-			shortName: "Arbitrum",
-			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://arb1.arbitrum.io/rpc",
-			explorer: "https://arbiscan.io",
-			icon: "https://icons-ckg.pages.dev/lz-scan/networks/arbitrum.svg",
-			cctp: {
-				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
-				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
-			},
-			layerZero: {
-				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
-				sendUln302: "0x975bcd720be66659e3eb3c0e4f1866a3020e493a",
-				receiveUln302: "0x7b9e184e07a6ee1ac23eae0fe8d6be2f663f05e6",
-				executor: "0x31cae3b7fb82d847621859fb1585353c5720660d",
-				blockedMessageLib: "0x1ccbf0db9c192d969de57e25b3ff09a25bb1d862",
-				deadDVN: "0x758c419533ad64ce9d3413bc8d3a97b026098ec1",
-				endpointV2View: "0x5440e2097c41f8e0a8551521d569c71de70fde23",
-				lzExecutor: "0x6862ded20594da16b7cbb282894fae23043a32bc"
-			}
-		},
-		optimism: {
-			network: "mainnet",
-			chainId: 10,
-			cctpDomain: 2,
-			eid: 30111,
-			name: "Optimism Mainnet",
-			shortName: "Optimism",
-			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://mainnet.optimism.io",
-			explorer: "https://optimistic.etherscan.io",
-			icon: "https://icons-ckg.pages.dev/lz-scan/networks/optimism.svg",
-			cctp: {
-				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
-				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
-			},
-			layerZero: {
-				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
-				sendUln302: "0x1322871e4ab09bc7f5717189434f97bbd9546e95",
-				receiveUln302: "0x3c4962ff6258dcfcafd23a814237b7d6eb712063",
-				executor: "0x2d2ea0697bdbede3f01553d2ae4b8d0c486b666e",
-				blockedMessageLib: "0x1ccbf0db9c192d969de57e25b3ff09a25bb1d862",
-				deadDVN: "0xebc3065003e67caac747836da272d9e5271a37e1",
-				endpointV2View: "0xecee8b581960634af89f467ae624ff468a9db14b",
-				lzExecutor: "0xb02763373589c440ed6ff32f47cf4b81ca285d01"
-			}
-		},
-		robinhood: {
-			// NOT in Circle's published CCTP domain list — excluded from USDC bridging
-			// until officially confirmed (watched in MAINNET-CHECKLIST Phase 0).
-			// Legacy LayerZero data only; no USDC route exists here today.
-			network: "mainnet",
-			chainId: 4663,
-			eid: 30416,
-			name: "Robinhood Chain",
-			shortName: "RHC",
-			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://rpc.mainnet.chain.robinhood.com",
-			explorer: "https://robinhoodchain.blockscout.com",
-			icon: "https://icons-ckg.pages.dev/lz-scan/networks/robinhood.svg",
-			layerZero: {
-				endpointV2: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b",
-				sendUln302: "0xc39161c743d0307eb9bcc9fef03eeb9dc4802de7",
-				receiveUln302: "0xe1844c5d63a9543023008d332bd3d2e6f1fe1043",
-				executor: "0x4208d6e27538189bb48e603d6123a94b8abe0a0b",
-				blockedMessageLib: "0xc1ce56b2099ca68720592583c7984cab4b6d7e7a",
-				deadDVN: "0x6788f52439aca6bff597d3eec2dc9a44b8fee842",
-				endpointV2View: "0xaab5a48cfc03efa9cc34a2c1aacccb84b4b770e4",
-				lzExecutor: "0x41bdb4aa4a63a5b2efc531858d3118392b1a1c3d"
 			}
 		},
 		arc: {
@@ -334,7 +170,6 @@ const CONFIG = {
 			// Show balances via the 6-dec ERC-20 view; never sum the two views.
 			network: "testnet",
 			chainId: 5042002,
-			eid: 30417, // UNVERIFIED against official LayerZero registry — confirm before mainnet
 			cctpDomain: 26,
 			name: "Arc Testnet",
 			shortName: "ARC",
@@ -403,7 +238,7 @@ const CONFIG = {
 			name: "Arbitrum Sepolia",
 			shortName: "Arb Sepolia",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://sepolia.arbitrum.io",
+			rpcUrl: "https://sepolia-rollup.arbitrum.io/rpc/v1",
 			explorer: "https://sepolia.arbiscan.io",
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/arbitrum.svg",
 			cctp: {
@@ -434,7 +269,6 @@ const CONFIG = {
 			disabled: true,
 			network: "mainnet",
 			chainId: null,           // ?TBD?
-			eid: null,               // UNVERIFIED — do NOT set from testnet value
 			cctpDomain: null,        // ?TBD?
 			name: "Arc Mainnet",
 			shortName: "Arc",
@@ -521,32 +355,6 @@ const CONFIG = {
 		// infra submits the destination mint. Fee quote: /v2/burn/USDC/fees/...?forward=true
 		forwardHook: "0x636374702d666f72776172640000000000000000000000000000000000000000"
 	},
-	// CCTP V2 registry — canonical values from developers.circle.com/cctp/references/
-	// contract-addresses + contract-interfaces (fetched 2026-08-22). Contract addresses
-	// are shared per network tier (Circle bridges testnet<->testnet, mainnet<->mainnet).
-	cctp: {
-		domains: {
-			ethereum: 0,
-			optimism: 2,
-			arbitrum: 3,
-			base: 6,
-			robinhood: null, // not in the CCTP domain registry
-			arc: 26,
-			arcMainnet: null // UNVERIFIED until the Arc mainnet domain publishes
-		},
-		contracts: {
-			testnet: {
-				tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
-				messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275"
-			},
-			mainnet: {
-				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
-				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
-			}
-		},
-		attestationApi: "https://iris-api.circle.com/v2/attestations",
-		MESSAGE_SENT_TOPIC0: "0x2fa9ca894982930190727e75500a97d8dc500233a5065e0f3126c48fbe0343c0"
-	},
 	lzScan: "https://layerzeroscan.com"
 };
 
@@ -570,7 +378,7 @@ const ERC20_ABI = [
 // Circle CCTP V2 — verified against circlefin/evm-cctp-contracts
 // (src/v2/TokenMessengerV2.sol, src/interfaces/IReceiver.sol)
 const TOKEN_MESSENGER_V2_ABI = [
-	"function depositForBurn(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold) external returns (uint64 nonce)",
+	"function depositForBurn(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold) external",
 	"function depositForBurnWithHook(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold, bytes calldata hookData) external"
 ];
 
@@ -594,5 +402,3 @@ const OFT_ABI = [
 	"function symbol() external view returns (string)",
 	"function name() external view returns (string)"
 ];
-
-

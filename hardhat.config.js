@@ -63,7 +63,7 @@ module.exports = {
 			// mismatched guess can never slip through the chainId validator. Empty url =
 			// fail closed: any run against this network errors out at connect time.
 			url: process.env.ARC_MAINNET_RPC || "",
-			accounts: [PRIVATE_KEY]
+			accounts: [ACTIVE_KEY]
 			// chainId: TBD — do NOT hardcode (MAINNET-CHECKLIST Phase 2)
 			// gasPrice: set on launch day to >= mainnet min base fee + margin (testnet floor 20 Gwei, used 30)
 		},

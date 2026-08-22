@@ -24,7 +24,7 @@ const IRIS_TIMEOUT_MS = 600_000; // 10 min cap for attestation polling
 const POLL_MS = 5_000;           // far below Iris's 40 req/s limit
 
 // --- load frontend CONFIG (single source of truth for chains/addresses) ------
-const configSrc = fs.readFileSync(path.join(__dirname, "..", "js", "config.js"), "utf8");
+const configSrc = fs.readFileSync(path.join(__dirname, "..", "frontend", "js", "config.js"), "utf8");
 const { CONFIG, TOKEN_MESSENGER_V2_ABI, MESSAGE_TRANSMITTER_V2_ABI, ERC20_ABI } =
 	(0, eval)(configSrc + "\n;({ CONFIG, TOKEN_MESSENGER_V2_ABI, MESSAGE_TRANSMITTER_V2_ABI, ERC20_ABI });");
 
