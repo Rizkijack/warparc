@@ -2,7 +2,8 @@ const { ethers } = require("ethers");
 const urls = {
   ethereum: "https://ethereum-rpc.publicnode.com",
   robinhood: "https://rpc.mainnet.chain.robinhood.com",
-  arc: "https://rpc.arc.circle.io"
+  // Arc Testnet — official: https://docs.arc.io/arc/references/connect-to-arc
+  arc: "https://rpc.testnet.arc.io"
 };
 (async () => {
   for (const [n, u] of Object.entries(urls)) {

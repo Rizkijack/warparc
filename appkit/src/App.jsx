@@ -3,7 +3,12 @@
 // Unified tab: appKit.unifiedBalance.*  — Gateway deposit / spend / getBalances
 // Patterns follow Circle's official adapter guides (browser wallet via
 // createViemAdapterFromProvider; switch to the SOURCE chain before signing;
-// useForwarder so the user never needs gas on the destination chain).
+// useForwarder so the user never needs gas on the destination chain — for
+// Unified-Balance spends; kit.bridge submits the destination mint itself).
+//
+// NOTE: kit.bridge() does NOT throw for step failures — it resolves with
+// BridgeResult.state 'pending' | 'success' | 'error'. The UI must branch on
+// result.state and offer appKit.retryBridge() for recovery.
 import { useMemo, useState } from "react";
 import { useAccount, useChainId, useSwitchChain, useConnect, useDisconnect } from "wagmi";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
@@ -11,6 +16,10 @@ import { AppKit } from "@circle-fin/app-kit";
 import { supportedChains, CHAIN_ID_TO_KIT_NAME } from "./wagmi";
 
 const appKit = new AppKit();
+
+// Same shape the SDK validates internally (numeric string, > 0, ≤ 6 decimals).
+const AMOUNT_RE = /^\d+(?:\.\d{1,6})?$/;
+const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
 const styles = {
 	page: { fontFamily: "system-ui, sans-serif", maxWidth: 720, margin: "0 auto", padding: 24, color: "#e6e8ef", background: "#0d1017", minHeight: "100vh" },
@@ -21,6 +30,7 @@ const styles = {
 	input: { background: "#1c212d", color: "#e6e8ef", border: "1px solid #2a2f3a", borderRadius: 8, padding: 8, flex: 1, minWidth: 120 },
 	button: { background: "#9b6ef0", color: "#fff", border: "none", borderRadius: 8, padding: "10px 18px", fontWeight: 600, cursor: "pointer" },
 	buttonGhost: { background: "#1c212d", color: "#e6e8ef", border: "1px solid #2a2f3a", borderRadius: 8, padding: "10px 18px", cursor: "pointer" },
+	buttonWarn: { background: "#b45309", color: "#fff", border: "none", borderRadius: 8, padding: "10px 18px", fontWeight: 600, cursor: "pointer" },
 	status: { fontSize: 13, whiteSpace: "pre-wrap", wordBreak: "break-all", background: "#10131b", borderRadius: 8, padding: 12, marginTop: 12, color: "#9fb0c8" },
 	tab: { display: "flex", gap: 8, marginBottom: 16 },
 	tabBtn: (active) => ({ background: active ? "#9b6ef0" : "#1c212d", color: active ? "#fff" : "#8b93a7", border: "1px solid #2a2f3a", borderRadius: 8, padding: "8px 16px", cursor: "pointer", fontWeight: 600 })
@@ -56,25 +66,41 @@ function useKitAdapter() {
 	return { getAdapter, connected: !!connector };
 }
 
-function BridgeTab() {
+function BridgeTab({ busy, setBusy }) {
 	const [fromId, setFromId] = useState(chainOptions[1].id); // Ethereum Sepolia
 	const [toId, setToId] = useState(chainOptions[0].id);     // Arc Testnet
 	const [amount, setAmount] = useState("1.00");
 	const [status, setStatus] = useState("");
-	const [busy, setBusy] = useState(false);
+	const [lastBridge, setLastBridge] = useState(null);
 	const { getAdapter, connected } = useKitAdapter();
 
-	const handleBridge = async () => {
+	// kit.bridge() resolves (does not throw) with state 'pending'|'success'|
+	// 'error'; retryBridge(result, {from, to}) resumes from the failed step.
+	const runBridge = async (isRetry) => {
+		if (!AMOUNT_RE.test(amount) || Number(amount) <= 0) {
+			setStatus("Invalid amount — use a number > 0 with at most 6 decimals");
+			return;
+		}
+		if (isRetry && !lastBridge) return;
 		setBusy(true);
-		setStatus("Bridging via App Kit…");
+		setStatus(isRetry ? "Retrying bridge…" : "Bridging via App Kit…");
 		try {
 			const adapter = await getAdapter(fromId);
-			const result = await appKit.bridge({
-				from: { adapter, chain: CHAIN_ID_TO_KIT_NAME[fromId] },
-				to: { adapter, chain: CHAIN_ID_TO_KIT_NAME[toId] },
-				amount
-			});
-			setStatus("SUCCESS\n" + JSON.stringify(result, null, 2));
+			const result = isRetry
+				? await appKit.retryBridge(lastBridge, { from: adapter, to: adapter })
+				: await appKit.bridge({
+					from: { adapter, chain: CHAIN_ID_TO_KIT_NAME[fromId] },
+					to: { adapter, chain: CHAIN_ID_TO_KIT_NAME[toId] },
+					amount
+				});
+			setLastBridge(result);
+			const failedSteps = (result.steps || []).filter(s => s.state === "error").map(s => s.name);
+			const header = result.state === "success"
+				? "SUCCESS"
+				: result.state === "pending"
+					? "PENDING — transfer still in progress, result below"
+					: "FAILED" + (failedSteps.length ? ` at step(s): ${failedSteps.join(", ")}` : "");
+			setStatus(header + "\n" + JSON.stringify(result, null, 2));
 		} catch (e) {
 			setStatus("FAILED: " + (e.message || String(e)));
 		} finally {
@@ -98,35 +124,44 @@ function BridgeTab() {
 				<input style={styles.input} value={amount} onChange={e => setAmount(e.target.value)} />
 			</div>
 			<div style={styles.row}>
-				<button style={styles.button} disabled={!connected || busy} onClick={handleBridge}>
-					{busy ? "Working…" : "Bridge"}
+				<button style={styles.button} disabled={!connected || busy} onClick={() => runBridge(false)}>
+					Bridge
 				</button>
+				{lastBridge && lastBridge.state !== "success" && (
+					<button style={styles.buttonWarn} disabled={!connected || busy} onClick={() => runBridge(true)}>
+						Retry bridge
+					</button>
+				)}
 			</div>
 			{status && <pre style={styles.status}>{status}</pre>}
 		</div>
 	);
 }
 
-function UnifiedTab() {
+function UnifiedTab({ busy, setBusy }) {
 	const { address } = useAccount();
 	const [depositChain, setDepositChain] = useState(chainOptions[1].id);
 	const [spendFrom, setSpendFrom] = useState(chainOptions[1].id);
 	const [spendTo, setSpendTo] = useState(chainOptions[0].id);
-	const [amount, setAmount] = useState("1.00");
+	const [depositAmount, setDepositAmount] = useState("1.00");
+	const [spendAmount, setSpendAmount] = useState("1.00");
 	const [recipient, setRecipient] = useState("");
 	const [status, setStatus] = useState("");
-	const [busy, setBusy] = useState(false);
 	const { getAdapter, connected } = useKitAdapter();
 	const { connector } = useAccount();
 
 	const handleDeposit = async () => {
+		if (!AMOUNT_RE.test(depositAmount) || Number(depositAmount) <= 0) {
+			setStatus("Invalid amount — use a number > 0 with at most 6 decimals");
+			return;
+		}
 		setBusy(true);
 		setStatus("Depositing into unified balance…");
 		try {
 			const adapter = await getAdapter(depositChain);
 			const result = await appKit.unifiedBalance.deposit({
 				from: { adapter, chain: CHAIN_ID_TO_KIT_NAME[depositChain] },
-				amount
+				amount: depositAmount
 			});
 			setStatus("SUCCESS\n" + JSON.stringify(result, null, 2));
 		} catch (e) {
@@ -137,15 +172,22 @@ function UnifiedTab() {
 	};
 
 	const handleSpend = async () => {
-		if (!recipient) { setStatus("Enter a recipient address"); return; }
+		if (!AMOUNT_RE.test(spendAmount) || Number(spendAmount) <= 0) {
+			setStatus("Invalid amount — use a number > 0 with at most 6 decimals");
+			return;
+		}
+		if (!ADDRESS_RE.test(recipient)) {
+			setStatus("Invalid recipient address (expected 0x…)");
+			return;
+		}
 		setBusy(true);
 		setStatus("Spending from unified balance (Forwarding Service)…");
 		try {
 			const adapter = await getAdapter(spendFrom);
 			const result = await appKit.unifiedBalance.spend({
-				from: { adapter, allocations: { amount, chain: CHAIN_ID_TO_KIT_NAME[spendFrom] } },
+				from: { adapter, allocations: { amount: spendAmount, chain: CHAIN_ID_TO_KIT_NAME[spendFrom] } },
 				to: { chain: CHAIN_ID_TO_KIT_NAME[spendTo], recipientAddress: recipient, useForwarder: true },
-				amount
+				amount: spendAmount
 			});
 			setStatus("SUCCESS\n" + JSON.stringify(result, null, 2));
 		} catch (e) {
@@ -156,6 +198,7 @@ function UnifiedTab() {
 	};
 
 	const handleBalances = async () => {
+		if (!connector) { setStatus("Wallet not connected"); return; }
 		setBusy(true);
 		setStatus("Fetching unified balances…");
 		try {
@@ -180,7 +223,7 @@ function UnifiedTab() {
 			<div style={styles.row}>
 				<span style={styles.label}>Deposit from</span>
 				<ChainSelect value={depositChain} onChange={setDepositChain} />
-				<input style={styles.input} value={amount} onChange={e => setAmount(e.target.value)} />
+				<input style={styles.input} value={depositAmount} onChange={e => setDepositAmount(e.target.value)} />
 				<button style={styles.buttonGhost} disabled={!connected || busy} onClick={handleDeposit}>Deposit</button>
 			</div>
 
@@ -191,6 +234,8 @@ function UnifiedTab() {
 				<ChainSelect value={spendTo} onChange={setSpendTo} exclude={spendFrom} />
 			</div>
 			<div style={styles.row}>
+				<span style={styles.label}>Spend amount</span>
+				<input style={styles.input} value={spendAmount} onChange={e => setSpendAmount(e.target.value)} />
 				<span style={styles.label}>Recipient</span>
 				<input style={styles.input} placeholder={address || "0x…"} value={recipient} onChange={e => setRecipient(e.target.value)} />
 				<button style={styles.buttonGhost} disabled={!connected || busy} onClick={handleSpend}>Spend (forward)</button>
@@ -209,6 +254,9 @@ export default function App() {
 	const { connect, connectors } = useConnect();
 	const { disconnect } = useDisconnect();
 	const [tab, setTab] = useState("bridge");
+	// One global busy flag: a mid-flight SDK operation must not be interleaved
+	// with a second one (both drive the same wallet through chain switches).
+	const [busy, setBusy] = useState(false);
 	const chainName = useMemo(() => supportedChains.find(c => c.id === chainId)?.name || `chain ${chainId}`, [chainId]);
 
 	return (
@@ -220,11 +268,11 @@ export default function App() {
 					{address ? (
 						<>
 							<span>{address.slice(0, 6)}…{address.slice(-4)} on {chainName}</span>
-							<button style={styles.buttonGhost} onClick={() => disconnect()}>Disconnect</button>
+							<button style={styles.buttonGhost} disabled={busy} onClick={() => disconnect()}>Disconnect</button>
 						</>
 					) : (
 						connectors.map(c => (
-							<button key={c.uid} style={styles.button} onClick={() => connect({ connector: c })}>
+							<button key={c.uid} style={styles.button} disabled={busy} onClick={() => connect({ connector: c })}>
 								Connect {c.name}
 							</button>
 						))
@@ -233,11 +281,11 @@ export default function App() {
 			</div>
 
 			<div style={styles.tab}>
-				<button style={styles.tabBtn(tab === "bridge")} onClick={() => setTab("bridge")}>Bridge</button>
-				<button style={styles.tabBtn(tab === "unified")} onClick={() => setTab("unified")}>Unified Balance</button>
+				<button style={styles.tabBtn(tab === "bridge")} disabled={busy} onClick={() => setTab("bridge")}>Bridge</button>
+				<button style={styles.tabBtn(tab === "unified")} disabled={busy} onClick={() => setTab("unified")}>Unified Balance</button>
 			</div>
 
-			{tab === "bridge" ? <BridgeTab /> : <UnifiedTab />}
+			{tab === "bridge" ? <BridgeTab busy={busy} setBusy={setBusy} /> : <UnifiedTab busy={busy} setBusy={setBusy} />}
 		</div>
 	);
 }

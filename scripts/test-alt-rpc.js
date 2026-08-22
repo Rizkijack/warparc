@@ -2,16 +2,19 @@ const { ethers } = require("ethers");
 
 const candidates = {
   ethereum: [
-    "https://cloudflare-eth.com",
     "https://rpc.ankr.com/eth",
     "https://eth.llamarpc.com",
     "https://ethereum-rpc.publicnode.com"
   ],
+  // Official Arc TESTNET alternates only — docs.arc.io/arc/references/connect-to-arc.
+  // Arc MAINNET endpoints are unknown until 2026-09-16: never guessed here
+  // (the previous mainnet.arc.network / thirdweb / circle.io entries were
+  // dead or unofficial guesses and have been removed).
   arc: [
-    "https://rpc.arc.circle.io",
-    "https://mainnet.arc.network",
-    "https://arc.rpc.thirdweb.com",
-    "https://arc.drpc.org"
+    "https://rpc.testnet.arc.io",
+    "https://rpc.blockdaemon.testnet.arc.io",
+    "https://rpc.drpc.testnet.arc.io",
+    "https://rpc.quicknode.testnet.arc.io"
   ]
 };
 

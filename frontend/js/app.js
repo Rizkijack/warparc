@@ -32,6 +32,8 @@ const toast = (msg, type = "info") => {
 	setTimeout(() => t.remove(), 4000);
 };
 
+const shortAddr = (a) => a.slice(0, 6) + "…" + a.slice(-4);
+
 // --- persistence (localStorage) ----------------------------------------------
 
 function saveTxHistory() {
@@ -63,7 +65,11 @@ function savePendingCctp(p) {
 function loadPendingCctp() {
 	try {
 		const p = JSON.parse(localStorage.getItem(PENDING_KEY) || "null");
-		if (p && p.burnHash && p.fromKey && p.toKey && CONFIG.chains[p.fromKey] && CONFIG.chains[p.toKey]) {
+		// recipient is optional but must be a string when present — a non-string
+		// from a hand-corrupted payload would throw inside shortAddr/showPendingBanner
+		// and abort the rest of page init.
+		if (p && p.burnHash && p.fromKey && p.toKey && CONFIG.chains[p.fromKey] && CONFIG.chains[p.toKey] &&
+			(p.recipient == null || typeof p.recipient === "string")) {
 			return p;
 		}
 	} catch { }
@@ -84,7 +90,8 @@ function showPendingBanner() {
 	const text = banner.querySelector(".pending-text");
 	if (text) {
 		text.textContent = `Unfinished bridge: ${p.amount} USDC burned on ${CONFIG.chains[p.fromKey].shortName} → ${CONFIG.chains[p.toKey].shortName}` +
-			(p.forward ? " (waiting for Circle forward)" : " (mint not yet submitted)");
+			(p.forward ? " (waiting for Circle forward)" : " (mint not yet submitted)") +
+			(p.recipient ? ` · penerima ${shortAddr(p.recipient)}` : "");
 	}
 }
 
@@ -310,6 +317,10 @@ function getReadProvider(chainKey) {
 	return readProviders[chainKey];
 }
 
+// Overlapping balance reads (fast token/chain flips) can resolve out of
+// order — only the latest invocation may write the balance display.
+let balSeq = 0;
+
 async function loadBalances() {
 	if (!state.account) return;
 
@@ -318,11 +329,14 @@ async function loadBalances() {
 	const provider = getReadProvider(fromKey);
 	if (!fromKey || !provider) { state.lastFromBalanceRaw = null; el("from-balance").textContent = "0.00"; return; }
 
+	const seq = ++balSeq;
+	const isStale = () => seq !== balSeq;
 	try {
 		if (token === "ABT") {
 			const contract = getBridgeContract(fromKey, provider, "ABT");
 			if (contract) {
 				const bal = await contract.balanceOf(state.account);
+				if (isStale()) return;
 				state.lastFromBalanceRaw = bal;
 				el("from-balance").textContent = truncateUnits(bal, 18, 4);
 			} else {
@@ -336,6 +350,7 @@ async function loadBalances() {
 			if (addr && addr !== "0x0000000000000000000000000000000000000000") {
 				const contract = new ethers.Contract(addr, ERC20_ABI, provider);
 				const bal = await contract.balanceOf(state.account);
+				if (isStale()) return;
 				state.lastFromBalanceRaw = bal;
 				el("from-balance").textContent = truncateUnits(bal, 6, 2);
 			} else {
@@ -347,6 +362,7 @@ async function loadBalances() {
 			el("from-balance").textContent = "0.00";
 		}
 	} catch {
+		if (isStale()) return;
 		state.lastFromBalanceRaw = null;
 		el("from-balance").textContent = "0.00";
 	}
@@ -642,6 +658,7 @@ async function bridge() {
 		}
 	} finally {
 		state.isBridging = false;
+		setFlowsBusy(false);
 		updateBridgeBtn();
 	}
 }
@@ -686,7 +703,8 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 
 	const burnTxId = "burn-" + Date.now();
 	const btn = el("bridge-btn");
-	btn.disabled = true;
+	setFlowsBusy(true);
+	let subTxId = null; // fwd-/att- sub-entry — must not stay "pending" on abort
 
 	try {
 		// 1. Make sure the wallet is on the source chain (and signer is fresh)
@@ -695,12 +713,21 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 			await switchChain(fromChain.chainId);
 			await refreshProvider();
 		}
+		const expectedAccount = state.account;
+		// A wallet account/chain switch mid-flow would send from the wrong key
+		// or chain — abort before any transaction is submitted.
+		const assertWalletStable = () => {
+			if (state.account !== expectedAccount || state.chainId !== fromChain.chainId) {
+				throw new Error("Wallet account or chain changed mid-flow — aborting before send (no transaction was submitted)");
+			}
+		};
 
 		// 2. Approve TokenMessengerV2 to burn USDC
 		const messengerAddr = fromChain.cctp.tokenMessengerV2;
 		const usdc = new ethers.Contract(usdcAddr, ERC20_ABI, state.signer);
 		const allowance = await usdc.allowance(state.account, messengerAddr);
 		if (allowance < parsedAmount + quote.maxFee) {
+			assertWalletStable();
 			btn.textContent = "Approving USDC...";
 			toast("Approving USDC for TokenMessengerV2...", "info");
 			const approveTx = await usdc.approve(messengerAddr, parsedAmount + quote.maxFee, arcOverrides(fromKey));
@@ -709,6 +736,7 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 		}
 
 		// 3. Burn on the source chain
+		assertWalletStable();
 		btn.textContent = `Burning ${amount} USDC...`;
 		addTxEntry(burnTxId, `Burn ${amount} USDC on ${fromChain.shortName}`, "pending", fromKey);
 		const messenger = new ethers.Contract(messengerAddr, TOKEN_MESSENGER_V2_ABI, state.signer);
@@ -745,8 +773,19 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 			// 4a. Circle's relayer submits the mint; we only wait for its tx hash
 			btn.textContent = "Waiting for Circle forward...";
 			const fwdTxId = "fwd-" + Date.now();
+			subTxId = fwdTxId;
 			addTxEntry(fwdTxId, `Forward mint on ${toChain.shortName} (Circle)`, "pending", toKey);
-			const forwardHash = await pollForwardCompletion(CONFIG.iris[fromChain.network], fromChain.cctpDomain, burnTx.hash);
+			let forwardHash;
+			try {
+				forwardHash = await pollForwardCompletion(CONFIG.iris[fromChain.network], fromChain.cctpDomain, burnTx.hash);
+			} catch (e) {
+				if (e.name !== "ForwardTimeoutWithAttestation") throw e;
+				// Forwarder stalled but the attestation is signed — mint manually
+				// (fwd- is done; the fallback mint gets its own entry).
+				updateTxEntry(fwdTxId, "failed", "");
+				await manualMintFallback(toChain, toKey, e.att, amount);
+				return;
+			}
 			updateTxEntry(fwdTxId, "success", forwardHash);
 			toast(`Bridge complete! ${amount} USDC → ${toChain.shortName} (forwarded by Circle)`, "success");
 			clearPendingCctp();
@@ -755,6 +794,7 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 			// 4b. Wait for Circle to sign the attestation (fast ≈ seconds)
 			btn.textContent = "Waiting for attestation...";
 			const attTxId = "att-" + Date.now();
+			subTxId = attTxId;
 			addTxEntry(attTxId, "Circle attestation (fast)", "pending", fromKey);
 			const att = await pollAttestation(CONFIG.iris[fromChain.network], fromChain.cctpDomain, burnTx.hash);
 			updateTxEntry(attTxId, "success", burnTx.hash);
@@ -765,6 +805,10 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 			await switchChain(toChain.chainId);
 			await refreshProvider();
 			onAccountChange();
+			// Defensive: the wallet must sit on the destination before receiveMessage.
+			if (state.chainId !== toChain.chainId) {
+				throw new Error("Wallet chain changed mid-flow — aborting before mint (no transaction was submitted)");
+			}
 
 			const mintTxId = "mint-" + Date.now();
 			addTxEntry(mintTxId, `Mint ${amount} USDC on ${toChain.shortName}`, "pending", toKey);
@@ -773,6 +817,9 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 	} catch (e) {
 		if (state.txHistory.find(t => t.id === burnTxId && t.status === "pending")) {
 			updateTxEntry(burnTxId, "failed", "");
+		}
+		if (subTxId && state.txHistory.find(t => t.id === subTxId && t.status === "pending")) {
+			updateTxEntry(subTxId, "failed", "");
 		}
 		toast("Bridge failed: " + (e.reason || e.shortMessage || e.message || "Unknown error"), "error");
 	}
@@ -815,9 +862,28 @@ async function submitMint(toChain, att, mintTxId, toKey, amount) {
 	}
 }
 
+// Forwarder stalled but Iris already signed the attestation — anyone may
+// submit receiveMessage (destinationCaller = zero), so finish the mint by
+// hand. submitMint clears the pending record on success, keeps it on failure.
+async function manualMintFallback(toChain, toKey, att, amount, labelSuffix = " (manual fallback)") {
+	toast("Forwarder belum selesai — melanjutkan dengan mint manual…", "info");
+	await switchChain(toChain.chainId);
+	await refreshProvider();
+	onAccountChange();
+	// Same defense as the other pre-mint paths: a silently-ignored chain switch
+	// would send the mint to the wrong network (wasted gas — USDC on Arc).
+	if (state.chainId !== toChain.chainId) {
+		throw new Error(`Wallet is not on ${toChain.name} — mint aborted before send`);
+	}
+	const mintTxId = "mint-" + Date.now();
+	addTxEntry(mintTxId, `Mint ${amount} USDC on ${toChain.shortName}${labelSuffix}`, "pending", toKey);
+	await submitMint(toChain, att, mintTxId, toKey, amount);
+}
+
 // Resume an interrupted transfer after a reload: the burn hash is enough to
 // redo either the attestation+mint (manual) or the forward-completion wait.
 async function resumePendingCctp() {
+	if (state.isBridging) { toast("Another bridge flow is in progress", "error"); return; }
 	const p = loadPendingCctp();
 	if (!p) return;
 	if (!state.signer || !state.account) {
@@ -833,17 +899,31 @@ async function resumePendingCctp() {
 
 	state.isBridging = true;
 	const btn = el("bridge-btn");
-	btn.disabled = true;
+	setFlowsBusy(true);
 	const resumeId = "resume-" + Date.now();
 
 	try {
 		if (p.forward) {
 			addTxEntry(resumeId, `Forward mint on ${toChain.shortName} (Circle, resumed)`, "pending", p.toKey);
-			const forwardHash = await pollForwardCompletion(CONFIG.iris[fromChain.network], fromChain.cctpDomain, p.burnHash);
+			let forwardHash;
+			try {
+				forwardHash = await pollForwardCompletion(CONFIG.iris[fromChain.network], fromChain.cctpDomain, p.burnHash);
+			} catch (e) {
+				if (e.name !== "ForwardTimeoutWithAttestation") throw e;
+				updateTxEntry(resumeId, "failed", "");
+				await manualMintFallback(toChain, p.toKey, e.att, p.amount, " (resumed, manual fallback)");
+				return;
+			}
 			updateTxEntry(resumeId, "success", forwardHash);
 			toast("Forward completed — funds are on " + toChain.shortName, "success");
 			clearPendingCctp();
 		} else {
+			// The mint always pays the ORIGINAL recipient; a different connected
+			// account only pays the gas — make that explicit before proceeding.
+			if (p.recipient && state.account && p.recipient.toLowerCase() !== state.account.toLowerCase() &&
+				!window.confirm("Burn ini dibuat untuk penerima " + shortAddr(p.recipient) + ", BUKAN akun yang tersambung sekarang. Mint manual akan mengirim dana ke penerima asli (gas dibayar akun sekarang). Lanjutkan?")) {
+				return;
+			}
 			btn.textContent = "Waiting for attestation...";
 			const att = await pollAttestation(CONFIG.iris[fromChain.network], fromChain.cctpDomain, p.burnHash);
 			if (state.chainId !== toChain.chainId) {
@@ -851,6 +931,11 @@ async function resumePendingCctp() {
 				await switchChain(toChain.chainId);
 				await refreshProvider();
 				onAccountChange();
+			}
+			// Chain-only assertion: the account may differ from the burner (the
+			// confirm above already covers that case).
+			if (state.chainId !== toChain.chainId) {
+				throw new Error("Wallet chain changed mid-flow — aborting before mint (no transaction was submitted)");
 			}
 			const mintTxId = "mint-" + Date.now();
 			addTxEntry(mintTxId, `Mint ${p.amount} USDC on ${toChain.shortName} (resumed)`, "pending", p.toKey);
@@ -863,7 +948,7 @@ async function resumePendingCctp() {
 		toast("Resume failed: " + (e.reason || e.shortMessage || e.message || "Unknown error"), "error");
 	} finally {
 		state.isBridging = false;
-		btn.disabled = false;
+		setFlowsBusy(false);
 		updateBridgeBtn();
 	}
 }
@@ -872,21 +957,34 @@ async function resumePendingCctp() {
 // (the mint itself was submitted by Circle on the destination chain).
 async function pollForwardCompletion(irisBase, srcDomain, txHash, timeoutMs = 600000) {
 	const url = `${irisBase}/v2/messages/${srcDomain}?transactionHash=${txHash}`;
-	const deadline = Date.now() + timeoutMs;
-	while (Date.now() < deadline) {
+	const fetchMsg = async () => {
 		try {
 			const res = await fetch(url);
 			if (res.ok) {
 				const data = await res.json();
-				const msg = data && data.messages && data.messages[0];
-				if (msg && msg.forwardTxHash) {
-					return msg.forwardTxHash;
-				}
+				return (data && data.messages && data.messages[0]) || null;
 			}
 		} catch { /* transient network error — keep polling */ }
+		return null;
+	};
+	const deadline = Date.now() + timeoutMs;
+	while (Date.now() < deadline) {
+		const msg = await fetchMsg();
+		if (msg && msg.forwardTxHash) {
+			return msg.forwardTxHash;
+		}
 		await sleep(5000);
 	}
-	throw new Error("Forward completion timeout — Circle will still mint; resume later from this page");
+	// Timeout: a signed attestation still lets the caller mint manually
+	// (destinationCaller = zero) — surface it instead of dead-ending.
+	const msg = await fetchMsg();
+	if (msg && msg.status === "complete" && msg.message && msg.attestation) {
+		const e = new Error("Forward completion timeout — attestation signed, manual mint possible");
+		e.name = "ForwardTimeoutWithAttestation";
+		e.att = msg;
+		throw e;
+	}
+	throw new Error("Forward completion timeout — attestation not signed yet; Circle may still forward it, or resume later from this page");
 }
 
 // Poll Iris until the burn message is signed. 404 = not observed yet; 5s
@@ -928,7 +1026,7 @@ async function bridgeLegacyOFT(amount, parsedAmount, fromKey, toKey, token) {
 
 	const txId = "tx-" + Date.now();
 	const btn = el("bridge-btn");
-	btn.disabled = true;
+	setFlowsBusy(true);
 	btn.textContent = `Bridging ${amount} ${token}...`;
 
 	addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName}`, "pending", fromKey);
@@ -976,6 +1074,15 @@ async function bridgeLegacyOFT(amount, parsedAmount, fromKey, toKey, token) {
 		updateTxEntry(txId, "failed", "");
 		toast("Bridge failed: " + (e.reason || e.shortMessage || e.message || "Unknown error"), "error");
 	}
+}
+
+// Both action buttons go quiet while any bridge/resume flow runs; only the
+// disabled state is touched — labels stay owned by updateBridgeBtn/the flow.
+function setFlowsBusy(busy) {
+	const b = el("bridge-btn");
+	if (b) b.disabled = busy;
+	const r = el("resume-btn");
+	if (r) r.disabled = busy;
 }
 
 function updateBridgeBtn() {

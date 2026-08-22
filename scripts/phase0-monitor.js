@@ -29,26 +29,37 @@ const BLOG_URL = "https://community.arc.io/public/blogs/arc-public-mainnet-launc
 const STATE_FILE = path.join(__dirname, "..", "cache", "phase0-state.json");
 
 // Halaman referensi docs.arc.io yang dipantau: setiap fetch + cek kata kunci.
+// Kata kunci HARUS flip-capable: jenuh sekarang = tidak akan pernah melaporkan
+// CHANGED saat launch. Karena itu marker "mainnet" polos TIDAK dipakai — di
+// connect-to-arc ia sudah FOUND hari ini lewat contoh kode Ethereum-mainnet,
+// dan di contract-addresses/supported-blockchains lewat kalimat penyangkalan.
+// Yang dipakai: frasa penyangkalan (FOUND → absent saat launch) dan pola
+// spesifik kemunculan mainnet Arc (absent → FOUND saat launch).
+// (Terverifikasi live 2026-08-22: semua marker flip-capable di bawah absen
+// hari ini KECUALI frasa penyangkalan; bridges.md belum menyebut "mainnet"
+// sama sekali sehingga marker polosnya masih sehat.)
 const REF_PAGES = [
 	{
 		key: "docs/connect-to-arc",
 		url: "https://docs.arc.io/arc/references/connect-to-arc.md",
-		keywords: ["mainnet RPC", "mainnet"], // section "mainnet RPC" mulai muncul menjelang launch
+		keywords: ["mainnet RPC", "rpc.mainnet"], // section "Mainnet RPC" / RPC mainnet Arc muncul
 	},
 	{
 		key: "docs/contract-addresses",
 		url: "https://docs.arc.io/arc/references/contract-addresses.md",
-		keywords: ["Mainnet addresses"], // section "Mainnet addresses" ditambahkan?
+		// "Mainnet addresses are not …available" = kalimat penyangkalan hari ini;
+		// hilangnya frasa ini ATAU munculnya "rpc.mainnet" = sinyal launch.
+		keywords: ["Mainnet addresses are not", "rpc.mainnet"],
 	},
 	{
 		key: "docs/bridges",
 		url: "https://docs.arc.io/integrate/infrastructure/bridges.md",
-		keywords: ["CCTP domain", "mainnet"], // CCTP domain mainnet dipublikasikan?
+		keywords: ["CCTP domain", "mainnet"], // CCTP domain mainnet dipublikasikan? (masih absent — sehat)
 	},
 	{
 		key: "docs/supported-blockchains",
 		url: "https://docs.arc.io/app-kit/references/supported-blockchains.md",
-		keywords: ["Arc_Mainnet", "mainnet"], // Arc muncul/dipindah ke tabel MAINNET?
+		keywords: ["Arc_Mainnet", "Arc Mainnet"], // Arc muncul/dipindah ke tabel MAINNET?
 	},
 ];
 

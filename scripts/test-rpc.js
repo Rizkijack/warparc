@@ -1,12 +1,14 @@
 const { ethers } = require("ethers");
 
 const chains = {
-  ethereum:  { rpc: "https://cloudflare-eth.com",                 cid: 1,     eid: 30101, lz: "0x1a44076050125825900e736c501f859c50fe728c" },
+  ethereum:  { rpc: "https://ethereum-rpc.publicnode.com",       cid: 1,     eid: 30101, lz: "0x1a44076050125825900e736c501f859c50fe728c" },
   base:      { rpc: "https://mainnet.base.org",                  cid: 8453,  eid: 30184, lz: "0x1a44076050125825900e736c501f859c50fe728c" },
   arbitrum:  { rpc: "https://arb1.arbitrum.io/rpc",              cid: 42161, eid: 30110, lz: "0x1a44076050125825900e736c501f859c50fe728c" },
   optimism:  { rpc: "https://mainnet.optimism.io",               cid: 10,    eid: 30111, lz: "0x1a44076050125825900e736c501f859c50fe728c" },
   robinhood: { rpc: "https://rpc.mainnet.chain.robinhood.com",  cid: 4663,  eid: 30416, lz: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b" },
-  arc:       { rpc: "https://rpc.arc.circle.io",                cid: 5042,  eid: 30417, lz: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b" }
+  // Arc Testnet — official: https://docs.arc.io/arc/references/connect-to-arc
+  // (chain ID 5042002; the old rpc.arc.circle.io / 5042 entries were stale guesses)
+  arc:       { rpc: "https://rpc.testnet.arc.io",                cid: 5042002, eid: 30417, lz: "0x6f475642a6e85809b1c36fa62763669b1b48dd5b" }
 };
 
 const LZ_ABI = [

@@ -10,8 +10,11 @@ behind SDK calls — no custom bridge contracts, no manual attestation handling.
   (`Arc_Testnet`, `Base_Sepolia`, …).
 - Browser-wallet adapter pattern (`createViemAdapterFromProvider`) per Circle's
   official adapter guide: switch the wallet to the **source** chain before
-  signing; spends use the Forwarding Service (`useForwarder: true`) so the user
-  never needs gas on the destination chain.
+  signing; Unified-Balance spends use the Forwarding Service (`useForwarder: true`)
+  so the user never needs gas on the destination chain. NOTE: `kit.bridge()` in
+  this app submits the destination mint itself (no forwarder) — the wallet is
+  switched to the destination chain mid-flow and needs gas there (Arc Testnet
+  gas = USDC).
 - USDC only — bridge and Unified Balance are USDC-scoped by design.
 
 ## Run
