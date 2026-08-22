@@ -110,7 +110,7 @@ async function main() {
 
 	switch (config.mode) {
 		case "cctp-only":
-			// Arc is a CCTP-only chain (MAINNET-CHECKLIST Phase 3 pt 3) — no custom contracts to deploy.
+			// Arc is a CCTP-only chain (MAINNET-CHECKLIST Phase 3 pt 3) — no custom deployment (MAINNET-CHECKLIST Phase 3 pt 3); use canonical USDC/gateway addresses
 			// Only canonical USDC / CCTP gateway addresses are used; bridged USDC flows via CCTP.
 			console.log(`\n=== Skipping ${network}: CCTP-only chain — no custom deployment (MAINNET-CHECKLIST Phase 3 pt 3); use canonical USDC/gateway addresses ===`);
 			return { network, skipped: true };
@@ -164,7 +164,7 @@ function getExplorerUrl(network, addr) {
 		arbitrum: `https://arbiscan.io/address/${addr}`,
 		optimism: `https://optimistic.etherscan.io/address/${addr}`,
 		robinhood: `https://robinhoodchain.blockscout.com/address/${addr}`,
-		arc: `https://arcscan.app/address/${addr}`
+		arc: `https://testnet.arcscan.app/address/${addr}`
 	};
 	return explorers[network] || addr;
 }

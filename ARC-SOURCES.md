@@ -45,7 +45,7 @@ UNVERIFIED instead of guessing.
 |----------|-----|----------|
 | Bridges integration guide | https://docs.arc.io/integrate/infrastructure/bridges.md | CCTP domain `26`, confirmations=1 rule, relayer funding, no-wrapped-USDC mandate |
 | Deploy on Arc tutorial | https://docs.arc.io/arc/tutorials/deploy-on-arc.md | Foundry flow, Blockscout verification flags |
-| Porting checklist | https://docs.arc.io/arc/tutorials/porting-contracts-to-arc.md | The porting checklist copied into DEPLOY.md §5 |
+| Porting checklist | https://docs.arc.io/arc/tutorials/porting-contracts-to-arc.md | Porting checklist mirrored in `ARC-REFERENCE.md` §15 |
 | App Kit overview | https://docs.arc.io/app-kit.md | Path A SDK design |
 | App Kit Bridge | https://docs.arc.io/app-kit/bridge.md | `kit.bridge()` usage, CCTP abstraction |
 | Unified Balance | https://docs.arc.io/app-kit/unified-balance.md | Gateway deposits/spends |

@@ -95,7 +95,6 @@ async function main() {
 		console.error("OFT path is deprecated; the canonical USDC route is Circle CCTP V2.");
 		process.exit(1);
 	}
-
 	// Only comments in both address maps — nothing to configure (pentest F3).
 	if (Object.keys(DEPLOYMENTS).length === 0 && Object.keys(ADAPTER_DEPLOYMENTS).length === 0) {
 		console.error("DEPLOYMENTS empty — nothing to configure. Fill addresses after deployment.");
