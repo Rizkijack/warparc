@@ -27,6 +27,7 @@ DEPLOY.md
 IDEA.md
 MAINNET-CHECKLIST.md
 ARC-SOURCES.md
+ARC-REFERENCE.md
 
 # Agent skill packs (installed via npx skills add; global mirror at ~/.agents)
 .agents/
