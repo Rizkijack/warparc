@@ -37,24 +37,40 @@ function bytes32ToAddress(bytes32Hex) {
 }
 
 /**
+ * Thrown by parseCctpV2Message for structurally invalid input or a message
+ * whose version field is not 2 — callers must not feed such bytes onward.
+ */
+class CctpParseError extends Error {
+	constructor(msg) {
+		super(msg);
+		this.name = "CctpParseError";
+	}
+}
+
+/**
  * Parse a CCTP V2 relay message header + burn body.
  * @param {string} messageHex 0x-prefixed message bytes as returned by Iris.
  * @returns {{ version, sourceDomain, destinationDomain, nonce, sender, recipient,
  *            destinationCaller, minFinalityThreshold, burnToken, mintRecipient,
  *            amount, maxFee, expirationBlock, hasHook }}
+ * @throws {CctpParseError} non-hex input, too-short message/body, or a version
+ *                          field other than 2
  */
 function parseCctpV2Message(messageHex) {
 	if (typeof messageHex !== "string" || !/^0x[0-9a-fA-F]+$/.test(messageHex)) {
-		throw new Error("message must be a 0x-prefixed hex string");
+		throw new CctpParseError("message must be a 0x-prefixed hex string");
 	}
 	const b = messageHex.slice(2);
-	if (b.length < MIN_HEADER_LEN * 2) throw new Error(`message too short (${b.length / 2}B < ${MIN_HEADER_LEN}B)`);
+	if (b.length < MIN_HEADER_LEN * 2) throw new CctpParseError(`message too short (${b.length / 2}B < ${MIN_HEADER_LEN}B)`);
+
+	const version = readUint32(b, 0);
+	if (version !== 2) throw new CctpParseError(`unsupported CCTP message version ${version} (expected 2)`);
 
 	const body = b.slice(MIN_HEADER_LEN * 2);
-	if (body.length < 228 * 2) throw new Error(`burn message body too short (${body.length / 2}B < 228B)`);
+	if (body.length < 228 * 2) throw new CctpParseError(`burn message body too short (${body.length / 2}B < 228B)`);
 
 	return {
-		version: readUint32(b, 0),
+		version,
 		sourceDomain: readUint32(b, 4),
 		destinationDomain: readUint32(b, 8),
 		nonce: hexSlice(b, 12, 32),
@@ -75,4 +91,4 @@ function parseCctpV2Message(messageHex) {
 
 const isZeroBytes32 = (hex) => /^0x0+$/.test(hex);
 
-module.exports = { parseCctpV2Message, MESSAGE_SENT_TOPIC, isZeroBytes32, MIN_HEADER_LEN };
+module.exports = { parseCctpV2Message, MESSAGE_SENT_TOPIC, isZeroBytes32, MIN_HEADER_LEN, CctpParseError };

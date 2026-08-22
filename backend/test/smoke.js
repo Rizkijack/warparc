@@ -8,11 +8,13 @@ const assert = require("assert");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const http = require("http");
 
 const { Store } = require("../src/store");
 const { createChainIndexer, TRANSFER_TOPIC } = require("../src/indexer");
-const { parseCctpV2Message, MESSAGE_SENT_TOPIC, isZeroBytes32 } = require("../src/cctp");
+const { parseCctpV2Message, MESSAGE_SENT_TOPIC, isZeroBytes32, CctpParseError } = require("../src/cctp");
 const { createRelayer } = require("../src/relayer");
+const { createServer } = require("../src/server");
 const { acquireLock } = require("../src/lock");
 
 let passed = 0;
@@ -176,7 +178,72 @@ function testEvmOnlyChain() {
 	});
 	idx.pollOnce().then(({ entries }) => {
 		ok(entries.length === 0, "emitter not in list → skipped (filter by emitter, never count others)");
-		finish();
+		testServerHostGuard();
+	});
+}
+
+// --- Server host guard + /events kind validation --------------------------------
+
+function testServerHostGuard() {
+	console.log("[smoke] Server host guard + /events kind validation");
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "warparc-srv-"));
+	const store = new Store({ dir });
+	const backendCfg = {
+		network: "testnet",
+		cfg: { iris: { testnet: "stub" }, chains: {} },
+		server: { host: "127.0.0.1", port: 0 }
+	};
+	const relayerStub = { stats: () => ({ mode: "watch-only" }), getJobs: () => ({}) };
+	const srv = createServer({ backendCfg, store, relayer: relayerStub, iris: null, indexerChains: [], log: silentLog() });
+
+	srv.listen(0, "127.0.0.1", () => {
+		const port = srv.address().port;
+		backendCfg.server.port = port;
+
+		function httpGet(hostHeader, urlPath) {
+			return new Promise((resolve, reject) => {
+				http.get({ hostname: "127.0.0.1", port, path: urlPath, headers: { Host: hostHeader } }, (res) => {
+					let body = "";
+					res.on("data", (chunk) => body += chunk);
+					res.on("end", () => {
+						try { resolve({ status: res.statusCode, body: JSON.parse(body) }); }
+						catch (_) { resolve({ status: res.statusCode, body }); }
+					});
+				}).on("error", reject);
+			});
+		}
+
+		httpGet(`127.0.0.1:${port}`, "/health")
+			.then((r) => {
+				ok(r.status === 200, "correct Host header → 200");
+				return httpGet("127.0.0.1:9999", "/health");
+			})
+			.then((r) => {
+				ok(r.status === 403, "wrong port in Host → 403");
+				return httpGet(`localhost:${port}`, "/health");
+			})
+			.then((r) => {
+				ok(r.status === 200, "localhost:correctport → 200");
+				return httpGet(`127.0.0.1:${port}`, "/events?kind=invalid");
+			})
+			.then((r) => {
+				ok(r.status === 400 && /kind/.test(r.body.error), "kind=invalid → 400 with 'kind' in error");
+				return httpGet(`127.0.0.1:${port}`, "/events?kind=erc20");
+			})
+			.then((r) => {
+				ok(r.status === 200, "kind=erc20 → 200");
+				return httpGet(`127.0.0.1:${port}`, "/events");
+			})
+			.then((r) => {
+				ok(r.status === 200, "no kind param → 200");
+				srv.close();
+				finish();
+			})
+			.catch((err) => {
+				console.error("[smoke] server test error:", err);
+				srv.close();
+				process.exitCode = 1;
+			});
 	});
 }
 
@@ -217,6 +284,65 @@ function testCctpParser() {
 	const dstCallerSet = "0x" + header.slice(0, 216) + "ff".repeat(32) + header.slice(216 + 64) + body;
 	ok(!isZeroBytes32(parseCctpV2Message(dstCallerSet).destinationCaller), "non-zero destinationCaller detectable");
 	assert.throws(() => parseCctpV2Message("0x1234"), /too short/, "short message rejected");
+}
+
+// --- CctpParseError classification ---------------------------------------------
+
+function testCctpParseError() {
+	console.log("[smoke] CctpParseError classification");
+	const header =
+		"00000002" +
+		"0000001a" +
+		"00000000" +
+		"0123456789abcdef".padEnd(64, "0") +
+		pad32(ALICE).slice(2) +
+		pad32(BOB).slice(2) +
+		"0".repeat(64) +
+		"000003e8" +
+		"00000000";
+	const body =
+		"00000002" +
+		pad32(ERC20).slice(2) +
+		pad32(BOB).slice(2) +
+		(1_000_000n).toString(16).padStart(64, "0") +
+		pad32(ALICE).slice(2) +
+		(500n).toString(16).padStart(64, "0") +
+		"0".repeat(64) +
+		"0".repeat(64);
+	const msg = "0x" + header + body;
+	const parsed = parseCctpV2Message(msg);
+	ok(parsed.version === 2, "valid V2 message parses without throw");
+	const v1Msg = "0x" + "00000001" + header.slice(8) + body;
+	try {
+		parseCctpV2Message(v1Msg);
+		ok(false, "version=1 should have thrown");
+	} catch (e) {
+		ok(e.name === "CctpParseError", "version=1 error name is CctpParseError");
+		ok(e instanceof CctpParseError && /version 1/.test(e.message), "version=1 instanceof CctpParseError with 'version 1' in message");
+	}
+	try {
+		parseCctpV2Message("0x1234");
+		ok(false, "too-short should have thrown");
+	} catch (e) {
+		ok(e instanceof CctpParseError && /too short/.test(e.message), "too-short message throws CctpParseError");
+	}
+}
+
+// --- Store kind filter + read-side dedup ----------------------------------------
+
+function testStoreKindDedup() {
+	console.log("[smoke] Store queryEvents kind filter + read-side dedup");
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "warparc-kind-"));
+	const s = new Store({ dir });
+	const txA = "0x" + "ab".repeat(32);
+	const txB = "0x" + "cd".repeat(32);
+	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: "0x1", emitter: ERC20 });
+	s.appendEvent({ chain: "arc", block: 11, from: BOB, to: ALICE, amount6: "200", kind: "system", txHash: txB, logIndex: "0x2", emitter: SYSTEM });
+	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: "0x1", emitter: ERC20 });
+	ok(s.queryEvents({ kind: "erc20" }).length === 1, "kind=erc20 returns 1 (duplicate deduped)");
+	ok(s.queryEvents({ kind: "system" }).length === 1, "kind=system returns 1");
+	ok(s.queryEvents().length === 2, "no kind returns 2 unique events (dedup removed duplicate)");
+	ok(s.queryEvents({ kind: "erc20" })[0].block === 10, "dedup kept the erc20 event with correct block");
 }
 
 // --- Relayer config guards -----------------------------------------------------
@@ -269,7 +395,18 @@ function testRelayerGuards() {
 	ok(r.stats().mode === "watch-only", "default boot is watch-only");
 	const st = r.stats();
 	ok(st.budgets && st.budgets.arc && st.budgets.arc.unit === "USDC" && st.budgets.arc.paused === false, "stats exposes per-chain gas budget (Arc=USDC, not paused)");
-	ok(st.budgets && st.budgets.baseSepolia === undefined || true, "stats budget keys derive from configured chains");
+	ok(st.budgets && typeof st.budgets === "object" && st.budgets.arc && st.budgets.arc.unit === "USDC", "stats budgets is object with arc chain USDC unit");
+}
+
+// --- Relayer module shape -------------------------------------------------------
+
+function testRelayerModuleShape() {
+	console.log("[smoke] Relayer module shape");
+	ok(typeof createRelayer === "function", "createRelayer exported as function");
+	// IRIS_FETCH_TIMEOUT_MS is read at module load from RELAYER_IRIS_TIMEOUT_MS env;
+	// full timeout behaviour requires a live Iris mock + async tick — integration only.
+	const { ALREADY_RELAYED_RE } = require("../src/relayer");
+	ok(ALREADY_RELAYED_RE instanceof RegExp, "ALREADY_RELAYED_RE exported as RegExp");
 }
 
 function stubStore() {
@@ -289,8 +426,11 @@ function silentLog() {
 testStore();
 testLock();
 testCctpParser();
+testCctpParseError();
+testStoreKindDedup();
 testRelayerGuards();
-testIndexer(); // async tail calls finish()
+testRelayerModuleShape();
+testIndexer(); // async tail → testEvmOnlyChain → testServerHostGuard → finish
 
 function finish() {
 	console.log(`\n[smoke] OK — ${passed} assertions passed`);

@@ -3,7 +3,7 @@
  *
  * Routes:
  *   GET  /health                       — liveness + indexer/relayer summary
- *   GET  /events?chain=&address=&limit=— indexed USDC transfers (newest first)
+ *   GET  /events?chain=&address=&kind=&limit= — indexed USDC transfers (newest first; kind = erc20|system)
  *   GET  /jobs                         — relayer job list
  *   POST /relay {srcChain, burnTxHash} — queue a burn for relaying
  *   GET  /status?srcChain=&txHash=     — job state + live Iris attestation state
@@ -19,12 +19,25 @@ const { URL } = require("url");
 
 const MAX_BODY = 4096;
 
+// Token bucket for the /status Iris lookup: the relayer round-robins its Iris
+// polling to stay under the global 40 req/s budget, so an operator script
+// hammering /status must not spend that budget independently.
+const STATUS_IRIS_RPS_DEFAULT = 2;
+
+function statusIrisMinIntervalMs() {
+	const raw = Number(process.env.BACKEND_STATUS_IRIS_RPS);
+	if (!Number.isFinite(raw) || raw <= 0) return 1000 / STATUS_IRIS_RPS_DEFAULT;
+	return 1000 / raw;
+}
+
 function createServer({ backendCfg, store, relayer, iris, indexerChains, log = console }) {
 	const startedAt = Date.now();
 	// CORS is opt-in: no header at all unless an operator explicitly allows an
 	// origin — a wildcard on an unauthenticated state-changing route would let
 	// any webpage in the operator's browser queue relay jobs.
 	const corsOrigin = process.env.BACKEND_CORS_ORIGIN || null;
+	// Timestamp of the last live Iris lookup made by /status (any outcome).
+	let lastIrisCallAt = 0;
 
 	function corsHeaders() {
 		return corsOrigin
@@ -81,10 +94,17 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 		"GET /events": async (query) => {
 			const limitRaw = parseInt(query.get("limit") || "100", 10);
 			const limit = Number.isInteger(limitRaw) && limitRaw > 0 && limitRaw <= 1000 ? limitRaw : 100;
+			// Dual-emitter Arc events carry kind: "erc20" | "system" — summing
+			// across kinds double-counts, so let consumers pick exactly one.
+			const kind = query.get("kind");
+			if (kind !== null && kind !== "erc20" && kind !== "system") {
+				throw Object.assign(new Error(`kind must be "erc20" or "system"`), { statusCode: 400 });
+			}
 			return {
 				events: store.queryEvents({
 					chain: query.get("chain") || undefined,
 					address: query.get("address") || undefined,
+					kind: kind || undefined,
 					limit
 				})
 			};
@@ -122,13 +142,21 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 			}
 			const job = relayer ? relayer.getJobs()[txHash] || null : null;
 			let irisState = null;
-			if (iris) {
+			// Minimum spacing between live Iris lookups; a call (success OR fail)
+			// spends the slot, so failures cannot be used to bypass the budget.
+			const now = Date.now();
+			if (iris && now - lastIrisCallAt >= statusIrisMinIntervalMs()) {
+				lastIrisCallAt = now;
 				try {
 					const msg = await iris.getMessage(cfgChain.cctpDomain, txHash);
 					irisState = msg ? { status: msg.status, eventNonce: msg.eventNonce ?? null } : null;
 				} catch (e) {
 					irisState = { error: e.message };
 				}
+			} else if (iris) {
+				// Job data is still returned — dashboards keep working while the
+				// Iris poll budget is reserved for the relayer.
+				irisState = { throttled: true };
 			}
 			return { job, iris: irisState };
 		}
@@ -136,12 +164,13 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 
 	const server = http.createServer(async (req, res) => {
 		try {
-			// DNS-rebinding guard: only accept requests addressed to the host:port
-			// this server was bound to.
+			// DNS-rebinding guard: strict allow-list — only requests whose Host
+			// header is exactly this server's host:port (or localhost on the same
+			// port) get through; a wrong port is as suspect as a wrong host.
 			const hostHeader = String(req.headers.host || "").toLowerCase();
 			const expectedHost = `${backendCfg.server.host}:${backendCfg.server.port}`.toLowerCase();
-			const hostOnly = hostHeader.split(":")[0];
-			if (hostHeader !== expectedHost && hostOnly !== backendCfg.server.host.toLowerCase() && hostOnly !== "localhost") {
+			const localhostHost = `localhost:${backendCfg.server.port}`;
+			if (hostHeader !== expectedHost && hostHeader !== localhostHost) {
 				return json(res, 403, { error: "unexpected Host header" });
 			}
 			const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);

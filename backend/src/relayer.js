@@ -21,22 +21,38 @@
  *
  * BACKEND_AUTO_RELAY=true additionally watches MessageSent logs network-wide on
  * every configured source chain and enqueues burns matching the policy
- * (destination among our chains, destinationCaller zero, USDC burn token,
+ * (destination must be Arc, destinationCaller zero, USDC burn token,
  * amount ≤ RELAYER_MAX_USDC_PER_TX). Off by default.
  */
 "use strict";
 
 const { ethers } = require("ethers");
 const { createIrisClient } = require("./attestation");
-const { parseCctpV2Message, MESSAGE_SENT_TOPIC, isZeroBytes32 } = require("./cctp");
+const { parseCctpV2Message, MESSAGE_SENT_TOPIC, isZeroBytes32, CctpParseError } = require("./cctp");
 
 const TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 const ALREADY_RELAYED_RE = /already|replay|used|nonce/i;
+const BLOCKLIST_RE = /blacklist/i;
 
 const RECEIVE_MESSAGE_ABI = ["function receiveMessage(bytes message, bytes attestation) returns (bool)"];
 const USED_NONCES_ABI = ["function usedNonces(bytes32 nonce) view returns (bool)"];
+const IS_BLACKLISTED_ABI = ["function isBlacklisted(address account) view returns (bool)"];
 
-const ARC_MAX_FEE_PER_GAS_WEI = ethers.BigNumber.from(30).mul(1e9); // 30 Gwei ≥ 20 Gwei floor + margin
+// Per-request Iris timeout — prevents a hung socket from freezing the entire
+// tick loop (all chains, all jobs). 10s is generous for a single HTTP call;
+// the attestation_wait loop retries every tick (5s default).
+const IRIS_FETCH_TIMEOUT_MS = parseInt(process.env.RELAYER_IRIS_TIMEOUT_MS, 10) || 10_000;
+
+// Arc gas: env-tunable, ≥ 20 Gwei floor (DEPLOY.md §3, MAINNET-CHECKLIST standing rules).
+const ARC_MAX_FEE_GAS_GWEI = (() => {
+	const raw = parseInt(process.env.RELAYER_ARC_MAX_FEE_GAS_GWEI, 10);
+	if (Number.isFinite(raw) && raw > 0) {
+		if (raw < 20) console.warn(`[relayer] RELAYER_ARC_MAX_FEE_GAS_GWEI=${raw} is below the 20 Gwei Arc floor — txs will be rejected`);
+		return raw;
+	}
+	return 30;
+})();
+const ARC_MAX_FEE_PER_GAS_WEI = ethers.utils.parseUnits(String(ARC_MAX_FEE_GAS_GWEI), "gwei");
 const ARC_PRIORITY_FEE_WEI = ethers.BigNumber.from(0);
 
 function createRelayer({ backendCfg, chains, store, log = console }) {
@@ -70,6 +86,36 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 			wallets.set(chain.key, new ethers.Wallet(rcfg.privateKey.trim(), providerFor(chain)));
 		}
 		return wallets.get(chain.key);
+	}
+
+	// Iris timeout wrapper — a hung response must not freeze the sequential tick loop.
+	async function getMessageWithTimeout(srcDomain, txHash) {
+		let timer;
+		const timeout = new Promise((_, reject) => {
+			timer = setTimeout(() => reject(new Error(`Iris fetch timeout (${IRIS_FETCH_TIMEOUT_MS}ms)`)), IRIS_FETCH_TIMEOUT_MS);
+			if (timer.unref) timer.unref();
+		});
+		try {
+			return await Promise.race([iris.getMessage(srcDomain, txHash), timeout]);
+		} finally {
+			clearTimeout(timer);
+		}
+	}
+
+	// Blocklist pre-check (docs.arc.io/integrate/exchanges/withdrawals Step 2):
+	// Arc enforces a runtime blocklist — if mintRecipient is blocklisted,
+	// receiveMessage reverts and gas is wasted. Fail-open on RPC errors so a
+	// broken view call doesn't brick relaying.
+	async function checkBlocklist(dst, mintRecipientBytes32) {
+		if (!dst.isArc || !dst.usdc) return false;
+		try {
+			const recipientAddr = ethers.utils.getAddress("0x" + mintRecipientBytes32.replace(/^0x/, "").slice(-40));
+			const usdc = new ethers.Contract(dst.usdc, IS_BLACKLISTED_ABI, providerFor(dst));
+			return await usdc.isBlacklisted(recipientAddr);
+		} catch (e) {
+			log.warn(`[relayer] blocklist check failed (fail-open): ${e.message}`);
+			return false;
+		}
 	}
 
 	// --- job store -----------------------------------------------------------
@@ -182,7 +228,7 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 				return;
 			}
 			try {
-				const msg = await iris.getMessage(job.srcDomain, job.txHash);
+				const msg = await getMessageWithTimeout(job.srcDomain, job.txHash);
 				if (msg && (msg.messageCount || 1) > 1) {
 					log.warn(`[relayer] ${job.txHash} contains ${msg.messageCount} burns — only the first message is relayed (known limitation)`);
 				}
@@ -238,7 +284,12 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 					}
 				});
 			} catch (e) {
-				updateJob(job.txHash, { status: "attestation_wait", error: e.message });
+				if (e.name === "CctpParseError") {
+					updateJob(job.txHash, { status: "failed", error: `malformed CCTP message: ${e.message}` });
+					log.warn(`[relayer] fail ${job.txHash}: ${e.message}`);
+				} else {
+					updateJob(job.txHash, { status: "attestation_wait", error: e.message });
+				}
 			}
 			return;
 		}
@@ -296,7 +347,7 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 	}
 	function budgetPaused(chain) {
 		// Arc gas is 18-dec native USDC; EVM gas is ETH (18-dec too).
-		const limitNative = ethers.utils.parseUnits(String(budgetLimit(chain)), chain.isArc ? 18 : 18);
+		const limitNative = ethers.utils.parseUnits(String(budgetLimit(chain)), 18);
 		return budgetSpentNative(chain.key) >= limitNative;
 	}
 	function recordGas(chain, receipt) {
@@ -326,6 +377,16 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 	async function submit(job) {
 		const dst = byKey.get(job.dstChain);
 		if (!budgetGuard(dst)) return; // stays "ready"; retried next tick
+		// Blocklist pre-check: Arc enforces a runtime blocklist — if mintRecipient
+		// is blocklisted, receiveMessage reverts and gas is wasted (docs Step 2).
+		if (dst.isArc && job.parsed && job.parsed.recipient) {
+			const blocked = await checkBlocklist(dst, job.parsed.recipient);
+			if (blocked) {
+				updateJob(job.txHash, { status: "skipped", error: "mintRecipient blocklisted on Arc USDC" });
+				log.warn(`[relayer] skip ${job.txHash}: mintRecipient blocklisted`);
+				return;
+			}
+		}
 		updateJob(job.txHash, { status: "submitting" });
 		try {
 			const wallet = walletFor(dst);
@@ -343,6 +404,11 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 			log.info(`[relayer] relayed ${job.txHash} → ${dst.key} mint ${receipt.transactionHash}`);
 		} catch (e) {
 			const msgText = String((e && (e.reason || e.message)) || e);
+			if (BLOCKLIST_RE.test(msgText)) {
+				updateJob(job.txHash, { status: "skipped", error: `blocklist revert: ${msgText.slice(0, 300)}` });
+				log.warn(`[relayer] skip ${job.txHash}: blocklist revert`);
+				return;
+			}
 			if (ALREADY_RELAYED_RE.test(msgText)) {
 				const parsed = parseCctpV2Message(job.message);
 				const confirmed = await nonceUsed(dst, parsed.nonce);
@@ -401,7 +467,8 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 					//   USDC burn token must be KNOWN on the source chain,
 					//   destinationCaller zero, not expired, amount within cap.
 					const burnTokenOk = !!chain.usdc && parsed.burnToken === chain.usdc.toLowerCase();
-					const amountUsdc = Number(BigInt(parsed.amount)) / 1e6;
+					const amountRaw = BigInt(parsed.amount);
+					const capSubunits = BigInt(Math.trunc(rcfg.maxRelayUsdc * 1e6));
 					if (
 						dst &&
 						dst.isArc &&
@@ -409,8 +476,8 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 						!expired &&
 						isZeroBytes32(parsed.destinationCaller) &&
 						burnTokenOk &&
-						amountUsdc > 0 &&
-						amountUsdc <= rcfg.maxRelayUsdc
+						amountRaw > 0n &&
+						amountRaw <= capSubunits
 					) {
 						enqueue(chain.key, l.transactionHash);
 					}
