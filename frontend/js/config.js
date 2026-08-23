@@ -388,7 +388,7 @@ const CONFIG = {
 	// https://cloud.walletconnect.com (free tier); it is a public client-side
 	// value. EMPTY => the WalletConnect option stays disabled (fail-closed).
 	walletconnect: {
-		projectId: "",
+		projectId: "74c3944c7d1579478f020903a8e6d008",
 		sdkVersion: "2" // pinned @walletconnect/ethereum-provider major, served via jsdelivr +esm
 	},
 	lzScan: "https://layerzeroscan.com"
