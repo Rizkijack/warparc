@@ -384,6 +384,13 @@ const CONFIG = {
 		attestationApi: "https://iris-api.circle.com/v2/attestations",
 		MESSAGE_SENT_TOPIC0: "0x2fa9ca894982930190727e75500a97d8dc500233a5065e0f3126c48fbe0343c0"
 	},
+	// WalletConnect — remote/mobile wallet sessions. projectId comes from
+	// https://cloud.walletconnect.com (free tier); it is a public client-side
+	// value. EMPTY => the WalletConnect option stays disabled (fail-closed).
+	walletconnect: {
+		projectId: "",
+		sdkVersion: "2" // pinned @walletconnect/ethereum-provider major, served via jsdelivr +esm
+	},
 	lzScan: "https://layerzeroscan.com"
 };
 

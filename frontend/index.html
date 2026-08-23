@@ -167,9 +167,37 @@
 </footer>
 
 <div class="toast-container" id="toast-container"></div>
+<div class="wallet-modal" id="wallet-modal" hidden>
+	<div class="wallet-panel" role="dialog" aria-modal="true" aria-labelledby="wallet-modal-title">
+		<header>
+			<h2 id="wallet-modal-title">Connect Wallet</h2>
+			<button type="button" class="wallet-close" id="wallet-modal-close" aria-label="Close">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+			</button>
+		</header>
+		<section>
+			<h3>Installed</h3>
+			<ul id="wallet-list-installed" class="wallet-list"></ul>
+		</section>
+		<section>
+			<h3>Mobile &amp; Extension-free</h3>
+			<ul id="wallet-list-remote" class="wallet-list">
+				<li class="wallet-row" id="wc-row" role="button" tabindex="0">
+					<img class="wallet-icon" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='8' width='24' height='17' rx='3' fill='%232775CA'/%3E%3Crect x='4' y='8' width='24' height='6' rx='3' fill='%231E5FA8'/%3E%3Ccircle cx='23' cy='19' r='2.2' fill='%23FFFFFF'/%3E%3C/svg%3E">
+					<span class="wallet-meta">
+						<span class="wallet-name">WalletConnect</span>
+						<span class="wallet-sub">Scan QR with any mobile wallet</span>
+					</span>
+					<svg class="wallet-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</li>
+			</ul>
+		</section>
+	</div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js" integrity="sha384-gpR0Q6Hx/O+uevlbpbANbS0LWjbejPV1sqD/8w422l/fW8whGY0EPmKw3uG7ACYP" crossorigin="anonymous"></script>
 <script src="js/config.js"></script>
+<script src="js/wallets.js"></script>
 <script src="js/app.js"></script>
 <script src="js/ui.js"></script>
 </body>

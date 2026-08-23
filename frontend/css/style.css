@@ -1014,3 +1014,168 @@ footer a:hover { color: var(--accent); }
 
 
 
+
+/* --- Wallet picker modal ----------------------------------------------------- */
+
+.wallet-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 100; /* above the sticky nav (z-index: 50) */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1.5rem;
+	background: rgba(22, 32, 43, 0.4);
+	-webkit-backdrop-filter: blur(4px);
+	backdrop-filter: blur(4px);
+}
+
+.wallet-modal[hidden] { display: none; }
+
+.wallet-panel {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-width: 380px;
+	max-height: min(85vh, 34rem);
+	overflow-y: auto;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-card); /* identical to .bridge-card */
+	padding: 1.25rem;
+}
+
+.wallet-panel header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.wallet-panel h2 {
+	font-family: var(--font-serif);
+	font-size: 1.45rem;
+	font-weight: 500;
+	letter-spacing: -0.02em;
+	line-height: 1.2;
+	color: var(--ink);
+	margin: 0;
+}
+
+.wallet-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	padding: 0;
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-sm);
+	color: var(--text3);
+	cursor: pointer;
+}
+
+.wallet-close:hover { background: var(--surface2); color: var(--ink); }
+.wallet-close:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-border); }
+
+.wallet-panel h3 {
+	font-size: 0.64rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text3);
+	margin: 1rem 0 0.6rem;
+}
+
+.wallet-panel section:first-of-type h3 { margin-top: 0; }
+
+.wallet-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.wallet-row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	min-height: 44px;
+	padding: 0.5rem 0.75rem;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	font: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+	text-align: left;
+	color: var(--text);
+	cursor: pointer;
+	appearance: none;
+}
+
+.wallet-row:hover:not(.disabled):not([disabled]) { background: var(--surface2); }
+.wallet-row:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-border); }
+.wallet-row.disabled { opacity: 0.5; cursor: not-allowed; }
+.wallet-row.connecting { pointer-events: none; }
+
+.wallet-icon {
+	width: 27px;
+	height: 27px;
+	flex: none;
+	border-radius: 6px;
+	object-fit: contain;
+}
+
+.wallet-meta {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	flex: 1;
+}
+
+.wallet-name,
+.wallet-sub {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.wallet-sub {
+	font-size: 0.68rem;
+	font-weight: 500;
+	color: var(--text3);
+}
+
+.wallet-chevron { flex: none; color: var(--text3); }
+
+.wallet-empty {
+	padding: 0.75rem 0.85rem;
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--radius-sm);
+	font-size: 0.78rem;
+	color: var(--text2);
+}
+
+/* Motion only for users who opted into it */
+@media (prefers-reduced-motion: no-preference) {
+	.wallet-row { transition: background 0.15s ease; }
+	.wallet-row:active:not(.disabled):not([disabled]) { transform: scale(0.99); }
+	.wallet-row.connecting .wallet-sub { animation: walletSubPulse 1.2s ease-in-out infinite; }
+
+	@keyframes walletSubPulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.45; }
+	}
+}
+
+@media (max-width: 540px) {
+	.wallet-modal { align-items: flex-end; padding: 0; }
+	.wallet-panel { border-radius: 16px 16px 0 0; width: 100%; max-width: none; }
+}
