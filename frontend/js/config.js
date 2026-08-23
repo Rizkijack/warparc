@@ -1,5 +1,5 @@
 // WarpArc configuration — canonical USDC route is Circle CCTP V2 (burn-and-mint).
-// Every Arc value traces to https://docs.arc.io (see ARC-SOURCES.md). Never fill
+// Every Arc value traces to https://docs.arc.io (see scripts/ARC-SOURCES.md). Never fill
 // an unknown value from memory — re-fetch from the official docs instead.
 //
 // Legacy LayerZero V2 OFT data (chains.*.layerZero, OFT_ABI) is DEPRECATED and

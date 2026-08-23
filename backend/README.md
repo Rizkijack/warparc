@@ -8,8 +8,8 @@ Sumber desain (semua nilai terverifikasi, tidak ada tebakan):
 
 | Komponen | Referensi |
 |----------|-----------|
-| Indexer dual-emitter + 1 konfirmasi | docs.arc.io/integrate/infrastructure/indexing-events · DEPLOY.md §6 |
-| Relayer (attestation → receiveMessage) | docs.arc.io/integrate/exchanges/cctp-bridging · DEPLOY.md Path B |
+| Indexer dual-emitter + 1 konfirmasi | docs.arc.io/integrate/infrastructure/indexing-events |
+| Relayer (attestation → receiveMessage) | docs.arc.io/integrate/exchanges/cctp-bridging |
 | Checklist bridge (USDC gas, WSS, confirmations=1) | docs.arc.io/integrate/infrastructure/bridges |
 | Layout pesan CCTP V2 (offset 8 = dstDomain, dstCaller 108) | circlefin/evm-cctp-contracts `src/messages/v2/` |
 | Gas Arc (≥20 Gwei floor, tip 0, type-2) | ARC-REFERENCE.md §9 |
