@@ -240,7 +240,7 @@ function disconnectWallet() {
 function onAccountChange() {
 	const btn = el("connect-btn");
 	const badge = el("network-badge");
-	const bridgeArea = el("bridge-area");
+	const card = document.querySelector(".bridge-card");
 
 	if (state.account) {
 		const short = state.account.slice(0, 6) + "..." + state.account.slice(-4);
@@ -256,14 +256,14 @@ function onAccountChange() {
 			badge.style.display = "flex";
 		}
 
-		bridgeArea.style.display = "block";
+		if (card) card.classList.remove("disconnected");
 		loadBalances();
 		updateContractInfo();
 	} else {
 		btn.textContent = "Connect Wallet";
 		btn.className = "btn btn-primary btn-sm";
 		badge.style.display = "none";
-		bridgeArea.style.display = "none";
+		if (card) card.classList.add("disconnected");
 	}
 }
 
@@ -629,7 +629,7 @@ async function bridge() {
 
 	try {
 		if (!state.signer || !state.account) {
-			toast("Connect your wallet first", "error");
+			await connectWallet();
 			return;
 		}
 
@@ -711,6 +711,11 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 	setFlowsBusy(true);
 	let subTxId = null; // fwd-/att- sub-entry — must not stay "pending" on abort
 
+	// Initialize CCTP step tracker
+	resetStepper();
+	showStepper();
+	updateStepper("burn", "active");
+
 	try {
 		// 1. Make sure the wallet is on the source chain (and signer is fresh)
 		if (state.chainId !== fromChain.chainId) {
@@ -768,6 +773,11 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 		if (burnReceipt.status !== 1) throw new Error("Burn transaction failed");
 		updateTxEntry(burnTxId, "success", burnTx.hash);
 
+		// Stepper: burn done → attestation/forward active
+		updateStepper("burn", "done");
+		updateStepperLine("burn", "done");
+		updateStepper("attest", "active");
+
 		// Persist enough to resume if the flow dies before the mint lands
 		savePendingCctp({
 			burnHash: burnTx.hash,
@@ -799,6 +809,10 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 			toast(`Bridge complete! ${amount} USDC → ${toChain.shortName} (forwarded by Circle)`, "success");
 			clearPendingCctp();
 			loadBalances();
+			// Stepper: all done
+			updateStepper("attest", "done");
+			updateStepperLine("attest", "done");
+			updateStepper("mint", "done");
 		} else {
 			// 4b. Wait for Circle to sign the attestation (fast ≈ seconds)
 			btn.textContent = "Waiting for attestation...";
@@ -807,6 +821,11 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 			addTxEntry(attTxId, "Circle attestation (fast)", "pending", fromKey);
 			const att = await pollAttestation(CONFIG.iris[fromChain.network], fromChain.cctpDomain, burnTx.hash);
 			updateTxEntry(attTxId, "success", burnTx.hash);
+
+			// Stepper: attestation done → mint active
+			updateStepper("attest", "done");
+			updateStepperLine("attest", "done");
+			updateStepper("mint", "active");
 
 			// 5. Mint on the destination chain
 			btn.textContent = `Minting on ${toChain.shortName}...`;
@@ -831,6 +850,11 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 			updateTxEntry(subTxId, "failed", "");
 		}
 		toast("Bridge failed: " + (e.reason || e.shortMessage || e.message || "Unknown error"), "error");
+		// Mark the currently-active stepper step as failed
+		["burn", "attest", "mint"].forEach(s => {
+			const stepEl = el("step-" + s);
+			if (stepEl && stepEl.classList.contains("active")) updateStepper(s, "failed");
+		});
 	}
 }
 
@@ -850,9 +874,11 @@ async function submitMint(toChain, att, mintTxId, toKey, amount) {
 			updateTxEntry(mintTxId, "success", mintTx.hash);
 			toast(`Bridge complete! ${amount} USDC → ${toChain.shortName}`, "success");
 			clearPendingCctp();
+			updateStepper("mint", "done");
 		} else {
 			updateTxEntry(mintTxId, "failed", mintTx.hash);
 			toast("Mint transaction failed", "error");
+			updateStepper("mint", "failed");
 		}
 	} catch (e) {
 		const msg = String(e.reason || e.shortMessage || e.message || "");
@@ -860,10 +886,12 @@ async function submitMint(toChain, att, mintTxId, toKey, amount) {
 			updateTxEntry(mintTxId, "success", "");
 			toast("Mint was already submitted by a relayer — funds are on " + toChain.shortName, "success");
 			clearPendingCctp();
+			updateStepper("mint", "done");
 		} else {
 			// Rejected/reverted mint: the burn is safe on-chain — KEEP the pending
 			// record so the resume banner survives for a retry.
 			updateTxEntry(mintTxId, "failed", "");
+			updateStepper("mint", "failed");
 			throw e;
 		}
 	} finally {
@@ -1102,7 +1130,7 @@ function updateBridgeBtn() {
 	const amount = el("amount").value.trim();
 	const token = getSelectedToken();
 
-	if (!account) { btn.textContent = "Connect Wallet"; btn.disabled = true; return; }
+	if (!account) { btn.textContent = "Connect Wallet"; btn.disabled = false; return; }
 	if (fromKey === toKey) { btn.textContent = "Same chain selected"; btn.disabled = true; return; }
 
 	if (token === "USDC") {
@@ -1228,6 +1256,75 @@ function setMax() {
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Chain swap (interactive arrow button)
+// ---------------------------------------------------------------------------
+
+function swapChains() {
+	const from = el("from-chain");
+	const to = el("to-chain");
+	const tmp = from.value;
+	from.value = to.value;
+	to.value = tmp;
+	// Animate the swap icon
+	const btn = el("swap-chains-btn");
+	if (btn) {
+		btn.classList.add("swapped");
+		setTimeout(() => btn.classList.remove("swapped"), 300);
+	}
+	onChainChange();
+}
+
+// ---------------------------------------------------------------------------
+// Preset amount buttons (25% / 50% / 75%)
+// ---------------------------------------------------------------------------
+
+function setPresetAmount(pct) {
+	if (state.lastFromBalanceRaw == null || state.lastFromBalanceRaw === 0n) return;
+	const token = getSelectedToken();
+	const decimals = token === "USDC" ? 6 : 18;
+	const places = token === "USDC" ? 2 : 4;
+	const portion = state.lastFromBalanceRaw * BigInt(pct) / 100n;
+	el("amount").value = truncateUnits(portion, decimals, places);
+	updateBridgeBtn();
+	estimateGas();
+}
+
+// ---------------------------------------------------------------------------
+// CCTP V2 Step Tracker
+// ---------------------------------------------------------------------------
+
+function updateStepper(step, state) {
+	const stepEl = el("step-" + step);
+	if (!stepEl) return;
+	// Clear previous states
+	stepEl.classList.remove("active", "done", "failed");
+	if (state) stepEl.classList.add(state);
+}
+
+function updateStepperLine(line, state) {
+	const lineEl = el("line-" + line);
+	if (!lineEl) return;
+	lineEl.classList.remove("active", "done");
+	if (state) lineEl.classList.add(state);
+}
+
+function showStepper() {
+	const stepper = el("cctp-stepper");
+	if (stepper) stepper.style.display = "flex";
+}
+
+function hideStepper() {
+	const stepper = el("cctp-stepper");
+	if (stepper) stepper.style.display = "none";
+}
+
+function resetStepper() {
+	["burn", "attest", "mint"].forEach(s => updateStepper(s, null));
+	["burn", "attest"].forEach(l => updateStepperLine(l, null));
+	hideStepper();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 	if (window.ethereum) {
 		window.ethereum.on("accountsChanged", async (accounts) => {
@@ -1256,6 +1353,20 @@ document.addEventListener("DOMContentLoaded", () => {
 	el("connect-btn").addEventListener("click", connectWallet);
 	el("max-btn").addEventListener("click", setMax);
 	el("bridge-btn").addEventListener("click", bridge);
+
+	// Chain swap button
+	const swapBtn = el("swap-chains-btn");
+	if (swapBtn) {
+		swapBtn.addEventListener("click", swapChains);
+	}
+
+	// Preset amount buttons (25%, 50%, 75%)
+	document.querySelectorAll(".preset-btn").forEach(btn => {
+		btn.addEventListener("click", () => {
+			const pct = Number(btn.dataset.pct);
+			if (pct > 0) setPresetAmount(pct);
+		});
+	});
 
 	const forwardToggle = el("forward-toggle");
 	if (forwardToggle) {
@@ -1293,4 +1404,9 @@ document.addEventListener("DOMContentLoaded", () => {
 	populateChainSelects();
 	onTokenChange();
 	updateBridgeBtn();
+
+	// Start in disconnected state — card shows form but muted
+	const card = document.querySelector(".bridge-card");
+	if (card && !state.account) card.classList.add("disconnected");
 });
+

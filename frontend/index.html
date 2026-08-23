@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WarpArc Bridge · Circle CCTP V2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -46,16 +49,18 @@
 
 		<div class="chain-selectors">
 			<select id="from-chain" class="chain-select"></select>
-			<div class="chain-arrow">
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-					<line x1="5" y1="12" x2="19" y2="12"/>
-					<polyline points="12 5 19 12 12 19"/>
-				</svg>
-			</div>
-			<select id="to-chain" class="chain-select"></select>
+		<button type="button" class="chain-arrow" id="swap-chains-btn" aria-label="Swap source and destination chains" title="Swap chains">
+			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+				<polyline points="7 3 7 21"/>
+				<polyline points="3 17 7 21 11 17"/>
+				<polyline points="17 21 17 3"/>
+				<polyline points="13 7 17 3 21 7"/>
+			</svg>
+		</button>
+		<select id="to-chain" class="chain-select"></select>
 		</div>
 
-		<div id="bridge-area" style="display:none">
+		<div id="bridge-area">
 			<div class="input-group">
 				<label>Amount</label>
 				<div class="input-wrap">
@@ -67,7 +72,12 @@
 				</div>
 				<div class="balance-row">
 					<span>Balance: <span id="from-balance">0.00</span></span>
-					<button class="max-btn" id="max-btn">MAX</button>
+					<span class="preset-btns">
+						<button class="preset-btn" data-pct="25">25%</button>
+						<button class="preset-btn" data-pct="50">50%</button>
+						<button class="preset-btn" data-pct="75">75%</button>
+						<button class="max-btn" id="max-btn">MAX</button>
+					</span>
 				</div>
 			</div>
 
@@ -93,6 +103,23 @@
 						<button class="btn btn-primary btn-sm" id="resume-btn">Resume mint</button>
 						<button class="btn btn-sm" id="pending-dismiss">Dismiss</button>
 					</span>
+				</div>
+			</div>
+
+			<div class="cctp-stepper" id="cctp-stepper" style="display:none">
+				<div class="stepper-step" id="step-burn">
+					<div class="stepper-dot"></div>
+					<div class="stepper-label">Burn</div>
+				</div>
+				<div class="stepper-line" id="line-burn"></div>
+				<div class="stepper-step" id="step-attest">
+					<div class="stepper-dot"></div>
+					<div class="stepper-label">Attestation</div>
+				</div>
+				<div class="stepper-line" id="line-attest"></div>
+				<div class="stepper-step" id="step-mint">
+					<div class="stepper-dot"></div>
+					<div class="stepper-label">Mint</div>
 				</div>
 			</div>
 

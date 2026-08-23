@@ -12,7 +12,7 @@
 	--border-active: #3d4352;
 	--text: #e3e6eb;
 	--text2: #8b92a3;
-	--text3: #5a6170;
+	--text3: #7a8396;
 	--accent: #9b6ef0;
 	--accent-dim: #6b4fa0;
 	--green: #62d97a;
@@ -21,12 +21,14 @@
 	--eth: #6b8cff;
 	--radius: 10px;
 	--radius-sm: 6px;
+	--font-ui: "Inter", "SF Pro Display", system-ui, -apple-system, sans-serif;
+	--font-mono: "SF Mono", "Cascadia Code", "JetBrains Mono", "Consolas", monospace;
 }
 
 html { font-size: 15px; }
 
 body {
-	font-family: "SF Mono", "Cascadia Code", "JetBrains Mono", "Consolas", monospace;
+	font-family: var(--font-ui);
 	background: var(--bg);
 	color: var(--text);
 	min-height: 100vh;
@@ -140,8 +142,8 @@ main {
 	border: 1px solid var(--border);
 	border-radius: 16px;
 	padding: 2rem;
-	width: 75%;
-	max-width: 960px;
+	width: 100%;
+	max-width: 480px;
 	position: relative;
 }
 
@@ -214,9 +216,19 @@ main {
 	border: 1px solid var(--border);
 	flex-shrink: 0;
 	color: var(--text2);
+	cursor: pointer;
+	transition: all 0.2s;
+	outline: none;
+	font-family: inherit;
+	padding: 0;
 }
 
+.chain-arrow:hover { border-color: var(--accent); color: var(--accent); background: rgba(155, 110, 240, 0.08); }
+.chain-arrow:active { transform: scale(0.9); }
+.chain-arrow:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+
 .chain-arrow svg { transition: transform 0.3s; }
+.chain-arrow.swapped svg { transform: rotate(180deg); }
 
 .input-group {
 	margin-bottom: 1rem;
@@ -367,7 +379,7 @@ main {
 .contract-item .contract-addr {
 	color: var(--text2);
 	font-size: 0.72rem;
-	max-width: 340px;
+	max-width: 160px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -572,6 +584,177 @@ footer a {
 	75% { content: "..."; }
 }
 
+/* Monospace for data-heavy elements */
+.input-wrap input,
+#from-balance,
+.contract-addr,
+.tx-hash,
+.network-badge,
+.gas-estimate span:last-child {
+	font-family: var(--font-mono);
+}
+
+/* Preset amount buttons (25% / 50% / 75%) */
+.preset-btns {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.preset-btn {
+	background: none;
+	border: none;
+	color: var(--text3);
+	font-family: var(--font-ui);
+	font-size: 0.65rem;
+	font-weight: 600;
+	cursor: pointer;
+	padding: 0.15rem 0.35rem;
+	border-radius: 3px;
+	letter-spacing: 0.3px;
+	transition: all 0.15s;
+}
+
+.preset-btn:hover { background: rgba(155, 110, 240, 0.12); color: var(--accent); }
+
+/* CCTP V2 Step Tracker */
+.cctp-stepper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0;
+	padding: 1rem 0.5rem;
+	margin: 0.75rem 0;
+	background: var(--surface2);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+}
+
+.stepper-step {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.35rem;
+	min-width: 64px;
+}
+
+.stepper-dot {
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	border: 2px solid var(--border-active);
+	background: var(--surface);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.3s;
+	position: relative;
+}
+
+.stepper-dot::after {
+	content: "";
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: transparent;
+	transition: background 0.3s;
+}
+
+.stepper-label {
+	font-size: 0.65rem;
+	font-weight: 600;
+	color: var(--text3);
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	transition: color 0.3s;
+}
+
+.stepper-line {
+	flex: 1;
+	height: 2px;
+	background: var(--border);
+	margin: 0 0.25rem;
+	margin-bottom: 1.2rem;
+	transition: background 0.3s;
+	min-width: 24px;
+}
+
+/* Stepper states */
+.stepper-step.active .stepper-dot {
+	border-color: var(--accent);
+	box-shadow: 0 0 8px rgba(155, 110, 240, 0.4);
+}
+
+.stepper-step.active .stepper-dot::after {
+	background: var(--accent);
+	animation: pulse 1.5s infinite;
+}
+
+.stepper-step.active .stepper-label {
+	color: var(--accent);
+}
+
+.stepper-step.done .stepper-dot {
+	border-color: var(--green);
+	background: var(--green);
+}
+
+.stepper-step.done .stepper-dot::after {
+	content: "✓";
+	width: auto;
+	height: auto;
+	background: transparent;
+	color: #fff;
+	font-size: 0.65rem;
+	font-weight: 700;
+	animation: none;
+}
+
+.stepper-step.done .stepper-label {
+	color: var(--green);
+}
+
+.stepper-step.failed .stepper-dot {
+	border-color: var(--red);
+	background: var(--red);
+}
+
+.stepper-step.failed .stepper-dot::after {
+	content: "✕";
+	width: auto;
+	height: auto;
+	background: transparent;
+	color: #fff;
+	font-size: 0.65rem;
+	font-weight: 700;
+	animation: none;
+}
+
+.stepper-step.failed .stepper-label {
+	color: var(--red);
+}
+
+.stepper-line.done {
+	background: var(--green);
+}
+
+.stepper-line.active {
+	background: linear-gradient(90deg, var(--green), var(--accent));
+}
+
+/* Disconnected state — muted form overlay */
+.bridge-card.disconnected .input-wrap {
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+.bridge-card.disconnected .gas-estimate,
+.bridge-card.disconnected .balance-row,
+.bridge-card.disconnected .preset-btns {
+	opacity: 0.4;
+	pointer-events: none;
+}
+
 @media (max-width: 768px) {
 	.bridge-card { width: 100%; }
 	main { padding: 1.25rem; }
@@ -585,4 +768,7 @@ footer a {
 	main { padding: 1rem; }
 	footer { padding: 0.75rem 1rem; }
 	.footer-links { gap: 0.75rem; }
+	.cctp-stepper { padding: 0.75rem 0.25rem; }
+	.stepper-label { font-size: 0.6rem; }
 }
+
