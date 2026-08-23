@@ -118,6 +118,21 @@ Job lifecycle: `queued → attestation_wait → ready → submitting → relayed
 3. Uji: burn kecil dari frontend (jalur manual/forwarding-off), lalu
    `POST /relay` dengan txHash burn — pantau `/jobs` sampai `relayed`.
 
+## MCP server (ops via agent)
+
+```bash
+npm run backend:mcp          # MCP stdio server — tools/resources/prompts ops backend
+npm run backend:mcp:smoke    # 30+ asersi offline (protocol, tools, resources, prompts, E2E spawn)
+```
+
+Melayani MCP client (Claude/VS Code/agent lain) lewat JSON-RPC 2.0
+line-delimited di stdio sebagai **sesi ops pasif**: relayer TIDAK di-tick di
+sini (tidak ada double-submit dengan `npm run backend`), dan satu-satunya tool
+yang menulis (`warparc_relay_submit`) memakai guard yang sama dengan
+`POST /relay` — hanya mencatat job; pengiriman on-chain tetap butuh backend
+relayer yang LIVE. Detail tools/resources/prompts dan rencana remote
+(Streamable HTTP + auth): `mcp/README.md`.
+
 ## Test
 
 ```bash

@@ -1,7 +1,8 @@
 # WarpArc · App Kit (Path A)
 
 Reference implementation of the **recommended** integration path from
-MAINNET-CHECKLIST.md Phase 3 ("Path A App Kit"):
+ARC-REFERENCE.md Phase 3 (local-only runbook, formerly MAINNET-CHECKLIST.md,
+"Path A App Kit"):
 Circle **App Kit** (`@circle-fin/app-kit`) wrapping the full CCTP V2 lifecycle
 (`kit.bridge()`) plus **Unified Balance** (Gateway deposit / spend / getBalances)
 behind SDK calls — no custom bridge contracts, no manual attestation handling.
@@ -38,5 +39,5 @@ Fund the wallet with testnet USDC at https://faucet.circle.com first
   (`appKit.unifiedBalance.deposit/spend/getBalances`)
 
 The Path B static site (no build step, direct CCTP V2 contracts, manual mint +
-Forwarding Service toggle) lives in the repo root — see MAINNET-CHECKLIST.md
-Phase 3 ("Path B custom adapters").
+Forwarding Service toggle) lives in the repo root — see ARC-REFERENCE.md
+(local-only runbook) Phase 3 ("Path B custom adapters").
