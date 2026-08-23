@@ -27,6 +27,9 @@ const TESTNET_CHAIN_ID = 5042002; // Arc testnet chain id (desimal — banding p
 const RPC_URL = "https://rpc.testnet.arc.io";
 const LLMS_URL = "https://docs.arc.io/llms.txt";
 const BLOG_URL = "https://community.arc.io/public/blogs/arc-public-mainnet-launches-september-16-2026-2026-08-06";
+
+const MCP_DOCS_URL = "https://docs.arc.io/mcp"; // endpoint MCP resmi docs.arc.io (Streamable HTTP, tanpa auth)
+const MCP_TIMEOUT_MS = 15_000; // rantai initialize -> tools/list -> tools/call lebih lambat dr satu fetch
 const STATE_FILE = path.join(__dirname, "..", "cache", "phase0-state.json");
 
 // Halaman referensi docs.arc.io yang dipantau: setiap fetch + cek kata kunci.
@@ -196,6 +199,174 @@ async function checkBlog() {
 	};
 }
 
+// 5. MCP docs.arc.io — klien Streamable-HTTP minimal (tanpa dependency): initialize ->
+//    notifications/initialized -> tools/list -> tools/call(search). Menambah deteksi
+//    halaman mainnet baru walau belum terindeks llms.txt (cek no. 2).
+
+// Ambil semua event SSE yang sudah lengkap (diakhiri baris kosong) dari buffer.
+// Kembalikan {messages, rest}: rest = sisa parsial untuk chunk berikutnya.
+function takeSseEvents(buf) {
+	const messages = [];
+	let pos = 0;
+	const re = /\r?\n\r?\n/g;
+	let m;
+	while ((m = re.exec(buf))) {
+		const data = buf
+			.slice(pos, m.index)
+			.split(/\r?\n/)
+			.filter((line) => line.startsWith("data:"))
+			.map((line) => line.slice(5).trim())
+			.join("\n")
+			.trim();
+		pos = re.lastIndex;
+		if (data) {
+			try {
+				messages.push(JSON.parse(data));
+			} catch {
+				// event non-JSON (mis. komentar keepalive) — abaikan
+			}
+		}
+	}
+	return { messages, rest: buf.slice(pos) };
+}
+
+// Parser tunggal utk balasan non-streaming: JSON polos ATAU seluruh body terbungkus
+// SSE ("data: {...}" per event). Kembalikan daftar pesan JSON-RPC.
+function parseJsonOrSse(text) {
+	const trimmed = text.trim();
+	if (!/^data:/m.test(trimmed)) return [JSON.parse(trimmed)];
+	return takeSseEvents(trimmed + "\n\n").messages; // +"\n\n": event terakhir bisa tanpa baris kosong
+}
+
+async function checkMcpDocs() {
+	let sessionId = null;
+
+	// Satu POST ke endpoint MCP; kembalikan `result` utk request ber-id tsb.
+	// Notifikasi (tanpa id) tidak punya balasan -> null. Gagal selalu THROW dgn label
+	// kelas pendek — checkMcpDocs yang menangkap & menjadikannya findings.
+	async function send(body) {
+		let res;
+		try {
+			res = await fetch(MCP_DOCS_URL, {
+				method: "POST",
+				headers: {
+					"content-type": "application/json",
+					accept: "application/json, text/event-stream",
+					...(sessionId ? { "mcp-session-id": sessionId } : {}),
+				},
+				body: JSON.stringify(body),
+				signal: AbortSignal.timeout(MCP_TIMEOUT_MS),
+			});
+		} catch (e) {
+			throw new Error(
+				e.name === "TimeoutError" || e.name === "AbortError" ? `timeout >${MCP_TIMEOUT_MS / 1000}s` : "transport",
+			);
+		}
+		if (!res.ok) throw new Error(`HTTP ${res.status}`);
+		const sid = res.headers.get("mcp-session-id");
+		if (sid) sessionId = sid; // wajib dibawa balik di semua request sesi berikutnya
+		if (typeof body.id !== "number") {
+			await res.text(); // notifikasi: cukup drain body
+			return null;
+		}
+
+		// Server boleh membalas JSON polos atau membuka aliran SSE yang ditutup belakangan —
+		// utk SSE proses tiap chunk begitu datang, jangan menunggu stream tutup dulu.
+		if (/text\/event-stream/i.test(res.headers.get("content-type") || "")) {
+			const reader = res.body.getReader();
+			const decoder = new TextDecoder();
+			let buf = "";
+			try {
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
+					buf += decoder.decode(value, { stream: true });
+					const { messages, rest } = takeSseEvents(buf);
+					buf = rest;
+					const hit = messages.find((x) => x && x.id === body.id);
+					if (hit) {
+						if (hit.error) throw new Error(`rpc-error ${hit.error.code}`);
+						return hit.result;
+					}
+				}
+			} finally {
+				reader.cancel().catch(() => {}); // lepas koneksi walau selesai/throw
+			}
+			throw new Error(`no-response id=${body.id}`);
+		}
+
+		let msgs;
+		try {
+			msgs = parseJsonOrSse(await res.text());
+		} catch (e) {
+			throw new Error("bad-json");
+		}
+		const msg = msgs.find((x) => x && x.id === body.id);
+		if (!msg) throw new Error(`no-response id=${body.id}`);
+		if (msg.error) throw new Error(`rpc-error ${msg.error.code}`);
+		return msg.result;
+	}
+
+	try {
+		await send({
+			jsonrpc: "2.0",
+			id: 1,
+			method: "initialize",
+			params: {
+				protocolVersion: "2025-03-26",
+				capabilities: {},
+				clientInfo: { name: "warparc-phase0", version: "1.0" },
+			},
+		});
+		await send({ jsonrpc: "2.0", method: "notifications/initialized" });
+
+		const listResult = await send({ jsonrpc: "2.0", id: 2, method: "tools/list" });
+		const tools = (listResult && listResult.tools) || [];
+		const names = tools.map((t) => t.name);
+
+		// Tool pencarian: kandidat /search/i; bila lebih dari satu, nama terpendek menang.
+		const searchTools = tools
+			.filter((t) => t && /search/i.test(t.name))
+			.sort((a, b) => a.name.length - b.name.length);
+		if (searchTools.length === 0) {
+			const cls = `no-search-tool (${names.join(",") || "kosong"})`;
+			return { key: "mcp.docs.arc.io", ok: false, findings: [`error: ${cls}`], error: cls };
+		}
+
+		// Sesuaikan nama argumen dgn inputSchema tool: coba "query", lalu "q".
+		const schemaProps = Object.keys((searchTools[0].inputSchema && searchTools[0].inputSchema.properties) || {});
+		const argName = ["query", "q"].find((n) => schemaProps.includes(n)) || schemaProps[0] || "query";
+
+		const callResult = await send({
+			jsonrpc: "2.0",
+			id: 3,
+			method: "tools/call",
+			params: { name: searchTools[0].name, arguments: { [argName]: "mainnet" } },
+		});
+		if (callResult && callResult.isError) throw new Error("tool-error");
+
+		// Hit metrik: item konten yg menyebut mainnet (bila content array), atau jumlah
+		// kemunculan /mainnet/i pada gabungan teks hasil (fallback: seluruh result).
+		const content = callResult && callResult.content;
+		let mainnetHits;
+		if (Array.isArray(content)) {
+			mainnetHits = content.filter((item) => /mainnet/i.test(JSON.stringify(item))).length;
+		} else {
+			const blob = typeof content === "string" ? content : JSON.stringify(callResult || {});
+			mainnetHits = (blob.match(/mainnet/gi) || []).length;
+		}
+
+		return {
+			key: "mcp.docs.arc.io",
+			ok: true,
+			findings: [`tools=${names.join(",")}`, `mainnetHits=${mainnetHits}`],
+		};
+	} catch (e) {
+		const cls = String((e && e.message) || e).slice(0, 60);
+		return { key: "mcp.docs.arc.io", ok: false, findings: [`error: ${cls}`], error: cls };
+	}
+}
+
 // --- state & diff --------------------------------------------------------------
 
 function loadOldState() {
@@ -218,6 +389,10 @@ function comparable(c) {
 }
 
 // Bandingkan per-key dgn state lama; kembalikan daftar key yang berubah.
+// Key BARU (belum ada di baseline) dianggap informasional & sengaja dikecualikan dari
+// hitungan diff: tetap dicetak + tersimpan pada run pertamanya, dan baru ikut
+// dibandingkan mulai run kedua — sehingga menambah cek baru (mis. cek MCP) tidak
+// melaporkan CHANGED terus-menerus.
 function diffKeys(oldChecks, newChecks) {
 	const oldByKey = new Map((oldChecks || []).map((c) => [c.key, c]));
 	const changed = [];
@@ -256,6 +431,7 @@ async function main() {
 		checkDocsScan(),
 		...REF_PAGES.map(checkPage),
 		checkBlog(),
+		checkMcpDocs(),
 	]);
 
 	for (const c of checks) console.log(fmtCheck(c));
