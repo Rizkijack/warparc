@@ -16,6 +16,9 @@ deployments.json
 .env
 .env.local
 
+# Local agent reference docs (working docs, not committed)
+ARC-REFERENCE.md
+
 # Editors / OS
 .DS_Store
 Thumbs.db
