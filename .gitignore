@@ -8,6 +8,8 @@ typechain-types/
 
 # App Kit (Path A) build output — source lives in appkit/, build via npm run build
 appkit/dist/
+# Audit/one-off build artifacts (not source; keep local-only)
+_audit_appkit_dist/
 
 # Local deployment state (contains addresses, not secrets)
 deployments.json
