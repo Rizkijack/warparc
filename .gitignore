@@ -15,9 +15,7 @@ deployments.json
 # Environment / secrets
 .env
 .env.local
-
-# Local agent reference docs (working docs, not committed)
-ARC-REFERENCE.md
+# NOTE: jangan pakai wildcard `.env*` — itu meng-ignore `.env.example` (tracked).
 
 # Editors / OS
 .DS_Store
@@ -25,7 +23,7 @@ Thumbs.db
 *.log
 
 .vercel
-.env*
+.mcp.json
 
 # Worktrees & docs (operational runbooks stay local-only — never commit)
 PekerjaanAgents/

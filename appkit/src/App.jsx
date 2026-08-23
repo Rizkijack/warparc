@@ -22,18 +22,18 @@ const AMOUNT_RE = /^\d+(?:\.\d{1,6})?$/;
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
 const styles = {
-	page: { fontFamily: "system-ui, sans-serif", maxWidth: 720, margin: "0 auto", padding: 24, color: "#e6e8ef", background: "#0d1017", minHeight: "100vh" },
-	card: { border: "1px solid #2a2f3a", borderRadius: 12, padding: 20, marginBottom: 16, background: "#141822" },
+	page: { fontFamily: "'SF Pro Display', 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif", maxWidth: 760, margin: "0 auto", padding: "32px 24px 56px", color: "#2F3437", background: "#F7F6F3", minHeight: "100vh", lineHeight: 1.6 },
+	card: { border: "1px solid #EAEAEA", borderRadius: 10, padding: 20, marginBottom: 16, background: "#FFFFFF", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" },
 	row: { display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", margin: "8px 0" },
-	label: { fontSize: 12, color: "#8b93a7", minWidth: 110 },
-	select: { background: "#1c212d", color: "#e6e8ef", border: "1px solid #2a2f3a", borderRadius: 8, padding: 8, flex: 1, minWidth: 160 },
-	input: { background: "#1c212d", color: "#e6e8ef", border: "1px solid #2a2f3a", borderRadius: 8, padding: 8, flex: 1, minWidth: 120 },
-	button: { background: "#9b6ef0", color: "#fff", border: "none", borderRadius: 8, padding: "10px 18px", fontWeight: 600, cursor: "pointer" },
-	buttonGhost: { background: "#1c212d", color: "#e6e8ef", border: "1px solid #2a2f3a", borderRadius: 8, padding: "10px 18px", cursor: "pointer" },
-	buttonWarn: { background: "#b45309", color: "#fff", border: "none", borderRadius: 8, padding: "10px 18px", fontWeight: 600, cursor: "pointer" },
-	status: { fontSize: 13, whiteSpace: "pre-wrap", wordBreak: "break-all", background: "#10131b", borderRadius: 8, padding: 12, marginTop: 12, color: "#9fb0c8" },
+	label: { fontSize: 12, color: "#787774", minWidth: 120, flexShrink: 0 },
+	select: { background: "#F9F9F8", color: "#2F3437", border: "1px solid #EAEAEA", borderRadius: 6, padding: "8px 10px", flex: 1, minWidth: 160, fontFamily: "inherit", fontSize: 13 },
+	input: { background: "#F9F9F8", color: "#2F3437", border: "1px solid #EAEAEA", borderRadius: 6, padding: "8px 10px", flex: 1, minWidth: 140, fontFamily: "'Geist Mono', 'SF Mono', 'JetBrains Mono', Consolas, monospace", fontSize: 12.5 },
+	button: { background: "#1F2324", color: "#fff", border: "none", borderRadius: 4, padding: "9px 16px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", fontSize: 13 },
+	buttonGhost: { background: "#FFFFFF", color: "#2F3437", border: "1px solid #DCDCD6", borderRadius: 4, padding: "9px 16px", cursor: "pointer", fontFamily: "inherit", fontSize: 13 },
+	buttonWarn: { background: "#9F2F2D", color: "#fff", border: "none", borderRadius: 4, padding: "9px 16px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", fontSize: 13 },
+	status: { fontSize: 12.5, whiteSpace: "pre-wrap", wordBreak: "break-all", background: "#FBFBFA", border: "1px solid #EAEAEA", borderRadius: 6, padding: 12, marginTop: 12, color: "#2F3437", fontFamily: "'Geist Mono', 'SF Mono', 'JetBrains Mono', Consolas, monospace", lineHeight: 1.55, maxHeight: 320, overflow: "auto" },
 	tab: { display: "flex", gap: 8, marginBottom: 16 },
-	tabBtn: (active) => ({ background: active ? "#9b6ef0" : "#1c212d", color: active ? "#fff" : "#8b93a7", border: "1px solid #2a2f3a", borderRadius: 8, padding: "8px 16px", cursor: "pointer", fontWeight: 600 })
+	tabBtn: (active) => ({ background: active ? "#1F2324" : "#FFFFFF", color: active ? "#fff" : "#787774", border: "1px solid " + (active ? "#1F2324" : "#DCDCD6"), borderRadius: 4, padding: "8px 16px", cursor: "pointer", fontWeight: 600, fontFamily: "inherit", fontSize: 13 })
 };
 
 const chainOptions = supportedChains.map(c => ({ id: c.id, name: c.name }));
@@ -261,7 +261,9 @@ export default function App() {
 
 	return (
 		<div style={styles.page}>
-			<h2>WarpArc · App Kit <small style={{ color: "#8b93a7" }}>(Path A — testnet only)</small></h2>
+			<h2 style={{ fontFamily: "'Newsreader', 'Georgia', serif", fontSize: "1.8rem", fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1.2, color: "#1F2324", margin: "4px 0 16px" }}>
+				WarpArc · App Kit <small style={{ color: "#9C9A93", fontFamily: "inherit", fontSize: "0.8rem", fontWeight: 400, letterSpacing: 0, whiteSpace: "nowrap" }}>(Path A — testnet only)</small>
+			</h2>
 
 			<div style={styles.card}>
 				<div style={styles.row}>
