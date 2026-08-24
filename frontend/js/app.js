@@ -34,6 +34,7 @@ const TRANSLATIONS = {
 		amountMustExceedFee: "Amount must exceed the CCTP fee",
 		switchingTo: "Switching wallet to", alreadyRelayed: "Mint was already submitted by a relayer — funds are on",
 		switchRejected: "Wallet switch rejected — cannot bridge from ",
+		cctpFallbackNotice: "Bridge Adapter not deployed on this pair yet — using CCTP burn-and-mint",
 		forwarderStalled: "Forwarder belum selesai — melanjutkan dengan mint manual…",
 		resumeConfirm: "Burn ini dibuat untuk penerima",
 		notOnChain: "Wallet is not on", abortMint: " — mint aborted before send",
@@ -75,6 +76,7 @@ const TRANSLATIONS = {
 		amountMustExceedFee: "金额必须超过CCTP费用",
 		switchingTo: "切换钱包到", alreadyRelayed: "铸造已被中继器提交 — 资金已在",
 		switchRejected: "钱包切换被拒绝 — 无法从以下网络桥接 ",
+		cctpFallbackNotice: "桥接适配器尚未部署于该组合 — 改用 CCTP 销毁并铸造",
 		forwarderStalled: "转发器未完成 — 手动铸造继续…",
 		resumeConfirm: "此销毁为收款人创建",
 		notOnChain: "钱包不在", abortMint: " — 铸造在发送前中止",
@@ -116,6 +118,7 @@ const TRANSLATIONS = {
 		amountMustExceedFee: "राशि CCTP शुल्क से अधिक होनी चाहिए",
 		switchingTo: "वॉलेट स्विच हो रहा है", alreadyRelayed: "मिंट पहले ही रिलेयर द्वारा सबमिट किया जा चुका है — फंड हैं",
 		switchRejected: "वॉलेट स्विच अस्वीकृत — इस नेटवर्क से ब्रिज नहीं कर सकते ",
+		cctpFallbackNotice: "ब्रिज एडाप्टर इस जोड़ी पर अभी डिप्लॉय नहीं है — CCTP बर्न-एंड-मिंट उपयोग हो रहा है",
 		forwarderStalled: "फॉरवर्डर पूरा नहीं हुआ — मैनुअल मिंट जारी…",
 		resumeConfirm: "यह बर्न प्राप्तकर्ता के लिए बनाया गया था",
 		notOnChain: "वॉलेट पर नहीं है", abortMint: " — भेजने से पहले मिंट निरस्त",
@@ -157,6 +160,7 @@ const TRANSLATIONS = {
 		amountMustExceedFee: "La cantidad debe exceder la tarifa CCTP",
 		switchingTo: "Cambiando billetera a", alreadyRelayed: "El mint ya fue enviado por un relayer — fondos en",
 		switchRejected: "Cambio de red rechazado — no se puede puentear desde ",
+		cctpFallbackNotice: "El adaptador aún no está desplegado en este par — usando CCTP burn-and-mint",
 		forwarderStalled: "Reenviador no completó — mint manual continuando…",
 		resumeConfirm: "Esta quema fue creada para el destinatario",
 		notOnChain: "Billetera no está en", abortMint: " — mint abortado antes de enviar",
@@ -198,6 +202,7 @@ const TRANSLATIONS = {
 		amountMustExceedFee: "Le montant doit dépasser les frais CCTP",
 		switchingTo: "Changement de portefeuille vers", alreadyRelayed: "Le mint a déjà été soumis par un relayer — fonds sur",
 		switchRejected: "Changement de réseau refusé — pont impossible depuis ",
+		cctpFallbackNotice: "L'adaptateur n'est pas encore déployé sur cette paire — utilisation du CCTP burn-and-mint",
 		forwarderStalled: "Transfert non terminé — mint manuel en cours…",
 		resumeConfirm: "Ce brûlage a été créé pour le destinataire",
 		notOnChain: "Portefeuille pas sur", abortMint: " — mint annulé avant envoi",
@@ -239,6 +244,7 @@ const TRANSLATIONS = {
 		amountMustExceedFee: "يجب أن يتجاوز المبلغ رسوم CCTP",
 		switchingTo: "تبديل المحفظة إلى", alreadyRelayed: "تم تقديم السك بالفعل بواسطة مُرحّل — الأموال في",
 		switchRejected: "تم رفض تبديل الشبكة — لا يمكن الجسر من ",
+		cctpFallbackNotice: "لم يتم نشر الجسر لهذا الزوج بعد — يتم استخدام CCTP burn-and-mint",
 		forwarderStalled: "المحول لم يكتمل — سك يدوي مستمر…",
 		resumeConfirm: "تم إنشاء هذا الحرق للمستلم",
 		notOnChain: "المحفظة ليست على", abortMint: " — تم إلغاء السك قبل الإرسال",
@@ -280,6 +286,7 @@ const TRANSLATIONS = {
 		amountMustExceedFee: "পরিমাণ CCTP ফি এর বেশি হতে হবে",
 		switchingTo: "ওয়ালেট পরিবর্তন হচ্ছে", alreadyRelayed: "মিন্ট ইতিমধ্যে রিলেয়ার দ্বারা জমা দেওয়া হয়েছে — তহবিল",
 		switchRejected: "ওয়ালেট সুইচ প্রত্যাখ্যাত — এই নেটওয়ার্ক থেকে ব্রিজ করা যাবে না ",
+		cctpFallbackNotice: "এই জোড়ায় ব্রিজ অ্যাডাপ্টার এখনো ডিপ্লয় হয়নি — CCTP বার্ন-অ্যান্ড-মিন্ট ব্যবহৃত হচ্ছে",
 		forwarderStalled: "ফরওয়ার্ডার সম্পূর্ণ হয়নি — ম্যানুয়াল মিন্ট চলছে…",
 		resumeConfirm: "এই বার্ন প্রাপকের জন্য তৈরি করা হয়েছিল",
 		notOnChain: "ওয়ালেট নেই", abortMint: " — পাঠানোর আগে মিন্ট বাতিল",
@@ -321,6 +328,7 @@ const TRANSLATIONS = {
 		amountMustExceedFee: "O valor deve exceder a taxa CCTP",
 		switchingTo: "Alternando carteira para", alreadyRelayed: "O mint já foi enviado por um relayer — fundos em",
 		switchRejected: "Troca de rede rejeitada — não é possível fazer bridge de ",
+		cctpFallbackNotice: "O adaptador ainda não está implantado neste par — usando CCTP burn-and-mint",
 		forwarderStalled: "Encaminhador não completou — mint manual continuando…",
 		resumeConfirm: "Esta queima foi criada para o destinatário",
 		notOnChain: "Carteira não está em", abortMint: " — mint abortado antes de enviar",
@@ -362,6 +370,7 @@ const TRANSLATIONS = {
 		amountMustExceedFee: "Сумма должна превышать комиссию CCTP",
 		switchingTo: "Переключение кошелька на", alreadyRelayed: "Минт уже отправлен релеером — средства на",
 		switchRejected: "Переключение сети отклонено — невозможен мост из ",
+		cctpFallbackNotice: "Адаптер ещё не развёрнут для этой пары — используется CCTP burn-and-mint",
 		forwarderStalled: "Пересылка не завершена — ручной минт продолжается…",
 		resumeConfirm: "Это сжигание было создано для получателя",
 		notOnChain: "Кошелёк не на", abortMint: " — минт отменён перед отправкой",
@@ -403,6 +412,7 @@ const TRANSLATIONS = {
 		amountMustExceedFee: "金額はCCTP手数料を超える必要があります",
 		switchingTo: "ウォレット切り替え中", alreadyRelayed: "ミントはリレイヤーにより送信済み — 資金は",
 		switchRejected: "ウォレット切替が拒否されました — 次のネットワークからブリッジできません ",
+		cctpFallbackNotice: "このペアにブリッジアダプタは未デプロイのため — CCTPバーン＆ミントを使用します",
 		forwarderStalled: "フォワーダー未完了 — 手動ミント続行…",
 		resumeConfirm: "このバーンは受取人向けに作成されました",
 		notOnChain: "ウォレットが上にありません", abortMint: " — 送信前にミント中止",
@@ -876,6 +886,17 @@ function getBridgeContract(chainKey, signerOrProvider, token) {
 	if (!addr) return null;
 	return new ethers.Contract(addr, OFT_ABI, signerOrProvider);
 }
+const isArcChainKey = (k) => k === "arc" || k === "arcMainnet";
+// USDC routing policy (user rule): CCTP is mandatory only for routes that
+// touch Arc. EVM-to-EVM prefers the backend-configured BridgeAdapter (OFT);
+// until its deployments are filled it falls back to plain CCTP burn-and-mint
+// WITHOUT the Forwarding hook (hook quotes are Arc-route-only).
+function resolveUsdcRoute(fromKey, toKey) {
+	if (isArcChainKey(fromKey) || isArcChainKey(toKey)) return { protocol: "cctp", useForwardHook: true };
+	const d = CONFIG.bridgeAdapter.deployments;
+	if (d[fromKey] && d[toKey]) return { protocol: "adapter" };
+	return { protocol: "cctp", useForwardHook: false };
+}
 
 // Read-only provider for the SELECTED source chain. Balances and gas estimates
 // must reflect what the user picked in the UI — not whatever chain the wallet
@@ -1270,7 +1291,13 @@ async function bridge() {
 		}
 
 		if (token === "USDC") {
-			await bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey);
+			const route = resolveUsdcRoute(fromKey, toKey);
+			if (route.protocol === "adapter") {
+				await bridgeLegacyOFT(amount, parsedAmount, fromKey, toKey, "USDC");
+			} else {
+				if (!route.useForwardHook) toast(t("cctpFallbackNotice"), "info");
+				await bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, route.useForwardHook);
+			}
 		} else if (token === "ETH") {
 			await bridgeETHNative(amount, parsedAmount, fromKey, toKey);
 		} else {
@@ -1288,11 +1315,11 @@ async function bridge() {
 // destination mint is submitted by Circle — essential when the recipient has
 // no gas on the destination (USDC is gas on Arc).
 // Reference quickstart: https://developers.circle.com/cctp/quickstarts/transfer-usdc-ethereum-to-arc
-async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
+async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, useForwardHook = true) {
 	const fromChain = CONFIG.chains[fromKey];
 	const toChain = CONFIG.chains[toKey];
 	const usdcAddr = CONFIG.tokens.USDC.addresses[fromKey];
-	const forward = isForwardEnabled();
+	const forward = isForwardEnabled() && useForwardHook !== false;
 
 	if (!usdcAddr || !fromChain.cctp || !toChain.cctp) {
 		toast("CCTP not available on this route", "error");
