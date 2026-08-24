@@ -1330,3 +1330,39 @@ html:not([data-theme="dark"]) #icon-moon { display: none; }
 		transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 	}
 }
+/* === Wallet chain picker === */
+.wallet-chain {
+	appearance: none;
+	-webkit-appearance: none;
+	font-family: var(--font-ui);
+	font-size: 0.72rem;
+	font-weight: 600;
+	padding: 0.32rem 1.5rem 0.32rem 0.7rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background-color: var(--surface);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238A94A6' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.55rem center;
+	color: var(--text);
+	cursor: pointer;
+	max-width: 150px;
+	text-overflow: ellipsis;
+}
+
+.wallet-chain:hover { border-color: var(--border-strong); }
+
+.wallet-chain:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+}
+
+.wallet-chain:disabled { opacity: 0.55; cursor: default; }
+
+[data-theme="dark"] .wallet-chain {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237FA3CC' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+@media (max-width: 540px) {
+	.wallet-chain { max-width: 110px; }
+}

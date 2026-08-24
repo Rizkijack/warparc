@@ -214,6 +214,58 @@ async function refreshProvider() {
 	state.signer = await state.provider.getSigner();
 	state.chainId = Number(await state.wallet.eip1193.request({ method: "eth_chainId" }));
 }
+// Navbar network picker. Rebuilt from scratch on every call so it always
+// mirrors getFilteredChains() (same mode filter/sort as the bridge selects);
+// hidden while disconnected. A wallet sitting on a chain outside the active
+// mode's list gets a disabled "Unknown network" placeholder instead.
+function renderWalletChainPicker() {
+	const sel = el("wallet-chain");
+	if (!sel) return;
+	if (!state.wallet) { sel.hidden = true; return; }
+	sel.hidden = false;
+	const keys = getFilteredChains();
+	sel.innerHTML = "";
+	const knownKey = keys.find(k => CONFIG.chains[k].chainId === state.chainId);
+	if (!knownKey) {
+		const opt = document.createElement("option");
+		opt.disabled = true;
+		opt.value = "unknown";
+		opt.textContent = `Unknown network (${state.chainId ?? "?"})`;
+		sel.appendChild(opt);
+	}
+	keys.forEach(k => {
+		const c = CONFIG.chains[k];
+		const opt = document.createElement("option");
+		opt.value = String(c.chainId);
+		opt.textContent = c.shortName;
+		opt.title = c.name;
+		sel.appendChild(opt);
+	});
+	sel.value = knownKey ? String(state.chainId) : "unknown";
+}
+
+// User picked a network in the navbar select. A successful switchChain also
+// fires the provider's chainChanged event (_chainChanged re-runs
+// refreshProvider/onAccountChange) — the double refresh is safe because
+// bindWalletEvents never accumulates listeners on an already-bound provider.
+async function onWalletChainChange() {
+	const sel = el("wallet-chain");
+	if (!state.wallet || sel.disabled) { renderWalletChainPicker(); return; }
+	const id = Number(sel.value);
+	if (!id) return;
+	sel.disabled = true;
+	try {
+		await switchChain(id);
+		await refreshProvider();
+		toast(`Switched to ${CONFIG.chains[getChainKey(id)]?.shortName || ("chain " + id)}`, "success");
+	} catch (e) {
+		toast("Switch failed: " + (e.message || e.code), "error");
+	} finally {
+		sel.disabled = false;
+		renderWalletChainPicker();
+		onAccountChange();
+	}
+}
 
 // Thin backward-safe entry (the bridge flow still calls it when no signer):
 // route to the legacy injected wallet registered by wallets.js' fallback,
@@ -258,6 +310,7 @@ async function disconnectWallet() {
 		previous.eip1193 && typeof previous.eip1193.disconnect === "function") {
 		try { await previous.eip1193.disconnect(); } catch { }
 	}
+	renderWalletChainPicker();
 }
 
 function onAccountChange() {
@@ -1571,6 +1624,7 @@ async function connectWith(eip1193, label, type, opts = {}) {
 		bindWalletEvents(eip1193);
 		onAccountChange();
 		closeWalletModal();
+	renderWalletChainPicker();
 	} catch (e) {
 		toast("Connection rejected: " + e.message, "error");
 		updateConnectBtn("Connect Wallet");
@@ -1604,6 +1658,7 @@ function bindWalletEvents(p) {
 	state._chainChanged = async (chainId) => {
 		state.chainId = Number(chainId);
 		await refreshProvider();
+		renderWalletChainPicker();
 		onAccountChange();
 	};
 	p.on("accountsChanged", state._accountsChanged);
@@ -1642,6 +1697,7 @@ async function autoReconnect() {
 			state.account = p.accounts[0];
 			state.chainId = Number(await p.request({ method: "eth_chainId" }));
 			onAccountChange();
+			renderWalletChainPicker();
 		}
 	} catch {
 		// Auto-reconnect must never surface errors or toasts.
@@ -1677,6 +1733,8 @@ document.addEventListener("DOMContentLoaded", () => {
 	document.addEventListener("keydown", onModalKeydown);
 	el("max-btn").addEventListener("click", setMax);
 	el("bridge-btn").addEventListener("click", bridge);
+	el("wallet-chain").addEventListener("change", onWalletChainChange);
+	renderWalletChainPicker();
 
 	// Chain swap button
 	const swapBtn = el("swap-chains-btn");
@@ -1719,6 +1777,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			state.testnetMode = toggle.checked;
 			populateChainSelects();
 			onChainChange();
+			renderWalletChainPicker();
 		});
 	}
 
