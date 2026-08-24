@@ -396,7 +396,22 @@ const CONFIG = {
 		projectId: "74c3944c7d1579478f020903a8e6d008",
 		sdkVersion: "2" // pinned @walletconnect/ethereum-provider major, served via jsdelivr +esm
 	},
-	lzScan: "https://layerzeroscan.com"
+	lzScan: "https://layerzeroscan.com",
+	// ETH Bridge Protocol Configuration — native ETH cross-chain bridging
+	ethBridge: {
+		lifiApi: "https://li.quest/v1",
+		acrossApi: "https://app.across.to/api",
+		socketApi: "https://public-backend.socket.tech/v3",
+		relayApi: "https://api.relay.link",
+		// Stargate Router V2 — same address on all EVM chains
+		stargateRouterAddress: "0x150f4E4bD86B9b3655702eFEfB78c8b1D9b5d6c0",
+		// API keys — set via env or localStorage; never hardcode secrets here
+		apiKeys: {
+			across: "",       // set via ACROSS_API_KEY env or localStorage
+			acrossIntegratorId: "0xdead",
+			relay: ""          // set via RELAY_API_KEY env or localStorage
+		}
+	},
 };
 
 const LZ_ENDPOINT_ABI = [
@@ -443,5 +458,14 @@ const OFT_ABI = [
 	"function symbol() external view returns (string)",
 	"function name() external view returns (string)"
 ];
+
+// Stargate V2 Router ABI — native ETH cross-chain bridging (minimal)
+const STARGATE_ROUTER_ABI = [
+	"function swapETH(uint16 _dstChainId, address payable _refundAddress, bytes calldata _toAddress, uint256 _amountLD, uint256 _minAmountLD, uint256 _dstGasForCall) external payable returns (uint256, uint256)",
+	"function quoteSendFee(uint16 _dstChainId, uint256 _amount) external view returns (uint256 nativeFee, uint256 zroFee)"
+];
+
+// Native ETH address constant (same across all EVM chains)
+const NATIVE_ETH_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 

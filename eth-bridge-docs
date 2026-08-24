@@ -1,0 +1,220 @@
+# Protocol Research: ETH Mainnet Cross-Chain Bridge Integration
+
+## Overview
+
+Deep research on 5 bridge/aggregator protocols for integrating **ETH native token cross-chain bridging** into WarpArc. Target: bridge ETH between Ethereum Mainnet, Arbitrum, Optimism, Base, Robinhood Chain — **excluding Arc** (USDC is gas on Arc, not ETH).
+
+**Last Updated:** 2026-08-24
+
+---
+
+## 1. LI.FI Protocol
+
+### Overview
+Cross-chain routing & execution layer aggregating 58+ chains, 27+ bridges, 31+ DEXs. Returns executable transaction data.
+
+### Key Features
+- **Native ETH bridging:** Supported (`0x0000000000000000000000000000000000000000`)
+- **58+ chains:** All target EVM chains supported
+- **No API key required** (optional for higher rate limits)
+- **Returns `transactionRequest`** ready for signing
+
+### API Endpoints
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/v1/quote` | GET | Best quote + tx data |
+| `/v1/status` | GET | Transfer status |
+| `/v1/chains` | GET | Supported chains |
+| `/v1/tokens` | GET | Tokens by chain |
+
+**Base URL:** `https://li.quest/v1`
+
+### Quote: ETH→ETH Cross-Chain
+```javascript
+const params = new URLSearchParams({
+  fromChain: '1', toChain: '42161',
+  fromToken: '0x0000000000000000000000000000000000000000',
+  toToken: '0x0000000000000000000000000000000000000000',
+  fromAmount: '1000000000000000000',
+  fromAddress: '0xYourAddress', slippage: '0.003'
+});
+const resp = await fetch(`https://li.quest/v1/quote?${params}`);
+const quote = await resp.json();
+// Execute: signer.sendTransaction(quote.transactionRequest)
+```
+
+**Native ETH:** No approval needed. Simple sendTransaction with transactionRequest.
+
+### Status: `GET /v1/status?txHash=0x...&bridge=lifi&fromChain=1&toChain=42161`
+Statuses: `NOT_FOUND` → `PENDING` → `DONE` | `FAILED`
+Rate limit: ~100 req/s without API key
+
+### Complexity: **LOW** — REST API, ready-to-sign tx, no approval
+---
+
+## 2. Across Protocol
+
+### Overview
+Cross-chain protocol with ~2 second fills. Uses optimistic relayers + liquidity pools.
+
+### Key Features
+- **~2 second fills** on mainnet
+- **24+ chains:** All targets supported
+- **Native ETH bridging** via Swap API
+- **Requires API key** for production
+
+### API Endpoints
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/swap/approval` | GET | Quote + approval data |
+| `/api/swap/chains` | GET | Supported chains |
+| `/api/swap/tokens` | GET | Supported tokens |
+| `/api/deposit/status` | GET | Track deposit |
+
+**Base URL:** `https://app.across.to/api`
+
+### Authentication
+- Header: `Authorization: Bearer YOUR_API_KEY`
+- Query param: `integratorId`
+
+### Quote Example
+```javascript
+const params = new URLSearchParams({
+  originChainId: '1', destinationChainId: '42161',
+  inputToken: '0x0000000000000000000000000000000000000000',
+  outputToken: '0x0000000000000000000000000000000000000000',
+  amount: '1000000000000000000',
+  tradeType: 'minOutput', depositor: '0xAddress',
+  integratorId: '0xdead'
+});
+const resp = await fetch(`https://app.across.to/api/swap/approval?${params}`, {
+  headers: { Authorization: 'Bearer YOUR_API_KEY' }
+});
+const { swapTx } = await resp.json();
+// Execute: signer.sendTransaction(swapTx)
+```
+
+### Complexity: **LOW-MEDIUM** — Requires API key, returns calldata, fast fills
+
+---
+
+## 3. Socket / Bungee
+
+**Base URL:** `https://public-backend.socket.tech`
+**No API key needed** for basic usage.
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/v3/swap/quote` | GET | Get quotes |
+| `/v3/status` | GET | Transaction status |
+
+```javascript
+const params = new URLSearchParams({
+  originChainId: '1', destinationChainId: '42161',
+  inputToken: '0x0000000000000000000000000000000000000000',
+  outputToken: '0x0000000000000000000000000000000000000000',
+  amount: '1000000000000000000', slippage: '0.999',
+  userAddress: '0xAddress', receiverAddress: '0xAddress'
+});
+const resp = await fetch(`https://public-backend.socket.tech/v3/swap/quote?${params}`);
+const { result } = await resp.json();
+```
+
+### Complexity: **LOW** — No API key, REST API
+
+---
+
+## 4. Stargate V2
+
+LayerZero-based cross-chain bridge with unified liquidity pools. Direct contract interaction.
+
+### Contract Addresses
+**Stargate Router V2:** `0x150f4E4bD86B9b3655702eFEfB78c8b1D9b5d6c0` (same on all EVM chains)
+
+### ABI for Native ETH
+```javascript
+const STARGATE_ROUTER_ABI = [
+  "function swapETH(uint16 _dstChainId, address payable _refundAddress, bytes calldata _toAddress, uint256 _amountLD, uint256 _minAmountLD, uint256 _dstGasForCall) external payable returns (uint256, uint256)",
+  "function quoteSendFee(uint16 _dstChainId, uint256 _amount) external view returns (uint256 nativeFee, uint256 zroFee)"
+];
+```
+
+### LayerZero EIDs (match existing CONFIG values)
+| Chain | EID |
+|---|---|
+| Ethereum | 30101 |
+| Arbitrum | 30110 |
+| Optimism | 30111 |
+| Base | 30184 |
+
+### Flow
+1. `router.quoteSendFee(dstChainId, amount)` → nativeFee
+2. `router.swapETH(dstChainId, refundAddress, toAddress, amountLD, minAmountLD, 0, { value: amountLD })`
+
+### Complexity: **MEDIUM** — Direct contract call, no API, fee estimation needed
+
+---
+
+## 5. Relay Protocol
+
+Intent-based cross-chain payments network. Define what, solvers handle execution.
+
+**Base URL:** `https://api.relay.link`
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/intents/quote` | POST | Get quote |
+| `/intents/status/v3` | GET | Request status |
+| `/chains` | GET | Supported chains |
+
+```json
+POST /intents/quote
+{
+  "user": "0xAddress",
+  "originChainId": 1,
+  "destinationChainId": 42161,
+  "originCurrency": "0x0000000000000000000000000000000000000000",
+  "destinationCurrency": "0x0000000000000000000000000000000000000000",
+  "amount": "1000000000000000000",
+  "recipient": "0xAddress"
+}
+```
+
+### Complexity: **LOW-MEDIUM** — Requires API key, returns calldata, webhooks
+
+---
+
+## Protocol Comparison Matrix
+
+| Feature | Li.Fi | Across | Socket/Bungee | Stargate V2 | Relay |
+|---|---|---|---|---|---|
+| **Native ETH** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **API Key** | No | Yes | No | No | Yes |
+| **Returns Calldata** | ✅ | ✅ | ✅ | Manual | ✅ |
+| **Integration** | REST API | REST API | REST API | Contract | REST API |
+| **Chain Support** | All EVM | All EVM | All EVM | All EVM | All EVM |
+| **Speed** | Varies | ~2 sec | Varies | 1-5 min | Fast |
+| **ETH Approval** | None | None | None | None | None |
+| **Complexity** | Low | Low-Med | Low | Medium | Low-Med |
+
+## Multi-Protocol Fallback Strategy
+
+```
+bridgeETH() →
+  1. try Li.Fi (no API key, best aggregation)
+  2. if fail: try Across (fastest fills)
+  3. if fail: try Stargate V2 (direct contract)
+  4. if fail: try Socket/Bungee (no API key)
+  5. if fail: try Relay (intent-based)
+  6. if all fail: show error to user
+```
+
+## Chain ID Reference
+
+| Chain | Chain ID | LiFi Key | LayerZero EID |
+|---|---|---|---|
+| Ethereum Mainnet | 1 | eth | 30101 |
+| Arbitrum One | 42161 | arb | 30110 |
+| Optimism | 10 | oeth | 30111 |
+| Base | 8453 | base | 30184 |
+| Robinhood Chain | 42220 | — | — |

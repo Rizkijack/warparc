@@ -517,6 +517,463 @@ const toast = (msg, type = "info") => {
 
 const shortAddr = (a) => a.slice(0, 6) + "…" + a.slice(-4);
 
+// --- Protocol Selector (Relay / Li.Fi / CCTP) --------------------------------
+
+const PROTOCOL_KEY = "warparc:protocol";
+
+const PROTOCOLS = {
+	relay: {
+		name: "Relay",
+		icon: "⚡",
+		fee: "0%",
+		speed: "<3s",
+		chains: "85+",
+		desc: "Fastest cross-chain bridge. Intent-based, p50 <3s fill time. 0% fee for ETH→ETH.",
+		apiBase: "https://api.relay.link",
+		testnetApiBase: "https://api.testnets.relay.link",
+		supportedTokens: ["ETH"],
+	},
+	lifi: {
+		name: "Li.Fi",
+		icon: "🔗",
+		fee: "0.25%",
+		speed: "~30s",
+		chains: "60+",
+		desc: "Bridge aggregator routing through 20+ bridges for best rates. Supports Arc chain.",
+		apiBase: "https://li.quest/v1",
+		supportedTokens: ["ETH", "USDC"],
+	},
+	cctp: {
+		name: "CCTP V2",
+		icon: "🔵",
+		fee: "~$0.10",
+		speed: "~15min",
+		chains: "5",
+		desc: "Circle's native USDC bridge. Burn-and-mint, no wrapped tokens. Canonical route for Arc.",
+		supportedTokens: ["USDC"],
+	},
+	across: {
+		name: "Across",
+		icon: "⛓️",
+		fee: "~0.05%",
+		speed: "~2s",
+		chains: "24+",
+		desc: "Fastest cross-chain (~2s fills). Uses optimistic relayers. Native ETH supported.",
+		apiBase: "https://app.across.to/api",
+		supportedTokens: ["ETH"],
+	},
+	stargateV2: {
+		name: "Stargate V2",
+		icon: "⚡",
+		fee: "~0.06%",
+		speed: "~2min",
+		chains: "15+",
+		desc: "LayerZero-based unified liquidity. Native ETH via Router contract.",
+		supportedTokens: ["ETH"],
+	},
+	socket: {
+		name: "Socket/Bungee",
+		icon: "🔌",
+		fee: "~0.2%",
+		speed: "~1min",
+		chains: "30+",
+		desc: "Cross-chain routing engine aggregating bridges and DEXs. Refuel feature.",
+		apiBase: "https://public-backend.socket.tech/v3",
+		supportedTokens: ["ETH"],
+	},
+};
+
+let selectedProtocol = "relay";
+
+function getSelectedProtocol() {
+	return selectedProtocol;
+}
+
+function setProtocol(proto) {
+	if (!PROTOCOLS[proto]) return;
+	selectedProtocol = proto;
+	try { localStorage.setItem(PROTOCOL_KEY, proto); } catch {}
+	updateProtocolUI();
+	// Re-quote when protocol changes
+	if (state.account) estimateGas();
+}
+
+function initProtocol() {
+	try {
+		const saved = localStorage.getItem(PROTOCOL_KEY);
+		if (saved && PROTOCOLS[saved]) selectedProtocol = saved;
+	} catch {}
+	updateProtocolUI();
+}
+
+function updateProtocolUI() {
+	const proto = PROTOCOLS[selectedProtocol];
+	if (!proto) return;
+
+	// Update badge
+	const badge = el("protocol-badge");
+	if (badge) badge.textContent = proto.name;
+
+	// Update active state
+	document.querySelectorAll(".protocol-row[data-protocol]").forEach((row) => {
+		row.classList.toggle("active", row.getAttribute("data-protocol") === selectedProtocol);
+	});
+
+	// Update description
+	const desc = el("protocol-desc");
+	if (desc) desc.textContent = proto.desc;
+}
+
+// --- Relay API Integration ---------------------------------------------------
+
+async function relayQuote(fromChain, toChain, amount, token) {
+	const isTestnet = state.testnetMode;
+	const apiBase = isTestnet ? PROTOCOLS.relay.testnetApiBase : PROTOCOLS.relay.apiBase;
+
+	const originCurrency = token === "ETH"
+		? "0x0000000000000000000000000000000000000000"
+		: CONFIG.tokens[token].addresses[fromChain.key] || "0x0000000000000000000000000000000000000000";
+	const destinationCurrency = token === "ETH"
+		? "0x0000000000000000000000000000000000000000"
+		: CONFIG.tokens[token].addresses[toChain.key] || "0x0000000000000000000000000000000000000000";
+
+	try {
+		const res = await fetch(`${apiBase}/quote/v2`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				user: state.account,
+				originChainId: fromChain.chainId,
+				destinationChainId: toChain.chainId,
+				originCurrency,
+				destinationCurrency,
+				amount: amount.toString(),
+				tradeType: "EXACT_INPUT",
+			}),
+			signal: AbortSignal.timeout(15000),
+		});
+
+		if (!res.ok) return null;
+		const data = await res.json();
+		if (data.message) return null;
+
+		const output = data.details?.currencyOut?.amount;
+		const fee = data.details?.totalImpact?.percent;
+		const time = data.details?.timeEstimate;
+		const steps = data.steps || [];
+
+		return {
+			protocol: "relay",
+			output: output ? BigInt(output) : null,
+			feePercent: fee || "0",
+			estTimeSec: time || 3,
+			steps,
+			raw: data,
+		};
+	} catch {
+		return null;
+	}
+}
+
+async function relayExecute(quote) {
+	if (!quote || !quote.steps || !quote.steps.length) throw new Error("No steps in quote");
+
+	for (const step of quote.steps) {
+		const item = step.items?.[0];
+		if (!item || !item.data) continue;
+
+		if (step.kind === "transaction") {
+			const tx = await state.signer.sendTransaction({
+				to: item.data.to,
+				data: item.data.data,
+				value: item.data.value ? BigInt(item.data.value) : 0n,
+			});
+			const receipt = await tx.wait();
+			return { txHash: receipt.hash, requestId: step.requestId };
+		}
+	}
+	throw new Error("No transaction step found");
+}
+
+// --- Li.Fi API Integration ---------------------------------------------------
+
+async function lifiQuote(fromChain, toChain, amount, token) {
+	const fromAddr = token === "ETH"
+		? "0x0000000000000000000000000000000000000000"
+		: CONFIG.tokens[token].addresses[fromChain.key];
+	const toAddr = token === "ETH"
+		? "0x0000000000000000000000000000000000000000"
+		: CONFIG.tokens[token].addresses[toChain.key];
+
+	if (!fromAddr || !toAddr) return null;
+
+	try {
+		const params = new URLSearchParams({
+			fromChain: fromChain.chainId.toString(),
+			toChain: toChain.chainId.toString(),
+			fromToken: fromAddr,
+			toToken: toAddr,
+			fromAmount: amount.toString(),
+			fromAddress: state.account || "0x0000000000000000000000000000000000000000",
+		});
+
+		const res = await fetch(`${PROTOCOLS.lifi.apiBase}/quote?${params}`, {
+			signal: AbortSignal.timeout(15000),
+		});
+
+		if (!res.ok) return null;
+		const data = await res.json();
+
+		return {
+			protocol: "lifi",
+			output: data.toAmount ? BigInt(data.toAmount) : null,
+			feePercent: "0.25",
+			estTimeSec: data.estimatedRouteDuration || 30,
+			tool: data.tool,
+			transactionRequest: data.transactionRequest,
+			raw: data,
+		};
+	} catch {
+		return null;
+	}
+}
+
+async function lifiExecute(quote) {
+	if (!quote || !quote.transactionRequest) throw new Error("No transaction data in Li.Fi quote");
+
+	const tx = await state.signer.sendTransaction({
+		to: quote.transactionRequest.to,
+		data: quote.transactionRequest.data,
+		value: quote.transactionRequest.value ? BigInt(quote.transactionRequest.value) : 0n,
+	});
+	const receipt = await tx.wait();
+	return { txHash: receipt.hash };
+}
+
+// --- Across Protocol Integration -----------------------------------------------
+
+async function acrossQuote(fromChain, toChain, amount, token) {
+	const inputAddr = token === "ETH"
+		? "0x0000000000000000000000000000000000000000"
+		: CONFIG.tokens[token]?.addresses?.[fromChain.key];
+	const outputAddr = token === "ETH"
+		? "0x0000000000000000000000000000000000000000"
+		: CONFIG.tokens[token]?.addresses?.[toChain.key];
+
+	if (!inputAddr || !outputAddr) return null;
+	const apiKey = CONFIG.ethBridge?.apiKeys?.across || "";
+	if (!apiKey) return null;
+
+	try {
+		const params = new URLSearchParams({
+			originChainId: fromChain.chainId.toString(),
+			destinationChainId: toChain.chainId.toString(),
+			inputToken: inputAddr,
+			outputToken: outputAddr,
+			amount: amount.toString(),
+			tradeType: "minOutput",
+			depositor: state.account || "0x0000000000000000000000000000000000000000",
+			integratorId: CONFIG.ethBridge?.apiKeys?.acrossIntegratorId || "0xdead",
+		});
+
+		const res = await fetch(`https://app.across.to/api/swap/approval?${params}`, {
+			headers: { Authorization: `Bearer ${apiKey}` },
+			signal: AbortSignal.timeout(15000),
+		});
+		if (!res.ok) return null;
+		const data = await res.json();
+
+		return {
+			protocol: "across",
+			output: data.expectedOutput ? BigInt(data.expectedOutput) : null,
+			feePercent: "~0.05%",
+			estTimeSec: 2,
+			approvalTxns: data.approvalTxns || [],
+			swapTx: data.swapTx,
+			raw: data,
+		};
+	} catch { return null; }
+}
+
+async function acrossExecute(quote) {
+// --- Stargate V2 Integration --------------------------------------------------
+
+const STARGATE_ROUTER_ADDRESS = "0x150f4E4bD86B9b3655702eFEfB78c8b1D9b5d6c0";
+const STARGATE_ROUTER_MIN_ABI = [
+	"function swapETH(uint16 _dstChainId, address payable _refundAddress, bytes calldata _toAddress, uint256 _amountLD, uint256 _minAmountLD, uint256 _dstGasForCall) external payable returns (uint256, uint256)",
+	"function quoteSendFee(uint16 _dstChainId, uint256 _amount) external view returns (uint256 nativeFee, uint256 zroFee)"
+];
+
+async function stargateQuote(fromChain, toChain, amount, token) {
+	if (token !== "ETH") return null;
+	try {
+		const provider = getReadProvider(fromChain.key);
+		if (!provider) return null;
+		const router = new ethers.Contract(STARGATE_ROUTER_ADDRESS, STARGATE_ROUTER_MIN_ABI, provider);
+		const dstChainId = toChain.eid;
+		if (!dstChainId) return null;
+		const [nativeFee] = await router.quoteSendFee(dstChainId, amount);
+		return {
+			protocol: "stargateV2",
+			output: amount - nativeFee,
+			feePercent: "~0.06%",
+			estTimeSec: 120,
+			nativeFee,
+			dstChainId,
+		};
+	} catch { return null; }
+}
+
+async function stargateExecute(quote, fromKey, toKey, parsedAmount) {
+	if (!quote) throw new Error("No Stargate quote");
+	const router = new ethers.Contract(STARGATE_ROUTER_ADDRESS, STARGATE_ROUTER_MIN_ABI, state.signer);
+	const toAddress = ethers.zeroPadValue(state.account, 32);
+	const minAmount = parsedAmount - (quote.nativeFee || 0n);
+	const tx = await router.swapETH(
+		quote.dstChainId, state.account, toAddress,
+		parsedAmount, minAmount, 0n,
+		{ value: parsedAmount }
+	);
+	const receipt = await tx.wait();
+	return { txHash: receipt.hash };
+}
+
+// --- Socket/Bungee Integration ------------------------------------------------
+
+async function socketQuote(fromChain, toChain, amount, token) {
+	const inputAddr = token === "ETH"
+		? "0x0000000000000000000000000000000000000000"
+		: CONFIG.tokens[token]?.addresses?.[fromChain.key];
+	const outputAddr = token === "ETH"
+		? "0x0000000000000000000000000000000000000000"
+		: CONFIG.tokens[token]?.addresses?.[toChain.key];
+	if (!inputAddr || !outputAddr || !state.account) return null;
+	try {
+		const params = new URLSearchParams({
+			originChainId: fromChain.chainId.toString(),
+			destinationChainId: toChain.chainId.toString(),
+			userAddress: state.account,
+			receiverAddress: state.account,
+			inputToken: inputAddr,
+			outputToken: outputAddr,
+			amount: amount.toString(),
+			slippage: "0.999",
+		});
+		const res = await fetch(`https://public-backend.socket.tech/v3/swap/quote?${params}`, {
+			signal: AbortSignal.timeout(15000),
+		});
+		if (!res.ok) return null;
+		const data = await res.json();
+		if (!data.success || !data.result?.routes?.length) return null;
+		const route = data.result.routes[0];
+		return {
+			protocol: "socket",
+			output: route.output?.amount ? BigInt(route.output.amount) : null,
+			feePercent: "~0.2%",
+			estTimeSec: route.estimatedTime || 60,
+			route,
+			raw: data.result,
+		};
+	} catch { return null; }
+}
+
+async function socketExecute(quote) {
+	if (!quote || !quote.route) throw new Error("No Socket route data");
+	const route = quote.route;
+	if (route.userOp === "tx" && route.txData) {
+		const tx = await state.signer.sendTransaction({
+			to: route.txData.to, data: route.txData.data,
+			value: route.txData.value ? BigInt(route.txData.value) : 0n,
+		});
+		const receipt = await tx.wait();
+		return { txHash: receipt.hash };
+	}
+	throw new Error("No executable transaction data in Socket route");
+}
+	if (!quote || !quote.swapTx) throw new Error("No swap transaction in Across quote");
+	for (const approvalTx of (quote.approvalTxns || [])) {
+		const tx = await state.signer.sendTransaction({
+			to: approvalTx.to, data: approvalTx.data,
+			value: approvalTx.value ? BigInt(approvalTx.value) : 0n,
+		});
+		await tx.wait();
+	}
+	const tx = await state.signer.sendTransaction({
+		to: quote.swapTx.to, data: quote.swapTx.data,
+		value: quote.swapTx.value ? BigInt(quote.swapTx.value) : 0n,
+	});
+	const receipt = await tx.wait();
+	return { txHash: receipt.hash };
+}
+// --- Protocol-aware quote fetching -------------------------------------------
+
+async function fetchProtocolQuote(fromKey, toKey, amountWei, token) {
+	const fromChain = CONFIG.chains[fromKey];
+	const toChain = CONFIG.chains[toKey];
+	if (!fromChain || !toChain) return null;
+
+	const proto = getSelectedProtocol();
+
+	// CCTP uses existing flow — no external quote needed
+	if (proto === "cctp" || token === "USDC") {
+		return { protocol: "cctp", output: null, feePercent: "~0.003%", estTimeSec: 900 };
+	}
+
+	if (proto === "relay") {
+		return await relayQuote(fromChain, toChain, amountWei, token);
+	}
+
+	if (proto === "lifi") {
+		return await lifiQuote(fromChain, toChain, amountWei, token);
+	}
+
+	if (proto === "across") {
+		return await acrossQuote(fromChain, toChain, amountWei, token);
+	}
+
+	if (proto === "stargateV2") {
+		return await stargateQuote(fromChain, toChain, amountWei, token);
+	}
+
+	if (proto === "socket") {
+		return await socketQuote(fromChain, toChain, amountWei, token);
+	}
+
+	return null;
+}
+
+function updateQuoteDisplay(quote) {
+	const outEl = el("est-output");
+	const feeEl = el("est-fee");
+	const timeEl = el("est-time");
+	const routeEl = el("est-route");
+
+	if (!quote) {
+		if (outEl) outEl.textContent = "—";
+		if (feeEl) feeEl.textContent = "—";
+		if (timeEl) timeEl.textContent = "—";
+		if (routeEl) routeEl.textContent = "—";
+		return;
+	}
+
+	const token = getSelectedToken();
+	const decimals = token === "USDC" ? 6 : 18;
+	const symbol = token;
+
+	if (outEl) {
+		outEl.textContent = quote.output
+			? truncateUnits(quote.output, decimals, 4) + " " + symbol
+			: "—";
+	}
+	if (feeEl) feeEl.textContent = quote.feePercent ? `${quote.feePercent}%` : "—";
+	if (timeEl) {
+		const sec = quote.estTimeSec || 0;
+		if (sec < 60) timeEl.textContent = `${sec}s`;
+		else timeEl.textContent = `~${Math.round(sec / 60)}min`;
+	}
+	if (routeEl) routeEl.textContent = quote.tool || quote.protocol || "—";
+}
+
 // --- persistence (localStorage) ----------------------------------------------
 
 function saveTxHistory() {
@@ -1149,20 +1606,44 @@ async function estimateGas() {
 			return;
 		}
 
-		// ETH — simple transfer gas estimate (21000 gas × gas price)
+		// ETH — fetch protocol quote for accurate estimate
 		if (token === "ETH") {
-			const provider = getReadProvider(fromKey);
-			if (provider) {
-				const feeData = await provider.getFeeData();
-				if (isStale()) return;
-				const price = feeData.maxFeePerGas || feeData.gasPrice || 0n;
-				const cost = 21000n * price; // Standard ETH transfer gas
-				const decimals = fromChain.nativeCurrency.decimals;
-				elEst.textContent = truncateUnits(cost, decimals, 6) + " " + fromChain.nativeCurrency.symbol;
+			const proto = getSelectedProtocol();
+			const amountWei = el("amount").value.trim()
+				? ethers.parseUnits(el("amount").value.trim(), 18)
+				: ethers.parseUnits("1", 18); // Default to1 ETH for estimate
+
+			// Fetch protocol quote
+			const quote = await fetchProtocolQuote(fromKey, toKey, amountWei, "ETH");
+			if (isStale()) return;
+
+			if (quote && quote.output) {
+				updateQuoteDisplay(quote);
+				// Show gas estimate from provider
+				const provider = getReadProvider(fromKey);
+				if (provider) {
+					const feeData = await provider.getFeeData();
+					if (isStale()) return;
+					const price = feeData.maxFeePerGas || feeData.gasPrice || 0n;
+					const cost = 21000n * price;
+					const decimals = fromChain.nativeCurrency.decimals;
+					elEst.textContent = truncateUnits(cost, decimals, 6) + " " + fromChain.nativeCurrency.symbol;
+				}
 			} else {
-				elEst.textContent = "N/A";
+				// Fallback to simple gas estimate
+				const provider = getReadProvider(fromKey);
+				if (provider) {
+					const feeData = await provider.getFeeData();
+					if (isStale()) return;
+					const price = feeData.maxFeePerGas || feeData.gasPrice || 0n;
+					const cost = 21000n * price;
+					const decimals = fromChain.nativeCurrency.decimals;
+					elEst.textContent = truncateUnits(cost, decimals, 6) + " " + fromChain.nativeCurrency.symbol;
+				} else {
+					elEst.textContent = "N/A";
+				}
+				if (elFeeUsdc) elFeeUsdc.textContent = "N/A";
 			}
-			if (elFeeUsdc) elFeeUsdc.textContent = "N/A (native transfer)";
 			return;
 		}
 
@@ -1232,10 +1713,25 @@ async function bridge() {
 			return;
 		}
 
-		if (token === "USDC") {
+		const proto = getSelectedProtocol();
+
+		if (token === "USDC" && proto === "cctp") {
 			await bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey);
+		} else if (token === "ETH" && proto === "relay") {
+			await bridgeViaRelay(amount, parsedAmount, fromKey, toKey);
+		} else if (token === "ETH" && proto === "lifi") {
+			await bridgeViaLiFi(amount, parsedAmount, fromKey, toKey);
+		} else if (token === "ETH" && proto === "across") {
+			await bridgeViaAcross(amount, parsedAmount, fromKey, toKey);
+		} else if (token === "ETH" && proto === "stargateV2") {
+			await bridgeViaStargate(amount, parsedAmount, fromKey, toKey);
+		} else if (token === "ETH" && proto === "socket") {
+			await bridgeViabungee(amount, parsedAmount, fromKey, toKey);
 		} else if (token === "ETH") {
+			// Multi-protocol fallback — tries LiFi → Relay → Across → Stargate → Socket
 			await bridgeETHNative(amount, parsedAmount, fromKey, toKey);
+		} else if (token === "USDC") {
+			await bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey);
 		} else {
 			await bridgeLegacyOFT(amount, parsedAmount, fromKey, toKey, token);
 		}
@@ -1691,9 +2187,9 @@ async function bridgeLegacyOFT(amount, parsedAmount, fromKey, toKey, token) {
 	}
 }
 
-// ETH native bridge — direct transfer via backend relayer (lock-and-release).
-// User sends ETH on source chain; relayer detects and releases on destination.
-// Not available on Arc (USDC is gas there, not ETH).
+// ETH native bridge — multi-protocol fallback router.
+// Tries protocols in order: Li.Fi → Relay → Across (if API key) → Stargate V2 → Socket/Bungee.
+// Each bridgeViaXxx manages its own UI, tx entries, and errors. If one throws, the next is tried.
 async function bridgeETHNative(amount, parsedAmount, fromKey, toKey) {
 	const fromChain = CONFIG.chains[fromKey];
 	const toChain = CONFIG.chains[toKey];
@@ -1707,7 +2203,39 @@ async function bridgeETHNative(amount, parsedAmount, fromKey, toKey) {
 		return;
 	}
 
-	const txId = "eth-" + Date.now();
+	const apiKeyAcross = CONFIG.ethBridge?.apiKeys?.across || "";
+	const protocols = [
+		{ name: "Li.Fi",      fn: bridgeViaLiFi },
+		{ name: "Relay",      fn: bridgeViaRelay },
+	];
+	if (apiKeyAcross) protocols.push({ name: "Across", fn: bridgeViaAcross });
+	protocols.push(
+		{ name: "Stargate V2",  fn: bridgeViaStargate },
+		{ name: "Socket/Bungee",fn: bridgeViabungee }
+	);
+
+	for (const proto of protocols) {
+		try {
+			await proto.fn(amount, parsedAmount, fromKey, toKey);
+			return; // success — stop here
+		} catch (e) {
+			console.warn(`[ETH Bridge] ${proto.name} failed: ${e.message}. Next...`);
+		}
+	}
+	// All failed — the last bridgeViaXxx already showed its error toast
+}
+
+// Relay protocol bridge — intent-based, fastest fills (<3s p50)
+async function bridgeViaRelay(amount, parsedAmount, fromKey, toKey) {
+	const fromChain = CONFIG.chains[fromKey];
+	const toChain = CONFIG.chains[toKey];
+
+	if (fromChain.network !== toChain.network) {
+		toast(t("networkMismatch"), "error");
+		return;
+	}
+
+	const txId = "relay-" + Date.now();
 	const btn = el("bridge-btn");
 	setFlowsBusy(true);
 
@@ -1719,33 +2247,216 @@ async function bridgeETHNative(amount, parsedAmount, fromKey, toKey) {
 			await refreshProvider();
 		}
 
-		// Send ETH directly to destination (simple cross-chain transfer via relayer)
-		// For testnet: user sends ETH to their own address on source chain,
-		// backend relayer detects and releases on destination
-		btn.textContent = `Sending ${amount} ETH...`;
-		addTxEntry(txId, `${t("bridgeToken")} ${amount} ETH ${t("to")} ${toChain.shortName}`, "pending", fromKey);
+		btn.textContent = "Getting Relay quote...";
+		addTxEntry(txId, `Bridge ${amount} ETH → ${toChain.shortName} (Relay)`, "pending", fromKey);
 
-		// Direct ETH transfer to self on source chain (triggers relayer detection)
-		const tx = await state.signer.sendTransaction({
-			to: state.account,
-			value: parsedAmount,
-			...(fromKey === "arc" ? { maxFeePerGas: ethers.parseUnits("30", "gwei"), maxPriorityFeePerGas: 0n } : {})
-		});
-
-		updateTxEntry(txId, "pending", tx.hash);
-		const receipt = await tx.wait();
-
-		if (receipt.status === 1) {
-			updateTxEntry(txId, "success", tx.hash);
-			toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName}`, "success");
-			loadBalances();
-		} else {
-			updateTxEntry(txId, "failed", tx.hash);
-			toast("Transaction failed", "error");
+		// Get quote from Relay API
+		const quote = await relayQuote(fromChain, toChain, parsedAmount, "ETH");
+		if (!quote || !quote.steps || !quote.steps.length) {
+			throw new Error("Relay quote unavailable for this route");
 		}
+
+		updateQuoteDisplay(quote);
+		btn.textContent = "Sending via Relay...";
+
+		// Execute the bridge
+		const result = await relayExecute(quote);
+
+		updateTxEntry(txId, "success", result.txHash);
+		toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName} (Relay)`, "success");
+		loadBalances();
 	} catch (e) {
 		updateTxEntry(txId, "failed", "");
 		toast(`${t("bridgeFailed")}${e.reason || e.shortMessage || e.message || "Unknown error"}`, "error");
+	} finally {
+		setFlowsBusy(false);
+		updateBridgeBtn();
+	}
+}
+// Across Protocol bridge — fastest fills (~2s). Requires API key.
+async function bridgeViaAcross(amount, parsedAmount, fromKey, toKey) {
+	const fromChain = CONFIG.chains[fromKey];
+	const toChain = CONFIG.chains[toKey];
+
+	if (fromChain.network !== toChain.network) {
+		throw new Error("Network mismatch");
+	}
+
+	const txId = "across-" + Date.now();
+	const btn = el("bridge-btn");
+	setFlowsBusy(true);
+
+	try {
+		if (state.chainId !== fromChain.chainId) {
+			toast(`${t("switchingTo")} ${fromChain.name}...`, "info");
+			await switchChain(fromChain.chainId);
+			await refreshProvider();
+		}
+
+		btn.textContent = "Getting Across quote...";
+		addTxEntry(txId, `Bridge ${amount} ETH → ${toChain.shortName} (Across)`, "pending", fromKey);
+
+		const quote = await acrossQuote(fromChain, toChain, parsedAmount, "ETH");
+		if (!quote || !quote.swapTx) {
+			throw new Error("Across quote unavailable for this route");
+		}
+
+		updateQuoteDisplay(quote);
+		btn.textContent = "Sending via Across...";
+
+		const result = await acrossExecute(quote);
+
+		updateTxEntry(txId, "success", result.txHash);
+		toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName} (Across)`, "success");
+		loadBalances();
+	} catch (e) {
+		updateTxEntry(txId, "failed", "");
+		toast(`${t("bridgeFailed")}${e.reason || e.shortMessage || e.message || "Unknown error"}`, "error");
+		throw e; // re-throw for multi-protocol fallback
+	} finally {
+		setFlowsBusy(false);
+		updateBridgeBtn();
+	}
+}
+
+// Stargate V2 bridge — LayerZero-based, direct contract interaction.
+async function bridgeViaStargate(amount, parsedAmount, fromKey, toKey) {
+	const fromChain = CONFIG.chains[fromKey];
+	const toChain = CONFIG.chains[toKey];
+
+	if (fromChain.network !== toChain.network) {
+		throw new Error("Network mismatch");
+	}
+
+	const txId = "stargate-" + Date.now();
+	const btn = el("bridge-btn");
+	setFlowsBusy(true);
+
+	try {
+		if (state.chainId !== fromChain.chainId) {
+			toast(`${t("switchingTo")} ${fromChain.name}...`, "info");
+			await switchChain(fromChain.chainId);
+			await refreshProvider();
+		}
+
+		btn.textContent = "Getting Stargate quote...";
+		addTxEntry(txId, `Bridge ${amount} ETH → ${toChain.shortName} (Stargate V2)`, "pending", fromKey);
+
+		const quote = await stargateQuote(fromChain, toChain, parsedAmount, "ETH");
+		if (!quote || !quote.dstChainId) {
+			throw new Error("Stargate quote unavailable for this route");
+		}
+
+		updateQuoteDisplay(quote);
+		btn.textContent = "Sending via Stargate...";
+
+		const result = await stargateExecute(quote, fromKey, toKey, parsedAmount);
+
+		updateTxEntry(txId, "success", result.txHash);
+		toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName} (Stargate V2)`, "success");
+		loadBalances();
+	} catch (e) {
+		updateTxEntry(txId, "failed", "");
+		toast(`${t("bridgeFailed")}${e.reason || e.shortMessage || e.message || "Unknown error"}`, "error");
+		throw e; // re-throw for multi-protocol fallback
+	} finally {
+		setFlowsBusy(false);
+		updateBridgeBtn();
+	}
+}
+
+// Socket/Bungee bridge — cross-chain routing engine.
+async function bridgeViabungee(amount, parsedAmount, fromKey, toKey) {
+	const fromChain = CONFIG.chains[fromKey];
+	const toChain = CONFIG.chains[toKey];
+
+	if (fromChain.network !== toChain.network) {
+		throw new Error("Network mismatch");
+	}
+
+	const txId = "socket-" + Date.now();
+	const btn = el("bridge-btn");
+	setFlowsBusy(true);
+
+	try {
+		if (state.chainId !== fromChain.chainId) {
+			toast(`${t("switchingTo")} ${fromChain.name}...`, "info");
+			await switchChain(fromChain.chainId);
+			await refreshProvider();
+		}
+
+		btn.textContent = "Getting Socket quote...";
+		addTxEntry(txId, `Bridge ${amount} ETH → ${toChain.shortName} (Socket)`, "pending", fromKey);
+
+		const quote = await socketQuote(fromChain, toChain, parsedAmount, "ETH");
+		if (!quote || !quote.route) {
+			throw new Error("Socket quote unavailable for this route");
+		}
+
+		updateQuoteDisplay(quote);
+		btn.textContent = "Sending via Socket...";
+
+		const result = await socketExecute(quote);
+
+		updateTxEntry(txId, "success", result.txHash);
+		toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName} (Socket)`, "success");
+		loadBalances();
+	} catch (e) {
+		updateTxEntry(txId, "failed", "");
+		toast(`${t("bridgeFailed")}${e.reason || e.shortMessage || e.message || "Unknown error"}`, "error");
+		throw e; // re-throw for multi-protocol fallback
+	} finally {
+		setFlowsBusy(false);
+		updateBridgeBtn();
+	}
+}
+
+// Li.Fi protocol bridge — aggregator routing through 20+ bridges
+async function bridgeViaLiFi(amount, parsedAmount, fromKey, toKey) {
+	const fromChain = CONFIG.chains[fromKey];
+	const toChain = CONFIG.chains[toKey];
+
+	if (fromChain.network !== toChain.network) {
+		toast(t("networkMismatch"), "error");
+		return;
+	}
+
+	const txId = "lifi-" + Date.now();
+	const btn = el("bridge-btn");
+	setFlowsBusy(true);
+
+	try {
+		// Switch to source chain
+		if (state.chainId !== fromChain.chainId) {
+			toast(`${t("switchingTo")} ${fromChain.name}...`, "info");
+			await switchChain(fromChain.chainId);
+			await refreshProvider();
+		}
+
+		btn.textContent = "Getting Li.Fi quote...";
+		addTxEntry(txId, `Bridge ${amount} ETH → ${toChain.shortName} (Li.Fi)`, "pending", fromKey);
+
+		// Get quote from Li.Fi API
+		const quote = await lifiQuote(fromChain, toChain, parsedAmount, "ETH");
+		if (!quote || !quote.transactionRequest) {
+			throw new Error("Li.Fi quote unavailable for this route");
+		}
+
+		updateQuoteDisplay(quote);
+		btn.textContent = `Sending via ${quote.tool || "Li.Fi"}...`;
+
+		// Execute the bridge
+		const result = await lifiExecute(quote);
+
+		updateTxEntry(txId, "success", result.txHash);
+		toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName} (Li.Fi)`, "success");
+		loadBalances();
+	} catch (e) {
+		updateTxEntry(txId, "failed", "");
+		toast(`${t("bridgeFailed")}${e.reason || e.shortMessage || e.message || "Unknown error"}`, "error");
+	} finally {
+		setFlowsBusy(false);
+		updateBridgeBtn();
 	}
 }
 
@@ -2385,6 +3096,15 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 	}
 	initLanguage();
+
+	// Protocol selector
+	initProtocol();
+	document.querySelectorAll(".protocol-row[data-protocol]").forEach((row) => {
+		row.addEventListener("click", () => {
+			const proto = row.getAttribute("data-protocol");
+			setProtocol(proto);
+		});
+	});
 
 	loadTxHistory();
 	renderTxHistory();

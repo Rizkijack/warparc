@@ -65,6 +65,7 @@
 </nav>
 
 <main>
+	<div class="bridge-layout">
 	<div class="bridge-card">
 		<div class="card-header">
 			<h1 data-i18n="crossChainBridge">Cross-Chain Bridge</h1>
@@ -180,6 +181,101 @@
 				</div>
 			</div>
 		</div>
+	</div>
+
+	<!-- Protocol Selector Sidebar -->
+	<div class="protocol-sidebar" id="protocol-sidebar">
+		<div class="protocol-header">
+			<h3 data-i18n="selectProtocol">Select Protocol</h3>
+			<span class="protocol-badge" id="protocol-badge">Relay</span>
+		</div>
+
+		<div class="protocol-table">
+			<div class="protocol-row protocol-row-header">
+				<span></span>
+				<span>Fee</span>
+				<span>Speed</span>
+				<span>Chains</span>
+			</div>
+			<button class="protocol-row active" data-protocol="relay" id="proto-relay">
+				<span class="protocol-name">
+					<span class="protocol-icon">⚡</span>
+					Relay
+				</span>
+				<span class="protocol-fee">0%</span>
+				<span class="protocol-speed">&lt;3s</span>
+				<span class="protocol-chains">85+</span>
+			</button>
+			<button class="protocol-row" data-protocol="lifi" id="proto-lifi">
+				<span class="protocol-name">
+					<span class="protocol-icon">🔗</span>
+					Li.Fi
+				</span>
+				<span class="protocol-fee">0.25%</span>
+				<span class="protocol-speed">~30s</span>
+				<span class="protocol-chains">60+</span>
+			</button>
+			<button class="protocol-row" data-protocol="cctp" id="proto-cctp">
+				<span class="protocol-name">
+					<span class="protocol-icon">🔵</span>
+					CCTP V2
+				</span>
+				<span class="protocol-fee">~$0.10</span>
+				<span class="protocol-speed">~15min</span>
+				<span class="protocol-chains">5</span>
+			</button>
+<button class="protocol-row" data-protocol="across" id="proto-across">
+				<span class="protocol-name">
+					<span class="protocol-icon">⛓️</span>
+					Across
+				</span>
+				<span class="protocol-fee">~0.05%</span>
+				<span class="protocol-speed">~2s</span>
+				<span class="protocol-chains">24+</span>
+			</button>
+			<button class="protocol-row" data-protocol="stargateV2" id="proto-stargate">
+				<span class="protocol-name">
+					<span class="protocol-icon">⚡</span>
+					Stargate V2
+				</span>
+				<span class="protocol-fee">~0.06%</span>
+				<span class="protocol-speed">~2min</span>
+				<span class="protocol-chains">15+</span>
+			</button>
+			<button class="protocol-row" data-protocol="socket" id="proto-bungee">
+				<span class="protocol-name">
+					<span class="protocol-icon">🔌</span>
+					Socket/Bungee
+				</span>
+				<span class="protocol-fee">~0.2%</span>
+				<span class="protocol-speed">~1min</span>
+				<span class="protocol-chains">30+</span>
+			</button>
+		</div>
+
+		<div class="protocol-details" id="protocol-details">
+			<div class="protocol-detail-row">
+				<span class="detail-label" data-i18n="estOutput">Est. Output</span>
+				<span class="detail-value" id="est-output">—</span>
+			</div>
+			<div class="protocol-detail-row">
+				<span class="detail-label" data-i18n="estFee">Est. Fee</span>
+				<span class="detail-value" id="est-fee">—</span>
+			</div>
+			<div class="protocol-detail-row">
+				<span class="detail-label" data-i18n="estTime">Est. Time</span>
+				<span class="detail-value" id="est-time">—</span>
+			</div>
+			<div class="protocol-detail-row">
+				<span class="detail-label" data-i18n="route">Route</span>
+				<span class="detail-value" id="est-route">—</span>
+			</div>
+		</div>
+
+		<div class="protocol-info">
+			<p id="protocol-desc" data-i18n="relayDesc">Fastest cross-chain bridge. Intent-based, p50 &lt;3s fill time. 0% fee for ETH→ETH.</p>
+		</div>
+	</div>
 	</div>
 </main>
 
