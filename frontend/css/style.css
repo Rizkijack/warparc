@@ -935,6 +935,88 @@ footer a:hover { color: var(--ink); }
 	transform: translateY(0);
 }
 
+/* --- Language selector ------------------------------------------------------ */
+
+.lang-selector {
+	position: relative;
+}
+
+.lang-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.35rem 0.6rem;
+	background: var(--surface2);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	color: var(--text2);
+	font-family: var(--font-ui);
+	font-size: 0.68rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.15s;
+	white-space: nowrap;
+}
+
+.lang-btn:hover { border-color: var(--border-strong); color: var(--text); }
+
+.lang-flag {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 16px;
+	border-radius: 3px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	font-size: 0.56rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--text2);
+	flex-shrink: 0;
+}
+
+.lang-dropdown {
+	display: none;
+	position: absolute;
+	top: calc(100% + 4px);
+	right: 0;
+	background: var(--surface);
+	border: 1px solid var(--border-strong);
+	border-radius: 8px;
+	padding: 0.35rem;
+	min-width: 160px;
+	z-index: 100;
+	box-shadow: var(--shadow-toast);
+	max-height: 320px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+}
+
+.lang-dropdown.open { display: block; }
+
+.lang-option {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	width: 100%;
+	padding: 0.45rem 0.6rem;
+	background: none;
+	border: none;
+	border-radius: 5px;
+	color: var(--text);
+	font-family: var(--font-ui);
+	font-size: 0.72rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.1s;
+	text-align: left;
+	white-space: nowrap;
+}
+
+.lang-option:hover { background: var(--surface2); }
+.lang-option.active { background: var(--surface2); color: var(--ink); font-weight: 700; }
+
 /* --- Responsive ------------------------------------------------------------ */
 
 @media (max-width: 768px) {
@@ -956,6 +1038,7 @@ footer a:hover { color: var(--ink); }
 	.tx-item { grid-template-columns: 8px minmax(0, 1fr) auto; column-gap: 0.6rem; }
 	.tx-badge { min-width: 56px; }
 	.network-toggle { display: none; }
+	.lang-dropdown { right: auto; left: 0; }
 }
 
 

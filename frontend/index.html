@@ -22,27 +22,46 @@
 		WarpArc
 	</div>
 	<div class="nav-right">
+		<div class="lang-selector" id="lang-selector">
+			<button class="lang-btn" id="lang-btn" aria-label="Select language" title="Language">
+				<span class="lang-flag" id="lang-flag">EN</span>
+				<svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+			</button>
+			<div class="lang-dropdown" id="lang-dropdown">
+				<button class="lang-option" data-lang="en"><span class="lang-flag">EN</span> English</button>
+				<button class="lang-option" data-lang="zh"><span class="lang-flag">ZH</span> 中文</button>
+				<button class="lang-option" data-lang="hi"><span class="lang-flag">HI</span> हिन्दी</button>
+				<button class="lang-option" data-lang="es"><span class="lang-flag">ES</span> Español</button>
+				<button class="lang-option" data-lang="fr"><span class="lang-flag">FR</span> Français</button>
+				<button class="lang-option" data-lang="ar"><span class="lang-flag">AR</span> العربية</button>
+				<button class="lang-option" data-lang="bn"><span class="lang-flag">BN</span> বাংলা</button>
+				<button class="lang-option" data-lang="pt"><span class="lang-flag">PT</span> Português</button>
+				<button class="lang-option" data-lang="ru"><span class="lang-flag">RU</span> Русский</button>
+				<button class="lang-option" data-lang="ja"><span class="lang-flag">JA</span> 日本語</button>
+			</div>
+		</div>
 		<div class="network-toggle">
-			<span class="toggle-label">Mainnet</span>
+			<span class="toggle-label" data-i18n="mainnet">Mainnet</span>
 			<label class="toggle-switch">
 				<input type="checkbox" id="network-mode-toggle" checked>
 				<span class="toggle-slider"></span>
 			</label>
-			<span class="toggle-label">Testnet</span>
+			<span class="toggle-label" data-i18n="testnet">Testnet</span>
 		</div>
 		<span class="network-badge" id="network-badge" style="display:none">
-			<span class="dot"></span> Not Connected
+			<span class="dot"></span> <span data-i18n="notConnected">Not Connected</span>
 		</span>
-		<button class="btn btn-primary btn-sm" id="connect-btn">Connect Wallet</button>
+		<button class="btn btn-primary btn-sm" id="connect-btn" data-i18n="connectWallet">Connect Wallet</button>
 	</div>
 </nav>
 
 <main>
 	<div class="bridge-card">
 		<div class="card-header">
-			<h1>Cross-Chain Bridge</h1>
+			<h1 data-i18n="crossChainBridge">Cross-Chain Bridge</h1>
 			<select id="token-select" class="token-picker">
 				<option value="USDC">USDC · CCTP V2</option>
+				<option value="ETH">ETH · Native</option>
 				<option value="ABT">ABT · OFT (legacy)</option>
 			</select>
 		</div>
@@ -62,7 +81,7 @@
 
 		<div id="bridge-area">
 			<div class="input-group">
-				<label>Amount</label>
+				<label data-i18n="amount">Amount</label>
 				<div class="input-wrap">
 					<input type="text" id="amount" placeholder="0.00" autocomplete="off" spellcheck="false">
 					<span class="token-tag" id="token-tag">
@@ -71,7 +90,7 @@
 					</span>
 				</div>
 				<div class="balance-row">
-					<span>Balance: <span id="from-balance">0.00</span></span>
+					<span><span data-i18n="balance">Balance</span>: <span id="from-balance">0.00</span></span>
 					<span class="preset-btns">
 						<button class="preset-btn" data-pct="25">25%</button>
 						<button class="preset-btn" data-pct="50">50%</button>
@@ -82,51 +101,51 @@
 			</div>
 
 			<div class="gas-estimate">
-				<span>Estimated Gas Fee (source)</span>
+				<span data-i18n="estGasFee">Estimated Gas Fee (source)</span>
 				<span id="gas-fee">N/A</span>
 			</div>
 			<div class="gas-estimate">
-				<span>CCTP Fast-Transfer Fee (USDC)</span>
+				<span data-i18n="cctpFee">CCTP Fast-Transfer Fee (USDC)</span>
 				<span id="gas-fee-usdc">N/A</span>
 			</div>
 			<div class="gas-estimate" id="forward-row">
 				<label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer">
 					<input type="checkbox" id="forward-toggle" checked>
-					<span>Forwarding Service — Circle submits the mint for you (extra fee, no destination gas needed)</span>
+					<span data-i18n="forwardingService">Forwarding Service — Circle submits the mint for you (extra fee, no destination gas needed)</span>
 				</label>
 			</div>
 
-			<div class="pending-resume" id="pending-resume" style="display:none">
+				<div class="pending-resume" id="pending-resume" style="display:none">
 				<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem">
-					<span class="pending-text" style="font-size:0.7rem;color:var(--text2)">Unfinished bridge detected</span>
+					<span class="pending-text" style="font-size:0.7rem;color:var(--text2)" data-i18n="unfinishedBridge">Unfinished bridge detected</span>
 					<span style="display:flex;gap:0.4rem">
-						<button class="btn btn-primary btn-sm" id="resume-btn">Resume mint</button>
-						<button class="btn btn-sm" id="pending-dismiss">Dismiss</button>
+						<button class="btn btn-primary btn-sm" id="resume-btn" data-i18n="resumeMint">Resume mint</button>
+						<button class="btn btn-sm" id="pending-dismiss" data-i18n="dismiss">Dismiss</button>
 					</span>
 				</div>
 			</div>
 
-			<div class="cctp-stepper reveal" id="cctp-stepper" style="display:none">
+				<div class="cctp-stepper reveal" id="cctp-stepper" style="display:none">
 				<div class="stepper-step" id="step-burn">
 					<div class="stepper-dot"></div>
-					<div class="stepper-label">Burn</div>
+					<div class="stepper-label" data-i18n="burn">Burn</div>
 				</div>
 				<div class="stepper-line" id="line-burn"></div>
 				<div class="stepper-step" id="step-attest">
 					<div class="stepper-dot"></div>
-					<div class="stepper-label">Attestation</div>
+					<div class="stepper-label" data-i18n="attestation">Attestation</div>
 				</div>
 				<div class="stepper-line" id="line-attest"></div>
 				<div class="stepper-step" id="step-mint">
 					<div class="stepper-dot"></div>
-					<div class="stepper-label">Mint</div>
+					<div class="stepper-label" data-i18n="mint">Mint</div>
 				</div>
 			</div>
 
-			<button class="bridge-btn" id="bridge-btn" disabled>Enter amount</button>
+			<button class="bridge-btn" id="bridge-btn" disabled data-i18n="enterAmount">Enter amount</button>
 
 			<div class="info-block reveal">
-				<h3>CCTP V2 Contracts</h3>
+				<h3 data-i18n="cctpContracts">CCTP V2 Contracts</h3>
 				<div class="contract-grid">
 					<div>
 						<div class="contract-col-title" id="from-chain-name">Ethereum</div>
@@ -146,9 +165,9 @@
 			</div>
 
 			<div class="info-block reveal">
-				<h3>Transaction History</h3>
+				<h3 data-i18n="txHistory">Transaction History</h3>
 				<div class="tx-history" id="tx-list">
-					<div class="empty-state">No transactions yet</div>
+					<div class="empty-state" data-i18n="noTxs">No transactions yet</div>
 				</div>
 			</div>
 		</div>
@@ -156,11 +175,11 @@
 </main>
 
 <footer>
-	<span>WarpArc Bridge · USDC via Circle CCTP V2</span>
+	<span data-i18n="footerText">WarpArc Bridge · USDC via Circle CCTP V2</span>
 	<div class="footer-links">
-		<a href="https://status.circle.com" target="_blank" rel="noopener">System Status</a>
+		<a href="https://status.circle.com" target="_blank" rel="noopener" data-i18n="systemStatus">System Status</a>
 		<a href="https://testnet.arcscan.app" target="_blank" rel="noopener">ArcScan</a>
-		<a href="https://faucet.circle.com" target="_blank" rel="noopener">Faucet</a>
+		<a href="https://faucet.circle.com" target="_blank" rel="noopener" data-i18n="faucet">Faucet</a>
 	</div>
 </footer>
 
@@ -169,6 +188,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js" integrity="sha384-gpR0Q6Hx/O+uevlbpbANbS0LWjbejPV1sqD/8w422l/fW8whGY0EPmKw3uG7ACYP" crossorigin="anonymous"></script>
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
-`t<script src="js/ui.js"></script>
+<script src="js/ui.js"></script>
 </body>
 </html>
