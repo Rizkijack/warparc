@@ -410,8 +410,13 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 				return;
 			}
 			if (ALREADY_RELAYED_RE.test(msgText)) {
-				const parsed = parseCctpV2Message(job.message);
-				const confirmed = await nonceUsed(dst, parsed.nonce);
+				let parsed = null;
+				try {
+					parsed = parseCctpV2Message(job.message);
+				} catch (parseErr) {
+					log.warn(`[relayer] failed to parse CCTP message for ${job.txHash}: ${parseErr.message}`);
+				}
+				const confirmed = parsed && await nonceUsed(dst, parsed.nonce);
 				if (confirmed) {
 					updateJob(job.txHash, { status: "relayed", error: `already relayed: ${msgText.slice(0, 200)}` });
 					log.info(`[relayer] ${job.txHash} already relayed elsewhere (usedNonces ✓) — done`);

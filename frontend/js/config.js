@@ -3,37 +3,9 @@
 // source handbook — ARC-SOURCES.md is local-only and may be absent). Never fill
 // an unknown value from memory — re-fetch from the official docs instead.
 //
-// Legacy LayerZero V2 OFT data (chains.*.layerZero, OFT_ABI) is DEPRECATED and
-// kept for the ABT demo path only (deprecated legacy OFT path).
+// DEPRECATED — Legacy LayerZero V2 OFT data (chains.*.layerZero, OFT_ABI, LZ_ENDPOINT_ABI).
+// Canonical USDC route is Circle CCTP V2. Retained for reference/test scripts; do not use.
 const CONFIG = {
-	bridgeToken: {
-		deployments: {
-			ethereum:  null,
-			base:      null,
-			arbitrum:  null,
-			optimism:  null,
-			robinhood: null,
-			arc:       null
-		},
-		decimals: 18,
-		symbol: "ABT",
-		name: "ARC Bridge Token",
-		icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='10' height='10' rx='2' fill='%239b6ef0'/%3E%3Crect x='18' y='4' width='10' height='10' rx='2' fill='%239b6ef0' opacity='0.5'/%3E%3Crect x='4' y='18' width='10' height='10' rx='2' fill='%2310b981'/%3E%3Crect x='18' y='18' width='10' height='10' rx='2' fill='%2310b981' opacity='0.5'/%3E%3C/svg%3E"
-	},
-	bridgeAdapter: {
-		deployments: {
-			ethereum:  null,
-			base:      null,
-			arbitrum:  null,
-			optimism:  null,
-			robinhood: null,
-			arc:       null
-		},
-		decimals: 6,
-		symbol: "USDC",
-		name: "ARC Bridge USDC Adapter",
-		icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%232775CA'/%3E%3Cpath d='M16 7v18M20.8 11.2c-.8-1.2-2.6-1.9-4.8-1.9-2.7 0-4.7 1.3-4.7 3.3 0 4.4 9.6 2.4 9.6 6.7 0 2.1-2.1 3.4-5.1 3.4-2.5 0-4.3-.9-5.1-2.2' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"
-	},
 	chains: {
 		ethereum: {
 			network: "mainnet",
@@ -51,6 +23,8 @@ const CONFIG = {
 				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
 				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
 			},
+			// DEPRECATED — LayerZero OFT path (canonical route is Circle CCTP V2).
+			// Retained for reference/test scripts; do not use in new code.
 			layerZero: {
 				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
 				sendUln302: "0xbb2ea70c9e858123480642cf96acbcce1372dce1",
@@ -78,6 +52,8 @@ const CONFIG = {
 				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
 				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
 			},
+			// DEPRECATED — LayerZero OFT path (canonical route is Circle CCTP V2).
+			// Retained for reference/test scripts; do not use in new code.
 			layerZero: {
 				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
 				sendUln302: "0xb5320b0b3a13cc860893e2bd79fcd7e13484dda2",
@@ -104,6 +80,8 @@ const CONFIG = {
 				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
 				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
 			},
+			// DEPRECATED — LayerZero OFT path (canonical route is Circle CCTP V2).
+			// Retained for reference/test scripts; do not use in new code.
 			layerZero: {
 				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
 				sendUln302: "0x975bcd720be66659e3eb3c0e4f1866a3020e493a",
@@ -130,6 +108,8 @@ const CONFIG = {
 				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
 				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
 			},
+			// DEPRECATED — LayerZero OFT path (canonical route is Circle CCTP V2).
+			// Retained for reference/test scripts; do not use in new code.
 			layerZero: {
 				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
 				sendUln302: "0x1322871e4ab09bc7f5717189434f97bbd9546e95",
@@ -381,20 +361,6 @@ const CONFIG = {
 		}
 	},
 	tokens: {
-		ABT: {
-			name: "ARC Bridge Token",
-			symbol: "ABT",
-			decimals: 18,
-			addresses: {
-				ethereum:  null,
-				base:      null,
-				arbitrum:  null,
-				optimism:  null,
-				robinhood: null,
-				arc:       null
-			},
-			icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='10' height='10' rx='2' fill='%239b6ef0'/%3E%3Crect x='18' y='4' width='10' height='10' rx='2' fill='%239b6ef0' opacity='0.5'/%3E%3Crect x='4' y='18' width='10' height='10' rx='2' fill='%2310b981'/%3E%3Crect x='18' y='18' width='10' height='10' rx='2' fill='%2310b981' opacity='0.5'/%3E%3C/svg%3E"
-		},
 		USDC: {
 			name: "USD Coin",
 			symbol: "USDC",
@@ -447,7 +413,7 @@ const CONFIG = {
 				optimismSepolia: "0x0000000000000000000000000000000000000000",
 				arcMainnet: "0x0000000000000000000000000000000000000000"
 			},
-			icon: "https://icons-ckg.pages.dev/lz-scan/protocols/ether.svg"
+			icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23627EEA'/%3E%3Cpath d='M16 4v12l7-8.5L16 4z' fill='%23fff' opacity='0.8'/%3E%3Cpath d='M16 4v12l-7-8.5L16 4z' fill='%23fff'/%3E%3Cpath d='M16 19l-7 5 7 4v-9z' fill='%23fff'/%3E%3Cpath d='M16 19l7 5-7 4v-9z' fill='%23fff' opacity='0.8'/%3E%3C/svg%3E"
 		}
 	},
 	// Circle Iris attestation API (CCTP V2) — technical guide:
@@ -489,7 +455,7 @@ const CONFIG = {
 			}
 		},
 		attestationApi: "https://iris-api.circle.com/v2/attestations",
-		MESSAGE_SENT_TOPIC0: "0x2fa9ca894982930190727e75500a97d8dc500233a5065e0f3126c48fbe0343c0"
+		MESSAGE_SENT_TOPIC0: "0x8c5261668696ce22758910d05bab8f186d6eb247ceac2af2e82c7dc17669b036", // keccak256("MessageSent(bytes)") — verified from circlefin/evm-cctp-contracts
 	},
 	// WalletConnect — remote/mobile wallet sessions. projectId comes from
 	// https://cloud.walletconnect.com (free tier); it is a public client-side
@@ -516,6 +482,8 @@ const CONFIG = {
 	},
 };
 
+// DEPRECATED — LayerZero V2 endpoint ABI (OFT path, replaced by Circle CCTP V2).
+// Retained for reference/test scripts; do not use in new code.
 const LZ_ENDPOINT_ABI = [
 	"function send(bytes calldata _payload, bytes calldata _options, address _sendLib, address _receiveLib) external payable",
 	"function send(address _lzReceive, address _compose, uint32 _dstEid, bytes32 _messageGuid, bytes calldata _message, bytes calldata _extraOptions, address _receiveLib, address _sendLib) external payable",
@@ -546,9 +514,11 @@ const MESSAGE_TRANSMITTER_V2_ABI = [
 	"event MessageSent(bytes message)"
 ];
 
+// DEPRECATED — LayerZero OFT ABI (canonical route is Circle CCTP V2).
+// Retained for reference/test scripts; do not use in new code.
 const OFT_ABI = [
 	"function send((uint32 dstEid,bytes32 to,uint256 amountLD,uint256 minAmountLD,bytes extraOptions,bytes composeMsg,bytes oftCmd) _sendParam,(uint256 nativeFee,uint256 lzTokenFee) _fee,address _refundAddress) external payable returns ((bytes32 guid,uint64 nonce,uint256 fee) msgReceipt,(uint256 amountSentLD,uint256 amountReceivedLD) oftReceipt)",
-	"function quoteSend((uint32 dstEid,bytes32 to,uint256 amountLD,uint256 minAmountLD,bytes extraOptions,bytes composeMsg,bytes oftCmd) _sendParam,bool _payInLzToken) external view returns (uint256 nativeFee,uint256 lzTokenFee)",
+	"function quoteSend((uint32 dstEid,bytes32 to,uint256 amountLD,uint256 minAmountLD,bytes extraOptions,bytes composeMsg,bytes oftCmd) _sendParam,bool _payInLzToken) external view returns (uint256 nativeFee, uint256 lzTokenFee)",
 	"function setPeer(uint32 _eid,bytes32 _peer) external",
 	"function balanceOf(address account) external view returns (uint256)",
 	"function approve(address spender,uint256 amount) external returns (bool)",

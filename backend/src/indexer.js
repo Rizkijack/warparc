@@ -196,7 +196,8 @@ function makeRpcCall(rpcUrl) {
 		const res = await fetch(rpcUrl, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ jsonrpc: "2.0", id: ++id, method, params })
+			body: JSON.stringify({ jsonrpc: "2.0", id: ++id, method, params }),
+			signal: AbortSignal.timeout(30000)
 		});
 		if (res.status === 429 || res.status === 503) {
 			const err = new Error(`RPC HTTP ${res.status}`);

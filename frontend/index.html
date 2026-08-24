@@ -45,12 +45,14 @@
 			</div>
 		</div>
 		<div class="network-toggle">
-			<span class="toggle-label" data-i18n="mainnet">Mainnet</span>
-			<label class="toggle-switch">
-				<input type="checkbox" id="network-mode-toggle" checked>
-				<span class="toggle-slider"></span>
-			</label>
-			<span class="toggle-label" data-i18n="testnet">Testnet</span>
+			<button class="network-btn" id="network-mainnet-btn" data-network="mainnet">
+				<span class="network-dot mainnet"></span>
+				<span data-i18n="mainnet">Mainnet</span>
+			</button>
+			<button class="network-btn active" id="network-testnet-btn" data-network="testnet">
+				<span class="network-dot testnet"></span>
+				<span data-i18n="testnet">Testnet</span>
+			</button>
 		</div>
 		<span class="network-badge" id="network-badge" style="display:none">
 			<span class="dot"></span> <span data-i18n="notConnected">Not Connected</span>
@@ -72,7 +74,6 @@
 			<select id="token-select" class="token-picker">
 				<option value="USDC">USDC · CCTP V2</option>
 				<option value="ETH">ETH · Native</option>
-				<option value="ABT">ABT · OFT (legacy)</option>
 			</select>
 		</div>
 
