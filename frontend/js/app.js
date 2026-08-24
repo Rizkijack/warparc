@@ -33,6 +33,7 @@ const TRANSLATIONS = {
 		forwardUnavailable: "Forwarding fee quote unavailable — turn off Forwarding Service or retry",
 		amountMustExceedFee: "Amount must exceed the CCTP fee",
 		switchingTo: "Switching wallet to", alreadyRelayed: "Mint was already submitted by a relayer — funds are on",
+		switchRejected: "Wallet switch rejected — cannot bridge from ",
 		forwarderStalled: "Forwarder belum selesai — melanjutkan dengan mint manual…",
 		resumeConfirm: "Burn ini dibuat untuk penerima",
 		notOnChain: "Wallet is not on", abortMint: " — mint aborted before send",
@@ -73,6 +74,7 @@ const TRANSLATIONS = {
 		forwardUnavailable: "转发费用报价不可用 — 关闭转发服务或重试",
 		amountMustExceedFee: "金额必须超过CCTP费用",
 		switchingTo: "切换钱包到", alreadyRelayed: "铸造已被中继器提交 — 资金已在",
+		switchRejected: "钱包切换被拒绝 — 无法从以下网络桥接 ",
 		forwarderStalled: "转发器未完成 — 手动铸造继续…",
 		resumeConfirm: "此销毁为收款人创建",
 		notOnChain: "钱包不在", abortMint: " — 铸造在发送前中止",
@@ -113,6 +115,7 @@ const TRANSLATIONS = {
 		forwardUnavailable: "फॉरवर्डिंग शुल्क उपलब्ध नहीं — फॉरवर्डिंग सर्विस बंद करें या पुनः प्रयास करें",
 		amountMustExceedFee: "राशि CCTP शुल्क से अधिक होनी चाहिए",
 		switchingTo: "वॉलेट स्विच हो रहा है", alreadyRelayed: "मिंट पहले ही रिलेयर द्वारा सबमिट किया जा चुका है — फंड हैं",
+		switchRejected: "वॉलेट स्विच अस्वीकृत — इस नेटवर्क से ब्रिज नहीं कर सकते ",
 		forwarderStalled: "फॉरवर्डर पूरा नहीं हुआ — मैनुअल मिंट जारी…",
 		resumeConfirm: "यह बर्न प्राप्तकर्ता के लिए बनाया गया था",
 		notOnChain: "वॉलेट पर नहीं है", abortMint: " — भेजने से पहले मिंट निरस्त",
@@ -153,6 +156,7 @@ const TRANSLATIONS = {
 		forwardUnavailable: "Cotización de reenvío no disponible — desactiva el servicio o reintenta",
 		amountMustExceedFee: "La cantidad debe exceder la tarifa CCTP",
 		switchingTo: "Cambiando billetera a", alreadyRelayed: "El mint ya fue enviado por un relayer — fondos en",
+		switchRejected: "Cambio de red rechazado — no se puede puentear desde ",
 		forwarderStalled: "Reenviador no completó — mint manual continuando…",
 		resumeConfirm: "Esta quema fue creada para el destinatario",
 		notOnChain: "Billetera no está en", abortMint: " — mint abortado antes de enviar",
@@ -193,6 +197,7 @@ const TRANSLATIONS = {
 		forwardUnavailable: "Cotisation de transfert indisponible — désactivez le service ou réessayez",
 		amountMustExceedFee: "Le montant doit dépasser les frais CCTP",
 		switchingTo: "Changement de portefeuille vers", alreadyRelayed: "Le mint a déjà été soumis par un relayer — fonds sur",
+		switchRejected: "Changement de réseau refusé — pont impossible depuis ",
 		forwarderStalled: "Transfert non terminé — mint manuel en cours…",
 		resumeConfirm: "Ce brûlage a été créé pour le destinataire",
 		notOnChain: "Portefeuille pas sur", abortMint: " — mint annulé avant envoi",
@@ -233,6 +238,7 @@ const TRANSLATIONS = {
 		forwardUnavailable: "عرض رسوم التحويل غير متاح — أوقف الخدمة أو أعد المحاولة",
 		amountMustExceedFee: "يجب أن يتجاوز المبلغ رسوم CCTP",
 		switchingTo: "تبديل المحفظة إلى", alreadyRelayed: "تم تقديم السك بالفعل بواسطة مُرحّل — الأموال في",
+		switchRejected: "تم رفض تبديل الشبكة — لا يمكن الجسر من ",
 		forwarderStalled: "المحول لم يكتمل — سك يدوي مستمر…",
 		resumeConfirm: "تم إنشاء هذا الحرق للمستلم",
 		notOnChain: "المحفظة ليست على", abortMint: " — تم إلغاء السك قبل الإرسال",
@@ -273,6 +279,7 @@ const TRANSLATIONS = {
 		forwardUnavailable: "ফরওয়ার্ডিং ফি কোট উপলব্ধ নয় — সার্ভিস বন্ধ করুন বা আবার চেষ্টা করুন",
 		amountMustExceedFee: "পরিমাণ CCTP ফি এর বেশি হতে হবে",
 		switchingTo: "ওয়ালেট পরিবর্তন হচ্ছে", alreadyRelayed: "মিন্ট ইতিমধ্যে রিলেয়ার দ্বারা জমা দেওয়া হয়েছে — তহবিল",
+		switchRejected: "ওয়ালেট সুইচ প্রত্যাখ্যাত — এই নেটওয়ার্ক থেকে ব্রিজ করা যাবে না ",
 		forwarderStalled: "ফরওয়ার্ডার সম্পূর্ণ হয়নি — ম্যানুয়াল মিন্ট চলছে…",
 		resumeConfirm: "এই বার্ন প্রাপকের জন্য তৈরি করা হয়েছিল",
 		notOnChain: "ওয়ালেট নেই", abortMint: " — পাঠানোর আগে মিন্ট বাতিল",
@@ -313,6 +320,7 @@ const TRANSLATIONS = {
 		forwardUnavailable: "Cotação de encaminhamento indisponível — desative o serviço ou tente novamente",
 		amountMustExceedFee: "O valor deve exceder a taxa CCTP",
 		switchingTo: "Alternando carteira para", alreadyRelayed: "O mint já foi enviado por um relayer — fundos em",
+		switchRejected: "Troca de rede rejeitada — não é possível fazer bridge de ",
 		forwarderStalled: "Encaminhador não completou — mint manual continuando…",
 		resumeConfirm: "Esta queima foi criada para o destinatário",
 		notOnChain: "Carteira não está em", abortMint: " — mint abortado antes de enviar",
@@ -353,6 +361,7 @@ const TRANSLATIONS = {
 		forwardUnavailable: "Котировка пересылки недоступна — отключите сервис или повторите",
 		amountMustExceedFee: "Сумма должна превышать комиссию CCTP",
 		switchingTo: "Переключение кошелька на", alreadyRelayed: "Минт уже отправлен релеером — средства на",
+		switchRejected: "Переключение сети отклонено — невозможен мост из ",
 		forwarderStalled: "Пересылка не завершена — ручной минт продолжается…",
 		resumeConfirm: "Это сжигание было создано для получателя",
 		notOnChain: "Кошелёк не на", abortMint: " — минт отменён перед отправкой",
@@ -393,6 +402,7 @@ const TRANSLATIONS = {
 		forwardUnavailable: "フォワーディング手数料の見積もり不可 — サービスをオフにするか再試行",
 		amountMustExceedFee: "金額はCCTP手数料を超える必要があります",
 		switchingTo: "ウォレット切り替え中", alreadyRelayed: "ミントはリレイヤーにより送信済み — 資金は",
+		switchRejected: "ウォレット切替が拒否されました — 次のネットワークからブリッジできません ",
 		forwarderStalled: "フォワーダー未完了 — 手動ミント続行…",
 		resumeConfirm: "このバーンは受取人向けに作成されました",
 		notOnChain: "ウォレットが上にありません", abortMint: " — 送信前にミント中止",
@@ -1141,6 +1151,24 @@ async function refreshProvider() {
 	state.signer = await state.provider.getSigner();
 	state.chainId = Number(await state.wallet.eip1193.request({ method: "eth_chainId" }));
 }
+// Single pre-flight policy for every bridge flow: the wallet MUST sit on the
+// UI-selected source chain before any balance read, approval, or transaction.
+// Runs in bridge() before sub-flows dispatch; a user rejection aborts cleanly
+// (no transaction was submitted). Returns true when safe to proceed.
+async function ensureWalletOnFromChain(fromChain) {
+	if (!state.wallet) return false;
+	if (state.chainId === fromChain.chainId) return true;
+	toast(`${t("switchingTo")} ${fromChain.name}...`, "info");
+	try {
+		await switchChain(fromChain.chainId);
+		await refreshProvider();
+		return true;
+	} catch (e) {
+		toast(t("switchRejected") + " " + fromChain.name, "error");
+		return false;
+	}
+}
+
 // Navbar network picker. Rebuilt from scratch on every call so it always
 // mirrors getFilteredChains() (same mode filter/sort as the bridge selects);
 // hidden while disconnected. A wallet sitting on a chain outside the active
@@ -1706,6 +1734,15 @@ async function bridge() {
 			return;
 		}
 		if (parsedAmount === 0n) { toast("Amount must be greater than 0", "error"); return; }
+		// Pre-flight: wallet must sit on the UI-selected source chain before
+		// any further check or transaction (auto-switch on mismatch).
+		const walletChainBefore = state.chainId;
+		if (!(await ensureWalletOnFromChain(CONFIG.chains[fromKey]))) return;
+		if (state.chainId !== walletChainBefore) {
+			// Balance cache belongs to the PREVIOUS chain — never judge the
+			// amount with cross-chain data; the next fetch repopulates it.
+			state.lastFromBalanceRaw = null;
+		}
 		// lastFromBalanceRaw tracks the SELECTED source chain — reject before the
 		// approve can succeed and strand the user at a reverting burn.
 		if (state.lastFromBalanceRaw != null && parsedAmount > state.lastFromBalanceRaw) {
@@ -1791,12 +1828,7 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 	updateStepper("burn", "active");
 
 	try {
-		// 1. Make sure the wallet is on the source chain (and signer is fresh)
-		if (state.chainId !== fromChain.chainId) {
-			toast(`Switching wallet to ${fromChain.name}...`, "info");
-			await switchChain(fromChain.chainId);
-			await refreshProvider();
-		}
+		// Wallet chain already guaranteed by ensureWalletOnFromChain in bridge().
 		const expectedAccount = state.account;
 		// A wallet account/chain switch mid-flow would send from the wrong key
 		// or chain — abort before any transaction is submitted.
@@ -2123,11 +2155,6 @@ async function pollAttestation(irisBase, srcDomain, txHash, timeoutMs = 600000) 
 async function bridgeLegacyOFT(amount, parsedAmount, fromKey, toKey, token) {
 	const fromChain = CONFIG.chains[fromKey];
 	const toChain = CONFIG.chains[toKey];
-
-	if (fromChain.chainId !== state.chainId) {
-		toast(`Switch to ${fromChain.name}`, "error");
-		try { await switchChain(fromChain.chainId); await refreshProvider(); } catch { return; }
-	}
 
 	const contract = getBridgeContract(fromKey, state.signer, token);
 	if (!contract) {
