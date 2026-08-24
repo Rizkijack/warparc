@@ -1846,6 +1846,35 @@ function getFilteredChains() {
 	});
 }
 
+// Segmented Testnet|Mainnet control inside the bridge card header. Single
+// source of truth for mode changes: updates state, persists, syncs both this
+// control and the navbar toggle (without dispatching a change event), then
+// re-renders every chain-dependent surface.
+function setBridgeMode(mode) {
+	mode = (mode === "mainnet") ? "mainnet" : "testnet";
+	if (state.isBridging) return; // never switch lists mid-bridge flow
+	const changed = state.testnetMode !== (mode === "testnet");
+	if (!changed) { syncBridgeModeUI(mode); return; }
+	state.testnetMode = (mode === "testnet");
+	try { localStorage.setItem("warparc:mode", mode); } catch {}
+	syncBridgeModeUI(mode);
+	populateChainSelects();
+	onChainChange();
+	renderWalletChainPicker();
+}
+
+// Reflects current mode onto pills + navbar checkbox (no change event —
+// avoids recursion; safe to call before listeners are bound at init).
+function syncBridgeModeUI(mode) {
+	const testnet = mode === "testnet";
+	const t = el("mode-testnet");
+	const m = el("mode-mainnet");
+	if (t) t.classList.toggle("active", testnet);
+	if (m) m.classList.toggle("active", !testnet);
+	const navToggle = el("network-mode-toggle");
+	if (navToggle) navToggle.checked = testnet;
+}
+
 function populateChainSelects() {
 	const from = el("from-chain");
 	const to = el("to-chain");
@@ -2352,6 +2381,17 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 	});
 
+	// Segmented control in the bridge card header
+	el("mode-testnet").addEventListener("click", () => setBridgeMode("testnet"));
+	el("mode-mainnet").addEventListener("click", () => setBridgeMode("mainnet"));
+
+	const toggle = el("network-mode-toggle");
+	if (toggle) {
+		toggle.addEventListener("change", () => {
+			setBridgeMode(toggle.checked ? "testnet" : "mainnet");
+		});
+	}
+
 	const forwardToggle = el("forward-toggle");
 	if (forwardToggle) {
 		forwardToggle.addEventListener("change", estimateGas);
@@ -2369,17 +2409,6 @@ document.addEventListener("DOMContentLoaded", () => {
 			// state. Manual ones stay resumable; dismiss only hides the banner.
 			if (p && p.forward) clearPendingCctp();
 			else el("pending-resume").style.display = "none";
-		});
-	}
-
-	const toggle = el("network-mode-toggle");
-	if (toggle) {
-		toggle.checked = state.testnetMode;
-		toggle.addEventListener("change", () => {
-			state.testnetMode = toggle.checked;
-			populateChainSelects();
-			onChainChange();
-			renderWalletChainPicker();
 		});
 	}
 
@@ -2409,6 +2438,10 @@ document.addEventListener("DOMContentLoaded", () => {
 	loadTxHistory();
 	renderTxHistory();
 	showPendingBanner();
+	// Restore persisted mode before the first populate so chain lists render
+	// in the saved mode; setBridgeMode is safe pre-listener (sync-only when
+	// unchanged, and pill/nav sync guards on missing elements).
+	setBridgeMode((() => { try { return localStorage.getItem("warparc:mode") || "testnet"; } catch { return "testnet"; } })());
 	populateChainSelects();
 	onTokenChange();
 	updateBridgeBtn();
