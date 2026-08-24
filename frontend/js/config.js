@@ -32,7 +32,7 @@ const CONFIG = {
 		decimals: 6,
 		symbol: "USDC",
 		name: "ARC Bridge USDC Adapter",
-		icon: "https://icons-ckg.pages.dev/lz-scan/protocols/usd-coin.svg"
+		icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%232775CA'/%3E%3Cpath d='M16 7v18M20.8 11.2c-.8-1.2-2.6-1.9-4.8-1.9-2.7 0-4.7 1.3-4.7 3.3 0 4.4 9.6 2.4 9.6 6.7 0 2.1-2.1 3.4-5.1 3.4-2.5 0-4.3-.9-5.1-2.2' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"
 	},
 	chains: {
 		ethereum: {
@@ -326,7 +326,7 @@ const CONFIG = {
 				// Arc mainnet USDC — ?TBD? (MAINNET-CHECKLIST.md Phase 1)
 				arcMainnet: null
 			},
-			icon: "https://icons-ckg.pages.dev/lz-scan/protocols/usd-coin.svg"
+			icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%232775CA'/%3E%3Cpath d='M16 7v18M20.8 11.2c-.8-1.2-2.6-1.9-4.8-1.9-2.7 0-4.7 1.3-4.7 3.3 0 4.4 9.6 2.4 9.6 6.7 0 2.1-2.1 3.4-5.1 3.4-2.5 0-4.3-.9-5.1-2.2' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"
 		},
 		ETH: {
 			name: "Ether",
@@ -388,6 +388,13 @@ const CONFIG = {
 		},
 		attestationApi: "https://iris-api.circle.com/v2/attestations",
 		MESSAGE_SENT_TOPIC0: "0x2fa9ca894982930190727e75500a97d8dc500233a5065e0f3126c48fbe0343c0"
+	},
+	// WalletConnect — remote/mobile wallet sessions. projectId comes from
+	// https://cloud.walletconnect.com (free tier); it is a public client-side
+	// value. EMPTY => the WalletConnect option stays disabled (fail-closed).
+	walletconnect: {
+		projectId: "74c3944c7d1579478f020903a8e6d008",
+		sdkVersion: "2" // pinned @walletconnect/ethereum-provider major, served via jsdelivr +esm
 	},
 	lzScan: "https://layerzeroscan.com"
 };

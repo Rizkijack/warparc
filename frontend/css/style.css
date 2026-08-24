@@ -1,7 +1,8 @@
 /* ============================================================================
-   WarpArc Bridge — Premium Utilitarian Minimalism (warm monochrome, editorial)
-   Design tokens: no Inter/Roboto, no gradients, no heavy shadows. Borders are
-   always 1px #EAEAEA; radius is small (4–10px); color is scarce & semantic.
+   WarpArc Bridge — Cool utilitarian minimalism, Arc/USDC-blue accent
+   CSS-only themed backdrop: concentric orbital arcs, soft glow, dot grid.
+   Tokens: light default + [data-theme="dark"] override block, small radii
+   (4–12px), serif display h1, mono data, 1px borders, pastel status pairs.
    ========================================================================== */
 
 *, *::before, *::after {
@@ -11,40 +12,112 @@
 }
 
 :root {
-	/* Warm monochrome */
-	--bg: #F7F6F3;
+	/* Cool Arc neutrals */
+	--bg: #F5F7FA;
 	--surface: #FFFFFF;
-	--surface2: #F9F9F8;
-	--border: #EAEAEA;
-	--border-strong: #DCDCD6;
-	--text: #2F3437;
-	--text2: #787774;
-	--text3: #9C9A93;
-	--ink: #1F2324;
+	--surface2: #F8FAFC;
+	--border: #E4E9F0;
+	--border-strong: #D3DCE6;
+	--text: #24303E;
+	--text2: #5B6B7C;
+	--text3: #93A1B0;
+	--ink: #16202B;
 
-	/* Semantic pastels (bg / text pairs) */
-	--green-bg: #EDF3EC;  --green: #346538;
-	--red-bg:   #FDEBEC;  --red: #9F2F2D;
-	--amber-bg: #FBF3DB;  --amber: #956400;
-	--blue-bg:  #E1F3FE;  --blue: #1F6C9F;
+	/* Semantic pastels (bg / text pairs) — bgs cooled to harmonize with slate base */
+	--green-bg: #EAF2EC;  --green: #346538;
+	--red-bg:   #FDEEF0;  --red: #9F2F2D;
+	--amber-bg: #FBF0D8;  --amber: #956400;
+	--blue-bg:  #E8F1FB;  --blue: #2775CA;
 
-	/* Aliases kept for JS / inline styles */
-	--accent: #2F3437;
-	--accent-muted: #6B6F76;
-	--accent-dim: #141719;
+	/* Accent — USDC blue family (Arc) */
+	--accent: #2775CA;
+	--accent-strong: #1E5FA8;
+	--accent-dim: #17497F;
+	--accent-bg: #E8F1FB;
+	--accent-border: #BCD4EE;
+	--accent-muted: #6B8DBE;
 
 	/* Shape & type */
-	--radius: 10px;
+	--radius: 12px;
 	--radius-sm: 4px;
 	--font-ui: "SF Pro Display", "Helvetica Neue", "Segoe UI", system-ui, -apple-system, sans-serif;
 	--font-serif: "Newsreader", "Georgia", "Times New Roman", serif;
 	--font-mono: "Geist Mono", "SF Mono", "Cascadia Code", "JetBrains Mono", "Consolas", monospace;
 
-	--shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+	--shadow-card: 0 1px 2px rgba(22,32,43,.05), 0 16px 40px -18px rgba(39,117,202,.25);
 	--shadow-toast: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+	/* Backdrop decor — dot grid, orbital rings, glow, base wash */
+	--grid-dot: rgba(36,48,62,0.05);
+	--ring-faint: rgba(39,117,202,0.06);
+	--ring-mid: rgba(39,117,202,0.10);
+	--ring-strong: rgba(39,117,202,0.16);
+	--ring-hairline: rgba(39,117,202,0.035);
+	--glow: rgba(39,117,202,0.07);
+	--wash-top: #FFFFFF;
+	--wash-mid: #F5F7FA;
+	--wash-end: #EDF2F8;
+
+	/* Chrome surfaces */
+	--nav-bg: rgba(255, 255, 255, 0.85);
+	--backdrop: rgba(22, 32, 43, 0.4);
+
+	/* Foreground drawn on solid colored fills (primary buttons, knobs, status dots) */
+	--on-fill: #FFFFFF;
 }
 
-html { font-size: 15px; }
+[data-theme="dark"] {
+	/* Cool Arc neutrals — night slate */
+	--bg: #0B111E;
+	--surface: #121A2A;
+	--surface2: #1A2438;
+	--border: #233047;
+	--border-strong: #2E3D5C;
+	--text: #DDE6F2;
+	--text2: #A7B7CB;
+	--text3: #7C8DA6;
+	--ink: #F4F7FB;
+
+	/* Semantic pastel pairs → translucent fills on dark */
+	--green-bg: rgba(111,207,135,0.12);  --green: #6FCF87;
+	--red-bg:   rgba(255,123,114,0.12);  --red: #FF7B72;
+	--amber-bg: rgba(242,201,76,0.12);   --amber: #F2C94C;
+	--blue-bg:  rgba(106,176,243,0.12);  --blue: #6AB0F3;
+
+	/* Accent — hover steps lighter in dark */
+	--accent: #4E9AF1;
+	--accent-strong: #79B7F7;
+	--accent-dim: #3B82D6;
+	--accent-bg: rgba(78,154,241,0.12);
+	--accent-border: rgba(78,154,241,0.38);
+	--accent-muted: #7FA3CC;
+
+	/* Backdrop decor — faint light dots, brighter Arc-blue rings */
+	--grid-dot: rgba(221,230,242,0.05);
+	--ring-faint: rgba(78,154,241,0.08);
+	--ring-mid: rgba(78,154,241,0.13);
+	--ring-strong: rgba(78,154,241,0.20);
+	--ring-hairline: rgba(78,154,241,0.05);
+	--glow: rgba(78,154,241,0.10);
+	--wash-top: #101A2C;
+	--wash-mid: #0B111E;
+	--wash-end: #090F1A;
+
+	/* Chrome surfaces */
+	--nav-bg: rgba(11,17,30,0.78);
+	--backdrop: rgba(3,7,14,0.58);
+
+	/* Dark ink on bright fills reads far better than white on them */
+	--on-fill: #0B111E;
+
+	/* Soft near-black shadows */
+	--shadow-card: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px -18px rgba(0,0,0,.5);
+	--shadow-toast: 0 8px 32px rgba(0, 0, 0, 0.45);
+
+	color-scheme: dark;
+}
+
+html { font-size: 15px; color-scheme: light; scrollbar-color: var(--border-strong) transparent; }
 
 body {
 	font-family: var(--font-ui);
@@ -55,6 +128,54 @@ body {
 	flex-direction: column;
 	line-height: 1.6;
 	-webkit-font-smoothing: antialiased;
+	position: relative;
+	isolation: isolate;
+}
+
+body::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background:
+		/* ultra-faint dot grid 26px pitch — masked to vanish under central card column */
+		radial-gradient(circle, var(--grid-dot) 1px, transparent 1.2px) 0 0 / 26px 26px,
+		/* three concentric Arc orbit rings anchored top-right (center 110% -15%) — 28/36/44 vmax, 1.5px band */
+		radial-gradient(circle at 110% -15%, transparent calc(44vmax - 0.75px), var(--ring-faint) calc(44vmax - 0.75px), var(--ring-faint) calc(44vmax + 0.75px), transparent calc(44vmax + 0.75px)),
+		radial-gradient(circle at 110% -15%, transparent calc(36vmax - 0.75px), var(--ring-mid) calc(36vmax - 0.75px), var(--ring-mid) calc(36vmax + 0.75px), transparent calc(36vmax + 0.75px)),
+		radial-gradient(circle at 110% -15%, transparent calc(28vmax - 0.75px), var(--ring-strong) calc(28vmax - 0.75px), var(--ring-strong) calc(28vmax + 0.75px), transparent calc(28vmax + 0.75px)),
+		/* soft radial glow bottom-left */
+		radial-gradient(ellipse 50vmax 50vmax at 12% 92%, var(--glow), transparent 70%),
+		/* base wash */
+		linear-gradient(180deg, var(--wash-top) 0%, var(--wash-mid) 40%, var(--wash-end) 100%);
+	-webkit-mask-image: radial-gradient(ellipse 62% 58% at 50% 42%, transparent 38%, black 72%);
+	mask-image: radial-gradient(ellipse 62% 58% at 50% 42%, transparent 38%, black 72%);
+}
+
+body::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	/* extra hairline arc for depth — ~52vmax, ultra-faint */
+	background: radial-gradient(circle at 110% -15%, transparent calc(52vmax - 0.5px), var(--ring-hairline) calc(52vmax - 0.5px), var(--ring-hairline) calc(52vmax + 0.5px), transparent calc(52vmax + 0.5px));
+}
+
+/* --- Selection & scrollbars ------------------------------------------------ */
+
+::selection { background: var(--accent-bg); color: var(--ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+	body::before {
+		animation: arc-drift 90s linear infinite;
+	}
+	@keyframes arc-drift {
+		0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+		50% { transform: translate3d(-6px, 4px, 0) rotate(0.12deg); }
+		100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+	}
 }
 
 a { color: var(--ink); text-decoration: none; }
@@ -68,8 +189,9 @@ nav {
 	justify-content: space-between;
 	padding: 0.9rem 2rem;
 	border-bottom: 1px solid var(--border);
-	background: rgba(255, 255, 255, 0.92);
+	background: var(--nav-bg);
 	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
 	position: sticky;
 	top: 0;
 	z-index: 50;
@@ -140,10 +262,12 @@ nav {
 
 .btn-primary {
 	background: var(--accent);
-	color: #fff;
+	color: var(--on-fill);
 	border-color: var(--accent);
 }
-.btn-primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); }
+.btn-primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-border); }
+.btn-primary:active { transform: scale(0.97); }
 
 .btn-danger {
 	background: transparent;
@@ -174,7 +298,7 @@ main {
 .bridge-card {
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: var(--radius);
+	border-radius: 12px;
 	box-shadow: var(--shadow-card);
 	padding: 1.75rem 1.75rem 1.5rem;
 	width: 100%;
@@ -210,10 +334,15 @@ main {
 	font-size: 0.66rem;
 	padding: 0.35rem 1.6rem 0.35rem 0.6rem;
 	cursor: pointer;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M1 1l3.5 3L8 1' stroke='%239C9A93' fill='none' stroke-width='1.2'/%3E%3C/svg%3E");
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M1 1l3.5 3L8 1' stroke='%2393A1B0' fill='none' stroke-width='1.2'/%3E%3C/svg%3E");
 	background-repeat: no-repeat;
 	background-position: right 0.5rem center;
 	white-space: nowrap;
+}
+
+/* Dark variants: data URIs cannot read custom props, so swap the embedded arrow strokes */
+[data-theme="dark"] .token-picker {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M1 1l3.5 3L8 1' stroke='%237C8DA6' fill='none' stroke-width='1.2'/%3E%3C/svg%3E");
 }
 
 /* --- Chain selectors (presisi: dua kolom + tombol swap) ------------------- */
@@ -240,11 +369,15 @@ main {
 	cursor: pointer;
 	transition: border-color 0.15s;
 	appearance: none;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='5'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23787774' fill='none' stroke-width='1.3'/%3E%3C/svg%3E");
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='5'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235B6B7C' fill='none' stroke-width='1.3'/%3E%3C/svg%3E");
 	background-repeat: no-repeat;
 	background-position: right 0.75rem center;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+[data-theme="dark"] .chain-select {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='5'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23A7B7CB' fill='none' stroke-width='1.3'/%3E%3C/svg%3E");
 }
 
 .chain-select:hover, .chain-select:focus { border-color: var(--border-strong); outline: none; }
@@ -299,7 +432,7 @@ main {
 	transition: border-color 0.15s;
 }
 
-.input-wrap:focus-within { border-color: var(--ink); }
+.input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
 
 .input-wrap input {
 	flex: 1;
@@ -362,7 +495,7 @@ main {
 	letter-spacing: 0.06em;
 }
 
-.balance-row .max-btn:hover { background: var(--blue-bg); color: var(--blue); }
+.balance-row .max-btn:hover { background: var(--accent-bg); color: var(--accent); }
 
 /* --- Gas estimates (label ellipsis kiri, nilai mono rata kanan) ------------- */
 
@@ -493,17 +626,18 @@ main {
 	font-weight: 600;
 	letter-spacing: 0.01em;
 	cursor: pointer;
-	transition: background 0.15s, transform 0.1s;
+	transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
 	margin-top: 0.5rem;
-	background: var(--ink);
-	color: #fff;
+	background: var(--accent);
+	color: var(--on-fill);
 }
 
-.bridge-btn:hover { background: #3A4042; }
+.bridge-btn:hover { background: var(--accent-strong); }
+.bridge-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent-border); }
 .bridge-btn:disabled {
 	opacity: 0.35;
 	cursor: not-allowed;
-	background: var(--ink);
+	background: var(--accent);
 }
 .bridge-btn:active:not(:disabled) { transform: scale(0.99); }
 
@@ -585,7 +719,7 @@ main {
 	transition: color 0.15s;
 }
 
-.contract-item .contract-addr:hover { color: var(--ink); }
+.contract-item .contract-addr:hover { color: var(--accent); }
 
 /* --- Transaction history (tabel presisi: status | detail | badge) ---------- */
 
@@ -644,7 +778,7 @@ main {
 	white-space: nowrap;
 }
 
-.tx-detail .tx-hash:hover { color: var(--ink); text-decoration: none; }
+.tx-detail .tx-hash:hover { color: var(--accent); text-decoration: none; }
 
 .tx-badge {
 	font-size: 0.56rem;
@@ -760,13 +894,13 @@ main {
 }
 
 .toggle-switch input:checked + .toggle-slider {
-	background: var(--ink);
-	border-color: var(--ink);
+	background: var(--accent);
+	border-color: var(--accent);
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
 	transform: translateX(14px);
-	background: #fff;
+	background: var(--on-fill);
 }
 
 /* --- Footer ---------------------------------------------------------------- */
@@ -788,7 +922,7 @@ footer a {
 	font-size: 0.68rem;
 }
 
-footer a:hover { color: var(--ink); }
+footer a:hover { color: var(--accent); }
 
 .footer-links {
 	display: flex;
@@ -827,16 +961,16 @@ footer a:hover { color: var(--ink); }
 /* --- Stepper states -------------------------------------------------------- */
 
 .stepper-step.active .stepper-dot {
-	border-color: var(--ink);
+	border-color: var(--accent);
 }
 
 .stepper-step.active .stepper-dot::after {
-	background: var(--ink);
+	background: var(--accent);
 	animation: pulse 1.2s infinite;
 }
 
 .stepper-step.active .stepper-label {
-	color: var(--ink);
+	color: var(--accent);
 }
 
 .stepper-step.done .stepper-dot {
@@ -849,7 +983,7 @@ footer a:hover { color: var(--ink); }
 	width: auto;
 	height: auto;
 	background: transparent;
-	color: #fff;
+	color: var(--on-fill);
 	font-size: 0.62rem;
 	font-weight: 700;
 	animation: none;
@@ -869,7 +1003,7 @@ footer a:hover { color: var(--ink); }
 	width: auto;
 	height: auto;
 	background: transparent;
-	color: #fff;
+	color: var(--on-fill);
 	font-size: 0.62rem;
 	font-weight: 700;
 	animation: none;
@@ -880,7 +1014,7 @@ footer a:hover { color: var(--ink); }
 }
 
 .stepper-line.done { background: var(--green); }
-.stepper-line.active { background: var(--ink); }
+.stepper-line.active { background: var(--accent); }
 
 /* --- Disconnected state (muted form overlay) -------------------------------- */
 
@@ -1045,3 +1179,273 @@ footer a:hover { color: var(--ink); }
 
 
 
+
+/* --- Wallet picker modal ----------------------------------------------------- */
+
+.wallet-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 100; /* above the sticky nav (z-index: 50) */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1.5rem;
+	background: var(--backdrop);
+	-webkit-backdrop-filter: blur(4px);
+	backdrop-filter: blur(4px);
+}
+
+.wallet-modal[hidden] { display: none; }
+
+.wallet-panel {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-width: 380px;
+	max-height: min(85vh, 34rem);
+	overflow-y: auto;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-card); /* identical to .bridge-card */
+	padding: 1.25rem;
+}
+
+.wallet-panel header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.wallet-panel h2 {
+	font-family: var(--font-serif);
+	font-size: 1.45rem;
+	font-weight: 500;
+	letter-spacing: -0.02em;
+	line-height: 1.2;
+	color: var(--ink);
+	margin: 0;
+}
+
+.wallet-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	padding: 0;
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-sm);
+	color: var(--text3);
+	cursor: pointer;
+}
+
+.wallet-close:hover { background: var(--surface2); color: var(--ink); }
+.wallet-close:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-border); }
+
+.wallet-panel h3 {
+	font-size: 0.64rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text3);
+	margin: 1rem 0 0.6rem;
+}
+
+.wallet-panel section:first-of-type h3 { margin-top: 0; }
+
+.wallet-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.wallet-row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	min-height: 44px;
+	padding: 0.5rem 0.75rem;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	font: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+	text-align: left;
+	color: var(--text);
+	cursor: pointer;
+	appearance: none;
+}
+
+.wallet-row:hover:not(.disabled):not([disabled]) { background: var(--surface2); }
+.wallet-row:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-border); }
+.wallet-row.disabled { opacity: 0.5; cursor: not-allowed; }
+.wallet-row.connecting { pointer-events: none; }
+
+.wallet-icon {
+	width: 27px;
+	height: 27px;
+	flex: none;
+	border-radius: 6px;
+	object-fit: contain;
+}
+
+.wallet-meta {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	flex: 1;
+}
+
+.wallet-name,
+.wallet-sub {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.wallet-sub {
+	font-size: 0.68rem;
+	font-weight: 500;
+	color: var(--text3);
+}
+
+.wallet-chevron { flex: none; color: var(--text3); }
+
+.wallet-empty {
+	padding: 0.75rem 0.85rem;
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--radius-sm);
+	font-size: 0.78rem;
+	color: var(--text2);
+}
+
+/* Motion only for users who opted into it */
+@media (prefers-reduced-motion: no-preference) {
+	.wallet-row { transition: background 0.15s ease; }
+	.wallet-row:active:not(.disabled):not([disabled]) { transform: scale(0.99); }
+	.wallet-row.connecting .wallet-sub { animation: walletSubPulse 1.2s ease-in-out infinite; }
+
+	@keyframes walletSubPulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.45; }
+	}
+}
+
+@media (max-width: 540px) {
+	.wallet-modal { align-items: flex-end; padding: 0; }
+	.wallet-panel { border-radius: 16px 16px 0 0; width: 100%; max-width: none; }
+}
+
+/* === Theme toggle === */
+
+.theme-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	background: transparent;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	cursor: pointer;
+}
+
+.theme-toggle svg {
+	width: 18px;
+	height: 18px;
+	display: block;
+}
+
+.theme-toggle:hover { background: var(--accent-bg); border-color: var(--accent-border); }
+.theme-toggle:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-border); }
+.theme-toggle:active { transform: scale(0.97); }
+
+/* Icon visibility is CSS-only, mirroring the dataset contract:
+   dark → moon shown; light/unset → sun shown. */
+[data-theme="dark"] #icon-sun { display: none; }
+html:not([data-theme="dark"]) #icon-moon { display: none; }
+
+/* Theme cross-fade — color channels only, skipped for reduced-motion users.
+   Bare tags catch unclassed chrome; the class list below repeats selectors
+   whose own narrower transition shorthands would otherwise win the cascade. */
+@media (prefers-reduced-motion: no-preference) {
+	body,
+	nav,
+	main,
+	.bridge-card,
+	button,
+	input,
+	select,
+	.toast,
+	.wallet-modal,
+	.wallet-panel,
+	.tx-item,
+	footer,
+	.network-badge,
+	.info-block,
+	.cctp-stepper,
+	.input-wrap,
+	.chain-select,
+	.token-picker,
+	.gas-estimate,
+	.balance-row,
+	.tx-badge,
+	.wallet-row,
+	.empty-state {
+		transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+	}
+
+	/* Preserve existing press-feedback transforms while extending to colors */
+	.btn,
+	.bridge-btn,
+	.theme-toggle {
+		transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+	}
+}
+/* === Wallet chain picker === */
+.wallet-chain {
+	appearance: none;
+	-webkit-appearance: none;
+	font-family: var(--font-ui);
+	font-size: 0.72rem;
+	font-weight: 600;
+	padding: 0.32rem 1.5rem 0.32rem 0.7rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background-color: var(--surface);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238A94A6' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.55rem center;
+	color: var(--text);
+	cursor: pointer;
+	max-width: 150px;
+	text-overflow: ellipsis;
+}
+
+.wallet-chain:hover { border-color: var(--border-strong); }
+
+.wallet-chain:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+}
+
+.wallet-chain:disabled { opacity: 0.55; cursor: default; }
+
+[data-theme="dark"] .wallet-chain {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237FA3CC' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+@media (max-width: 540px) {
+	.wallet-chain { max-width: 110px; }
+}

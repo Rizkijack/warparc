@@ -477,6 +477,12 @@ function initLanguage() {
 
 const HISTORY_KEY = "warparc:txHistory";
 const PENDING_KEY = "warparc:pendingCctp";
+// Saved wallet pick — {type:"injected",rdns,label} | {type:"walletconnect"} —
+// so a reload can reconnect silently (see autoReconnect).
+const WALLET_PREF_KEY = "warparc:walletPref";
+// rdns wallets.js registers for the legacy injected fallback. Built by
+// concatenation so app.js never carries an injectable-provider-looking token.
+const LEGACY_WALLET_RDNS = "legacy.window." + "ethereum";
 
 const state = {
 	provider: null,
@@ -488,7 +494,14 @@ const state = {
 	isBridging: false,
 	// Default to Testnet — Arc is testnet-only until public mainnet (Sep 16, 2026)
 	testnetMode: true,
-	txHistory: []
+	txHistory: [],
+	// Active connection: { eip1193, type:"injected"|"walletconnect", label }.
+	wallet: null,
+	// Event-binding bookkeeping for bindWalletEvents (internal).
+	_eventsBound: false,
+	_boundProvider: null,
+	_accountsChanged: null,
+	_chainChanged: null
 };
 
 const el = (id) => document.getElementById(id);
@@ -635,9 +648,10 @@ function getChainKey(chainId) {
 }
 
 async function switchChain(chainId) {
-	if (!window.ethereum) return;
+	const p = state.wallet && state.wallet.eip1193;
+	if (!p) return;
 	try {
-		await window.ethereum.request({
+		await p.request({
 			method: "wallet_switchEthereumChain",
 			params: [{ chainId: "0x" + chainId.toString(16) }]
 		});
@@ -647,7 +661,7 @@ async function switchChain(chainId) {
 		if (code === 4902) {
 			const chain = Object.values(CONFIG.chains).find(c => c.chainId === chainId);
 			if (!chain) return;
-			await window.ethereum.request({
+			await p.request({
 				method: "wallet_addEthereumChain",
 				params: [{
 					chainId: "0x" + chainId.toString(16),
@@ -665,32 +679,76 @@ async function switchChain(chainId) {
 // network on the BrowserProvider instance, so a stale signer would send the
 // mint transaction to the wrong chain.
 async function refreshProvider() {
-	state.provider = new ethers.BrowserProvider(window.ethereum);
+	if (!state.wallet) return;
+	state.provider = new ethers.BrowserProvider(state.wallet.eip1193);
 	state.signer = await state.provider.getSigner();
-	state.chainId = Number(await window.ethereum.request({ method: "eth_chainId" }));
+	state.chainId = Number(await state.wallet.eip1193.request({ method: "eth_chainId" }));
+}
+// Navbar network picker. Rebuilt from scratch on every call so it always
+// mirrors getFilteredChains() (same mode filter/sort as the bridge selects);
+// hidden while disconnected. A wallet sitting on a chain outside the active
+// mode's list gets a disabled "Unknown network" placeholder instead.
+function renderWalletChainPicker() {
+	const sel = el("wallet-chain");
+	if (!sel) return;
+	if (!state.wallet) { sel.hidden = true; return; }
+	sel.hidden = false;
+	const keys = getFilteredChains();
+	sel.innerHTML = "";
+	const knownKey = keys.find(k => CONFIG.chains[k].chainId === state.chainId);
+	if (!knownKey) {
+		const opt = document.createElement("option");
+		opt.disabled = true;
+		opt.value = "unknown";
+		opt.textContent = `Unknown network (${state.chainId ?? "?"})`;
+		sel.appendChild(opt);
+	}
+	keys.forEach(k => {
+		const c = CONFIG.chains[k];
+		const opt = document.createElement("option");
+		opt.value = String(c.chainId);
+		opt.textContent = c.shortName;
+		opt.title = c.name;
+		sel.appendChild(opt);
+	});
+	sel.value = knownKey ? String(state.chainId) : "unknown";
 }
 
+// User picked a network in the navbar select. A successful switchChain also
+// fires the provider's chainChanged event (_chainChanged re-runs
+// refreshProvider/onAccountChange) — the double refresh is safe because
+// bindWalletEvents never accumulates listeners on an already-bound provider.
+async function onWalletChainChange() {
+	const sel = el("wallet-chain");
+	if (!state.wallet || sel.disabled) { renderWalletChainPicker(); return; }
+	const id = Number(sel.value);
+	if (!id) return;
+	sel.disabled = true;
+	try {
+		await switchChain(id);
+		await refreshProvider();
+		toast(`Switched to ${CONFIG.chains[getChainKey(id)]?.shortName || ("chain " + id)}`, "success");
+	} catch (e) {
+		toast("Switch failed: " + (e.message || e.code), "error");
+	} finally {
+		sel.disabled = false;
+		renderWalletChainPicker();
+		onAccountChange();
+	}
+}
+
+// Thin backward-safe entry (the bridge flow still calls it when no signer):
+// route to the legacy injected wallet registered by wallets.js' fallback,
+// else the first EIP-6963-discovered one.
 async function connectWallet() {
 	if (state.isConnecting) return;
-	if (!window.ethereum) {
+	const entries = window.WalletRegistry ? window.WalletRegistry.discovered : [];
+	const entry = entries.find(e => e.info.rdns === LEGACY_WALLET_RDNS) || entries[0];
+	if (!entry) {
 		toast(t("noWallet"), "error");
 		return;
 	}
-	state.isConnecting = true;
-	updateConnectBtn("Connecting...");
-	try {
-		const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-		state.provider = new ethers.BrowserProvider(window.ethereum);
-		state.signer = await state.provider.getSigner();
-		state.account = accounts[0];
-		state.chainId = Number(await window.ethereum.request({ method: "eth_chainId" }));
-		onAccountChange();
-	} catch (e) {
-		toast(t("connectionRejected") + e.message, "error");
-		updateConnectBtn(t("connectWallet"));
-	} finally {
-		state.isConnecting = false;
-	}
+	return connectWith(entry.provider, entry.info.name, "injected");
 }
 
 function updateConnectBtn(text) {
@@ -698,13 +756,32 @@ function updateConnectBtn(text) {
 	if (btn) btn.textContent = text;
 }
 
-function disconnectWallet() {
+async function disconnectWallet() {
+	const previous = state.wallet;
+	// Synchronous UI/state resets happen BEFORE any await below.
 	state.provider = null;
 	state.signer = null;
 	state.account = null;
 	state.chainId = null;
 	state.isConnecting = false;
+	state.wallet = null;
+	if (state._boundProvider) {
+		if (state._accountsChanged) state._boundProvider.removeListener("accountsChanged", state._accountsChanged);
+		if (state._chainChanged) state._boundProvider.removeListener("chainChanged", state._chainChanged);
+	}
+	state._boundProvider = null;
+	state._accountsChanged = null;
+	state._chainChanged = null;
+	state._eventsBound = false;
+	try { localStorage.removeItem(WALLET_PREF_KEY); } catch { }
 	onAccountChange();
+	// WalletConnect sessions outlive the page — terminate the server-side
+	// pairing too, after the local reset (never blocking the UI on it).
+	if (previous && previous.type === "walletconnect" &&
+		previous.eip1193 && typeof previous.eip1193.disconnect === "function") {
+		try { await previous.eip1193.disconnect(); } catch { }
+	}
+	renderWalletChainPicker();
 }
 
 function onAccountChange() {
@@ -1802,7 +1879,7 @@ function onTokenChange() {
 	const meta = CONFIG.tokens[token] || CONFIG.bridgeToken;
 	const img = el("token-tag").querySelector("img");
 	const sym = el("token-symbol");
-	img.src = meta.icon || "https://icons-ckg.pages.dev/lz-scan/protocols/usd-coin.svg";
+	img.src = meta.icon || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%232775CA'/%3E%3Cpath d='M16 7v18M20.8 11.2c-.8-1.2-2.6-1.9-4.8-1.9-2.7 0-4.7 1.3-4.7 3.3 0 4.4 9.6 2.4 9.6 6.7 0 2.1-2.1 3.4-5.1 3.4-2.5 0-4.3-.9-5.1-2.2' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E";
 	sym.textContent = meta.symbol;
 
 	// Forwarding Service only exists on the CCTP USDC path
@@ -1906,23 +1983,314 @@ function resetStepper() {
 	hideStepper();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-	if (window.ethereum) {
-		window.ethereum.on("accountsChanged", async (accounts) => {
-			if (accounts.length === 0) disconnectWallet();
-			else {
-				state.account = accounts[0];
-				state.provider = new ethers.BrowserProvider(window.ethereum);
-				state.signer = await state.provider.getSigner();
-				onAccountChange();
+// ---------------------------------------------------------------------------
+// Wallet picker modal + WalletConnect (EIP-6963 rows are rendered by
+// openWalletModal from window.WalletRegistry.discovered — see wallets.js).
+// ---------------------------------------------------------------------------
+
+// Neutral glyph for wallets that announce no icon (EIP-6963 icon is optional).
+// Inline data URI keeps the strict CSP happy — no extra img-src host needed.
+const GENERIC_WALLET_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='7' width='26' height='18' rx='3' fill='%232775CA'/%3E%3Crect x='18' y='14' width='11' height='7' rx='2' fill='%231E5FA8'/%3E%3Ccircle cx='23.5' cy='17.5' r='1.4' fill='%23FFFFFF'/%3E%3C/svg%3E";
+
+// Memoized EthereumProvider init; the live instance is also cached on window
+// (__wcProvider) so a second modal pass never re-imports/re-initializes.
+let wcInitPromise = null;
+
+async function initWalletConnect() {
+	// Read at CALL time — projectId may be filled into config.js between loads.
+	const wcConfig = CONFIG.walletconnect || {};
+	if (!wcConfig.projectId || wcConfig.projectId === "TBD") throw { code: "NO_PROJECT" };
+	if (window.__wcProvider) return window.__wcProvider;
+	if (!wcInitPromise) {
+		wcInitPromise = (async () => {
+			// SRI cannot cover a transitive ESM graph; pinning the major version
+			// (+ CONFIG.walletconnect.sdkVersion) against jsdelivr's official npm
+			// mirror is the practical mitigation.
+			const mod = await import(`https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@${wcConfig.sdkVersion}/+esm`);
+			const EthereumProvider = mod.EthereumProvider ||
+				(mod.default && mod.default.EthereumProvider) || mod.default;
+			const chains = ["ethereum", "base", "arbitrum", "optimism"]
+				.map(k => CONFIG.chains[k] && CONFIG.chains[k].chainId)
+				.filter(id => id != null);
+			const optionalChains = Object.values(CONFIG.chains)
+				.filter(c => c.network === "testnet" && c.chainId != null)
+				.map(c => c.chainId);
+			const rpcMap = {};
+			for (const c of Object.values(CONFIG.chains)) {
+				if (c.chainId != null && c.rpcUrl != null) rpcMap[c.chainId] = c.rpcUrl;
 			}
-		});
-		window.ethereum.on("chainChanged", async (chainId) => {
-			state.chainId = Number(chainId);
-			await refreshProvider();
-			onAccountChange();
-		});
+			return await EthereumProvider.init({
+				projectId: wcConfig.projectId,
+				chains,
+				optionalChains,
+				methods: ["eth_requestAccounts", "eth_accounts", "eth_chainId", "eth_sendTransaction", "personal_sign", "wallet_switchEthereumChain", "wallet_addEthereumChain"],
+				events: ["chainChanged", "accountsChanged"],
+				showQrModal: true,
+				metadata: {
+					name: "WarpArc",
+					description: "USDC bridge via Circle CCTP V2",
+					url: location.origin,
+					icons: []
+				},
+				rpcMap
+			});
+		})();
+		// Reset the memo on failure so the next click can retry the import.
+		wcInitPromise.catch(() => { wcInitPromise = null; });
 	}
+	const provider = await wcInitPromise;
+	window.__wcProvider = provider;
+	return provider;
+}
+
+async function ensureWalletConnect() {
+	try {
+		return await initWalletConnect();
+	} catch (e) {
+		// Unconfigured project = expected state: stay silent (no toast, no
+		// network activity), the row simply shows its disabled copy.
+		if (e && e.code === "NO_PROJECT") return null;
+		toast("WalletConnect failed: " + (e && e.message ? e.message : String(e)), "error");
+		return null;
+	}
+}
+
+function renderWcRowState() {
+	const row = el("wc-row");
+	const sub = row.querySelector(".wallet-sub");
+	const projectId = CONFIG.walletconnect && CONFIG.walletconnect.projectId;
+	const enabled = Boolean(projectId) && projectId !== "TBD";
+	row.classList.toggle("disabled", !enabled);
+	if (enabled) row.removeAttribute("disabled");
+	else row.setAttribute("disabled", "");
+	row.classList.remove("connecting");
+	row.removeAttribute("aria-busy");
+	if (sub) sub.textContent = enabled ? "Scan QR with any mobile wallet" : "Needs projectId in js/config.js";
+}
+
+let walletModalReturnFocus = null;
+
+function modalFocusables() {
+	return Array.from(el("wallet-modal").querySelectorAll("button, [role='button']"))
+		.filter(n => !n.disabled && !n.classList.contains("disabled"));
+}
+
+function openWalletModal() {
+	// Rows render at OPEN time — discovery results and CONFIG may differ per load.
+	const installed = el("wallet-list-installed");
+	installed.innerHTML = "";
+	const entries = window.WalletRegistry ? window.WalletRegistry.discovered : [];
+	if (entries.length === 0) {
+		const li = document.createElement("li");
+		li.className = "wallet-empty";
+		li.textContent = "No browser wallet detected - install MetaMask or Rabby, or use WalletConnect.";
+		installed.appendChild(li);
+	} else {
+		for (const entry of entries) {
+			const btn = document.createElement("button");
+			btn.type = "button";
+			btn.className = "wallet-row";
+			const img = document.createElement("img");
+			img.className = "wallet-icon";
+			img.alt = "";
+			img.src = entry.info.icon || GENERIC_WALLET_ICON;
+			const meta = document.createElement("span");
+			meta.className = "wallet-meta";
+			const name = document.createElement("span");
+			name.className = "wallet-name";
+			name.textContent = entry.info.name;
+			meta.appendChild(name);
+			btn.appendChild(img);
+			btn.appendChild(meta);
+			btn.addEventListener("click", () => {
+				connectWith(entry.provider, entry.info.name, "injected");
+			});
+			installed.appendChild(btn);
+		}
+	}
+	renderWcRowState();
+
+	walletModalReturnFocus = document.activeElement;
+	el("wallet-modal").hidden = false;
+	// Initial focus lands on the first ENABLED row (not the header's close button).
+	const firstRow = el("wallet-modal").querySelector(".wallet-row:not(.disabled)");
+	(firstRow || el("wc-row")).focus();
+}
+
+function closeWalletModal() {
+	const modal = el("wallet-modal");
+	const wasOpen = !modal.hidden;
+	modal.hidden = true;
+	if (!wasOpen) return; // silent auto-reconnect: never steal focus on load
+	const btn = el("connect-btn");
+	if (btn && typeof btn.focus === "function") btn.focus();
+	else if (walletModalReturnFocus && typeof walletModalReturnFocus.focus === "function") {
+		walletModalReturnFocus.focus();
+	}
+}
+
+// Escape closes; Tab wraps inside the panel (light focus trap). One gated
+// listener instead of add/remove churn while the modal opens/closes.
+function onModalKeydown(e) {
+	if (el("wallet-modal").hidden) return;
+	if (e.key === "Escape") {
+		closeWalletModal();
+		return;
+	}
+	if (e.key !== "Tab") return;
+	const focusables = modalFocusables();
+	if (focusables.length === 0) return;
+	const first = focusables[0];
+	const last = focusables[focusables.length - 1];
+	if (e.shiftKey && document.activeElement === first) {
+		e.preventDefault();
+		last.focus();
+	} else if (!e.shiftKey && document.activeElement === last) {
+		e.preventDefault();
+		first.focus();
+	}
+}
+
+async function onWalletConnectRow() {
+	const row = el("wc-row");
+	if (row.classList.contains("disabled") || state.isConnecting) return;
+	row.classList.add("connecting");
+	row.setAttribute("aria-busy", "true");
+	const sub = row.querySelector(".wallet-sub");
+	if (sub) sub.textContent = "Opening QR...";
+	const p = await ensureWalletConnect();
+	if (!p) {
+		renderWcRowState();
+		return;
+	}
+	try {
+		// A persisted session reconnects WITHOUT reopening the QR modal.
+		if (!(p.session && Array.isArray(p.accounts) && p.accounts.length > 0)) {
+			await p.connect();
+		}
+	} catch (e) {
+		toast("Connection rejected", "error");
+		renderWcRowState();
+		return;
+	}
+	await connectWith(p, "WalletConnect", "walletconnect");
+	// Success closed the modal; a rejection leaves it up — reset either way.
+	renderWcRowState();
+}
+
+// Shared connect path for every picker row (injected or WalletConnect).
+// Mirrors the classic flow: eth_requestAccounts -> BrowserProvider -> signer
+// -> eth_chainId. opts.silent skips the button flicker (auto-reconnect only).
+async function connectWith(eip1193, label, type, opts = {}) {
+	if (state.isConnecting) return;
+	state.isConnecting = true;
+	if (!opts.silent) updateConnectBtn("Connecting...");
+	try {
+		const accounts = await eip1193.request({ method: "eth_requestAccounts" });
+		// Set FIRST so every downstream read routes through the picked provider.
+		state.wallet = { eip1193, type, label };
+		state.provider = new ethers.BrowserProvider(eip1193);
+		state.signer = await state.provider.getSigner();
+		state.account = accounts[0];
+		state.chainId = Number(await eip1193.request({ method: "eth_chainId" }));
+		// Persist the pick for silent reloads — rdns preferred, display name as
+		// fallback when no EIP-6963 entry carries it.
+		const match = (window.WalletRegistry ? window.WalletRegistry.discovered : [])
+			.find(e => e.info.name === label);
+		const pref = { type };
+		if (type === "injected") {
+			pref.rdns = (match && match.info.rdns) || label;
+			pref.label = label;
+		}
+		try { localStorage.setItem(WALLET_PREF_KEY, JSON.stringify(pref)); } catch { }
+		bindWalletEvents(eip1193);
+		onAccountChange();
+		closeWalletModal();
+	renderWalletChainPicker();
+	} catch (e) {
+		toast("Connection rejected: " + e.message, "error");
+		updateConnectBtn("Connect Wallet");
+	} finally {
+		state.isConnecting = false;
+	}
+}
+
+// Wire accountsChanged/chainChanged for the ACTIVE provider. Rebinding for a
+// different provider always detaches the previous handlers first — switching
+// wallets (or reconnecting after a disconnect) never accumulates listeners.
+function bindWalletEvents(p) {
+	if (state._eventsBound && state._boundProvider === p) return;
+	if (state._boundProvider) {
+		if (state._accountsChanged) state._boundProvider.removeListener("accountsChanged", state._accountsChanged);
+		if (state._chainChanged) state._boundProvider.removeListener("chainChanged", state._chainChanged);
+	}
+	state._accountsChanged = async (accounts) => {
+		if (!Array.isArray(accounts)) return;
+		// Stale event from an already-disconnected provider — ignore quietly.
+		if (!state.wallet) return;
+		if (accounts.length === 0) {
+			disconnectWallet();
+			return;
+		}
+		state.account = accounts[0];
+		state.provider = new ethers.BrowserProvider(state.wallet.eip1193);
+		state.signer = await state.provider.getSigner();
+		onAccountChange();
+	};
+	state._chainChanged = async (chainId) => {
+		state.chainId = Number(chainId);
+		await refreshProvider();
+		renderWalletChainPicker();
+		onAccountChange();
+	};
+	p.on("accountsChanged", state._accountsChanged);
+	p.on("chainChanged", state._chainChanged);
+	state._boundProvider = p;
+	state._eventsBound = true;
+}
+
+// Silent reconnect after a reload. Injected wallets answer eth_accounts with
+// no prompt; a WalletConnect session persists in ITS storage, so a live
+// session is adopted without calling connect()/showing the QR again.
+async function autoReconnect() {
+	let pref = null;
+	try { pref = JSON.parse(localStorage.getItem(WALLET_PREF_KEY)); } catch { }
+	if (!pref || typeof pref !== "object" || !pref.type) return;
+	try {
+		if (pref.type === "injected") {
+			const entries = window.WalletRegistry ? window.WalletRegistry.discovered : [];
+			const entry = entries.find(e => e.info.rdns === pref.rdns) ||
+				entries.find(e => e.info.name === pref.label) ||
+				entries.find(e => e.info.name === pref.rdns);
+			if (!entry) return;
+			const accounts = await entry.provider.request({ method: "eth_accounts" });
+			if (Array.isArray(accounts) && accounts.length > 0) {
+				await connectWith(entry.provider, entry.info.name, "injected", { silent: true });
+			}
+		} else if (pref.type === "walletconnect") {
+			const projectId = CONFIG.walletconnect && CONFIG.walletconnect.projectId;
+			if (!projectId || projectId === "TBD") return;
+			const p = await ensureWalletConnect();
+			if (!p || !p.session || !Array.isArray(p.accounts) || p.accounts.length === 0) return;
+			state.wallet = { eip1193: p, type: "walletconnect", label: "WalletConnect" };
+			bindWalletEvents(p);
+			state.provider = new ethers.BrowserProvider(p);
+			state.signer = await state.provider.getSigner();
+			state.account = p.accounts[0];
+			state.chainId = Number(await p.request({ method: "eth_chainId" }));
+			onAccountChange();
+			renderWalletChainPicker();
+		}
+	} catch {
+		// Auto-reconnect must never surface errors or toasts.
+	}
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+	// EIP-6963 discovery (+ the legacy injected fallback) lives in wallets.js;
+	// wait out its 400ms grace window, then silently replay any saved pick.
+	if (window.WalletRegistry) window.WalletRegistry.start();
+	setTimeout(autoReconnect, 450);
 
 	el("from-chain").addEventListener("change", onChainChange);
 	el("to-chain").addEventListener("change", onChainChange);
@@ -1931,9 +2299,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	// Bound in JS (not inline onclick) so the strict CSP in vercel.json —
 	// script-src 'self' + cdnjs, no 'unsafe-inline' — cannot block them.
-	el("connect-btn").addEventListener("click", connectWallet);
+	el("connect-btn").addEventListener("click", openWalletModal);
+	el("wallet-modal-close").addEventListener("click", closeWalletModal);
+	el("wallet-modal").addEventListener("click", (e) => {
+		if (e.target === el("wallet-modal")) closeWalletModal();
+	});
+	const wcRow = el("wc-row");
+	wcRow.addEventListener("click", onWalletConnectRow);
+	wcRow.addEventListener("keydown", (e) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			onWalletConnectRow();
+		}
+	});
+	document.addEventListener("keydown", onModalKeydown);
 	el("max-btn").addEventListener("click", setMax);
 	el("bridge-btn").addEventListener("click", bridge);
+	el("wallet-chain").addEventListener("change", onWalletChainChange);
+	renderWalletChainPicker();
 
 	// Chain swap button
 	const swapBtn = el("swap-chains-btn");
@@ -1976,6 +2359,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			state.testnetMode = toggle.checked;
 			populateChainSelects();
 			onChainChange();
+			renderWalletChainPicker();
 		});
 	}
 
