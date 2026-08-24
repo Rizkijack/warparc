@@ -19,10 +19,12 @@
     "backend:mcp:smoke": "node backend/test/mcp-smoke.js",
     "dev": "npx -y serve@14.2.5 frontend -l 8931"
   },
+  "dependencies": {
+    "ethers": "^5.7.0"
+  },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.0",
     "dotenv": "^16.4.0",
-    "ethers": "^5.7.0",
     "hardhat": "^2.22.0"
   }
 }

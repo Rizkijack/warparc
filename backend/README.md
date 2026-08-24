@@ -77,10 +77,13 @@ npm run backend:server
 | Variabel | Default | Keterangan |
 |----------|---------|------------|
 | `BACKEND_NETWORK` | `testnet` | `mainnet` gagal boot selama Arc mainnet TBD |
-| `BACKEND_INDEX_CHAINS` | `arc` | CSV; mis. `arc,baseSepolia` (Arc = dual-emitter) |
+| `BACKEND_INDEX_CHAINS` | `arc` (testnet) / `arcMainnet` (mainnet) | CSV; mis. `arc,baseSepolia` (Arc = dual-emitter) |
 | `BACKEND_DATA_DIR` | `backend/data` | events.jsonl + state.json (gitignored) |
 | `BACKEND_HOST` / `BACKEND_PORT` | `127.0.0.1` / `8932` | bind API |
 | `BACKEND_CORS_ORIGIN` | — (tidak diset) | origin yang diizinkan; **tanpa env ini CORS nonaktif** (API same-origin/localhost saja) |
+| `BACKEND_API_TOKEN` | — (tidak diset) | bila diset, `POST /relay` wajib header `Authorization: Bearer <token>` yang cocok (401 jika tidak) |
+| `BACKEND_STATUS_IRIS_RPS` | `2` | throttle lookup Iris live via `/status` & MCP (req/s); jangan makan budget global Iris 40 req/s milik relayer |
+| `BACKEND_NO_SIGINT` | — (tidak diset) | internal: `1` mematikan handler SIGINT indexer — diset otomatis oleh `npm run backend` & harness test yang mengelola shutdown sendiri |
 | `RELAYER_ENABLED` | `false` | master switch pengiriman |
 | `RELAYER_DRY_RUN` | `true` | `false` + enabled → benar-benar kirim |
 | `RELAYER_PRIVATE_KEY` | — | env saja; key relayer (gas), bukan key user |
@@ -89,10 +92,14 @@ npm run backend:server
 | `RELAYER_DAILY_USDC_BUDGET` | `50` | budget gas harian (USDC) utk tujuan Arc — submit pause saat terlampaui |
 | `RELAYER_DAILY_ETH_BUDGET` | `0.5` | budget gas harian (ETH) utk tujuan EVM |
 | `RELAYER_IRIS_CHECKS_PER_TICK` | `20` | max cek attestation per tick (jaga limit Iris 40 req/s) |
+| `RELAYER_IRIS_TIMEOUT_MS` | `10000` | timeout per request HTTP ke Iris — anti freeze tick loop; loop attestation_wait retry tiap tick |
+| `RELAYER_ARC_MAX_FEE_GAS_GWEI` | `30` | maxFeePerGas tx Arc (Gwei, type-2 tip 0); di bawah floor jaringan 20 Gwei tx ditolak |
 | `RELAYER_ALLOW_HOOKS` | `false` | izinkan relay burn ber-hook |
 | `RELAYER_POLL_MS` | `5000` | interval tick relayer |
 | `RELAYER_MAX_JOBS` | `500` | cap store job (terminal terlama dipangkas) |
 | `RELAYER_ATTESTATION_TIMEOUT_MS` | `600000` | batas tunggu attestation per job |
+| `RELAYER_MAX_ATTEMPTS` | `5` | max percobaan submit per job sebelum `failed` |
+| `RELAYER_MCP_SUBMIT` | `false` | opt-in ketat (fail-closed): tanpa ini tool submit via MCP hanya mengantri job ops, tidak mendorong ke jalur kirim |
 
 ## API
 

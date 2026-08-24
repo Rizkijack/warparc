@@ -53,8 +53,11 @@ function useKitAdapter() {
 	const chainId = useChainId();
 	const { switchChainAsync } = useSwitchChain();
 
-	// Switch to the chain that must SIGN, then build a viem adapter from the
-	// browser provider (createViemAdapterFromProvider is async — always await).
+	// Switch to the given chain, then build a viem adapter from the browser
+	// provider (createViemAdapterFromProvider is async — always await). Each
+	// call returns an adapter scoped to that chain; callers that act on TWO
+	// chains (bridge/retry) must build one adapter per chain, never reuse one
+	// bound to a single chain for both legs.
 	const getAdapter = async (requiredChainId) => {
 		if (!connector) throw new Error("Wallet not connected");
 		if (chainId !== requiredChainId) {
@@ -82,15 +85,24 @@ function BridgeTab({ busy, setBusy }) {
 			return;
 		}
 		if (isRetry && !lastBridge) return;
+		// Fail closed: retryBridge needs a destination-chain adapter, so an
+		// unknown/missing endpoint must abort before any wallet interaction.
+		if (!CHAIN_ID_TO_KIT_NAME[fromId] || !CHAIN_ID_TO_KIT_NAME[toId]) {
+			setStatus("FAILED: unsupported source/destination chain selection");
+			return;
+		}
 		setBusy(true);
 		setStatus(isRetry ? "Retrying bridge…" : "Bridging via App Kit…");
 		try {
-			const adapter = await getAdapter(fromId);
+			const adapterFrom = await getAdapter(fromId);
 			const result = isRetry
-				? await appKit.retryBridge(lastBridge, { from: adapter, to: adapter })
+				? await appKit.retryBridge(lastBridge, {
+					from: adapterFrom,
+					to: await getAdapter(toId)
+				})
 				: await appKit.bridge({
-					from: { adapter, chain: CHAIN_ID_TO_KIT_NAME[fromId] },
-					to: { adapter, chain: CHAIN_ID_TO_KIT_NAME[toId] },
+					from: { adapter: adapterFrom, chain: CHAIN_ID_TO_KIT_NAME[fromId] },
+					to: { adapter: adapterFrom, chain: CHAIN_ID_TO_KIT_NAME[toId] },
 					amount
 				});
 			setLastBridge(result);

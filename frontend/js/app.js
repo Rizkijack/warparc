@@ -1,4 +1,4 @@
-﻿// WarpArc â€” USDC bridges via Circle CCTP V2 (burn-and-mint, the only canonical
+// WarpArc â€” USDC bridges via Circle CCTP V2 (burn-and-mint, the only canonical
 // route to/from Arc per https://docs.arc.io/integrate/infrastructure/bridges).
 // Manual flow: approve â†’ depositForBurn â†’ poll Iris attestation â†’ receiveMessage.
 // Forwarding Service: approve â†’ depositForBurnWithHook("cctp-forward") â†’ Circle
@@ -1062,7 +1062,7 @@ function updateQuoteDisplay(quote) {
 			? truncateUnits(quote.output, decimals, 4) + " " + symbol
 			: "â€”";
 	}
-	if (feeEl) feeEl.textContent = quote.feePercent ? `${quote.feePercent}%` : "â€”";
+	if (feeEl) feeEl.textContent = quote.feePercent || "—";
 	if (timeEl) {
 		const sec = quote.estTimeSec || 0;
 		if (sec < 60) timeEl.textContent = `${sec}s`;
@@ -1364,7 +1364,8 @@ function onAccountChange() {
 		btn.textContent = t("connectWallet");
 		btn.className = "btn btn-primary btn-sm";
 		badge.style.display = "none";
-		bridgeArea.style.display = "none";
+		const bridgeArea = el("bridge-area");
+		if (bridgeArea) bridgeArea.style.display = "none";
 	}
 }
 
@@ -2275,7 +2276,7 @@ async function bridgeViaRelay(amount, parsedAmount, fromKey, toKey) {
 		const result = await relayExecute(quote);
 
 		updateTxEntry(txId, "success", result.txHash);
-		toast(`${t("bridgeComplete")} ${amount} ETH â†’ ${toChain.shortName} (Relay)`, "success");
+		toast(`${t("bridgeComplete")} ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Relay)`, "success");
 		loadBalances();
 	} catch (e) {
 		updateTxEntry(txId, "failed", "");
@@ -2320,7 +2321,7 @@ async function bridgeViaAcross(amount, parsedAmount, fromKey, toKey) {
 		const result = await acrossExecute(quote);
 
 		updateTxEntry(txId, "success", result.txHash);
-		toast(`${t("bridgeComplete")} ${amount} ETH â†’ ${toChain.shortName} (Across)`, "success");
+		toast(`${t("bridgeComplete")} ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Across)`, "success");
 		loadBalances();
 	} catch (e) {
 		updateTxEntry(txId, "failed", "");
@@ -2353,7 +2354,7 @@ async function bridgeViaStargate(amount, parsedAmount, fromKey, toKey) {
 		}
 
 		btn.textContent = "Getting Stargate quote...";
-		addTxEntry(txId, `Bridge ${amount} ETH â†’ ${toChain.shortName} (Stargate V2)`, "pending", fromKey);
+		addTxEntry(txId, `Bridge ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Stargate V2)`, "pending", fromKey);
 
 		const quote = await stargateQuote(fromChain, toChain, parsedAmount, "ETH");
 		if (!quote || !quote.dstChainId) {
@@ -2366,7 +2367,7 @@ async function bridgeViaStargate(amount, parsedAmount, fromKey, toKey) {
 		const result = await stargateExecute(quote, fromKey, toKey, parsedAmount);
 
 		updateTxEntry(txId, "success", result.txHash);
-		toast(`${t("bridgeComplete")} ${amount} ETH â†’ ${toChain.shortName} (Stargate V2)`, "success");
+		toast(`${t("bridgeComplete")} ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Stargate V2)`, "success");
 		loadBalances();
 	} catch (e) {
 		updateTxEntry(txId, "failed", "");
@@ -2399,7 +2400,7 @@ async function bridgeViabungee(amount, parsedAmount, fromKey, toKey) {
 		}
 
 		btn.textContent = "Getting Socket quote...";
-		addTxEntry(txId, `Bridge ${amount} ETH â†’ ${toChain.shortName} (Socket)`, "pending", fromKey);
+		addTxEntry(txId, `Bridge ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Socket)`, "pending", fromKey);
 
 		const quote = await socketQuote(fromChain, toChain, parsedAmount, "ETH");
 		if (!quote || !quote.route) {
@@ -2412,7 +2413,7 @@ async function bridgeViabungee(amount, parsedAmount, fromKey, toKey) {
 		const result = await socketExecute(quote);
 
 		updateTxEntry(txId, "success", result.txHash);
-		toast(`${t("bridgeComplete")} ${amount} ETH â†’ ${toChain.shortName} (Socket)`, "success");
+		toast(`${t("bridgeComplete")} ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Socket)`, "success");
 		loadBalances();
 	} catch (e) {
 		updateTxEntry(txId, "failed", "");
@@ -2463,7 +2464,7 @@ async function bridgeViaLiFi(amount, parsedAmount, fromKey, toKey) {
 		const result = await lifiExecute(quote);
 
 		updateTxEntry(txId, "success", result.txHash);
-		toast(`${t("bridgeComplete")} ${amount} ETH â†’ ${toChain.shortName} (Li.Fi)`, "success");
+		toast(`${t("bridgeComplete")} ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Li.Fi)`, "success");
 		loadBalances();
 	} catch (e) {
 		updateTxEntry(txId, "failed", "");

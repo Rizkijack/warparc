@@ -19,6 +19,22 @@ const { URL } = require("url");
 
 const MAX_BODY = 4096;
 
+// In-memory rate limiter for POST /relay: max 10 requests per minute per IP.
+const relayRateLimit = new Map();
+const RELAY_RATE_LIMIT_MAX = 10;
+const RELAY_RATE_LIMIT_WINDOW_MS = 60_000;
+
+function checkRelayRateLimit(ip) {
+	const now = Date.now();
+	const entry = relayRateLimit.get(ip);
+	if (!entry || now > entry.resetAt) {
+		relayRateLimit.set(ip, { count: 1, resetAt: now + RELAY_RATE_LIMIT_WINDOW_MS });
+		return true;
+	}
+	entry.count++;
+	return entry.count <= RELAY_RATE_LIMIT_MAX;
+}
+
 // Token bucket for the /status Iris lookup: the relayer round-robins its Iris
 // polling to stay under the global 40 req/s budget, so an operator script
 // hammering /status must not spend that budget independently.
@@ -55,7 +71,9 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 			"Content-Type": "application/json; charset=utf-8",
 			"Content-Length": Buffer.byteLength(body),
 			...corsHeaders(),
-			"Cache-Control": "no-store"
+			"Cache-Control": "no-store",
+			"X-Content-Type-Options": "nosniff",
+			"X-Frame-Options": "DENY"
 		});
 		res.end(body);
 	}
@@ -113,6 +131,19 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 		"GET /jobs": async () => ({ jobs: relayer ? relayer.getJobs() : {} }),
 
 		"POST /relay": async (query, req) => {
+			// Auth check: if BACKEND_API_TOKEN is set, require matching Bearer token.
+			const apiToken = process.env.BACKEND_API_TOKEN;
+			if (apiToken) {
+				const auth = req.headers.authorization || "";
+				if (auth !== `Bearer ${apiToken}`) {
+					return [{ error: "unauthorized" }, 401];
+				}
+			}
+			// Rate limit check: 10 requests per minute per IP.
+			const clientIp = req.socket.remoteAddress || "unknown";
+			if (!checkRelayRateLimit(clientIp)) {
+				return [{ error: "rate limit exceeded" }, 429];
+			}
 			if (!relayer) return [{ error: "relayer role not running" }, 503];
 			const body = await readJsonBody(req);
 			if (!body || typeof body !== "object") throw Object.assign(new Error("body must be a JSON object"), { statusCode: 400 });

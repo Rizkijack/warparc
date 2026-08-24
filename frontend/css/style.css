@@ -20,7 +20,7 @@
 	--border-strong: #D3DCE6;
 	--text: #24303E;
 	--text2: #5B6B7C;
-	--text3: #93A1B0;
+	--text3: #64748B;
 	--ink: #16202B;
 
 	/* Semantic pastels (bg / text pairs) — bgs cooled to harmonize with slate base */
@@ -75,7 +75,7 @@
 	--border-strong: #2E3D5C;
 	--text: #DDE6F2;
 	--text2: #A7B7CB;
-	--text3: #7C8DA6;
+	--text3: #8A9DB5;
 	--ink: #F4F7FB;
 
 	/* Semantic pastel pairs → translucent fills on dark */
@@ -1383,7 +1383,6 @@ footer a:hover { color: var(--accent); }
 	.contract-grid { grid-template-columns: 1fr; }
 	.tx-item { grid-template-columns: 8px minmax(0, 1fr) auto; column-gap: 0.6rem; }
 	.tx-badge { min-width: 56px; }
-	.network-toggle { display: none; }
 	.lang-dropdown { right: auto; left: 0; }
 }
 

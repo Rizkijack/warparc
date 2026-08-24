@@ -16,9 +16,16 @@
  *     sama dengan POST /relay: enqueue hanya mencatat job ops — pengiriman
  *     on-chain hanya dijalankan proses backend yang LIVE
  *     (RELAYER_ENABLED=true && RELAYER_DRY_RUN=false && RELAYER_PRIVATE_KEY).
+ *     Tool ini tambah NONAKTIF default (fail-closed): butuh env
+ *     RELAYER_MCP_SUBMIT=true baru enqueue lewat MCP diizinkan.
  *   - Respons tidak pernah memuat secret (key tetap di env; job hanya hash).
  *   - Instance standalone TIDAK menjalankan tick relayer (tidak ada double-
  *     submit dengan `npm run backend`); hanya menyediakan API baca/tulis job.
+ *     Relayer standalone dibuat HANYA lewat buildStandaloneDeps(), yang
+ *     memaksa logger semua-level → stderr (stdout murni frame protocol).
+ *   - Semua network I/O yang dipicu tool dibatasi deadline (withTimeout):
+ *     Iris lookup MCP_IRIS_TIMEOUT_MS, receipt lookup MCP_RPC_TIMEOUT_MS
+ *     (default 15000) — upstream menggantung tetap menghasilkan frame error.
  *   - Transport stdio = proses lokal. Rencana remote (Streamable HTTP + auth)
  *     ada di mcp/README.md — jangan expose tanpa auth.
  *
@@ -51,6 +58,57 @@ const ERR_INTERNAL = -32603;
 // /status Iris throttle — sama seperti GET /status (server.js): lookup live
 // tidak boleh memakai budget 40 req/s Iris milik relayer.
 const STATUS_IRIS_RPS_DEFAULT = 2;
+
+// Timeout I/O jaringan yang dipicu tool — upstream yang menggantung tetap
+// menghasilkan frame JSON-RPC error, bukan keheningan stream. Env-overridable,
+// dibaca per-panggilan (pola statusIrisMinIntervalMs di atas).
+const IRIS_TIMEOUT_DEFAULT_MS = 15_000;
+const RPC_TIMEOUT_DEFAULT_MS = 15_000;
+
+/** Parse env int positif — pola intEnv() config.js, lokal agar mandiri. */
+function envInt(name, fallback) {
+	const v = parseInt(process.env[name], 10);
+	return Number.isInteger(v) && v > 0 ? v : fallback;
+}
+
+/** Gate env boolean fail-closed — pola boolEnv() config.js: hanya "true". */
+function envBoolTrue(name) {
+	const v = process.env[name];
+	return v !== undefined && v.trim().toLowerCase() === "true";
+}
+
+function irisTimeoutMs() {
+	return envInt("MCP_IRIS_TIMEOUT_MS", IRIS_TIMEOUT_DEFAULT_MS);
+}
+function rpcTimeoutMs() {
+	return envInt("MCP_RPC_TIMEOUT_MS", RPC_TIMEOUT_DEFAULT_MS);
+}
+
+/**
+ * Batasi waktu tunggu promise upstream — hang tetap melempar Error (frame
+ * JSON-RPC error), bukan diam selamanya. Timer selalu di-clear; settlement
+ * loser Promise.race tertelan internal, jadi tidak ada unhandledRejection.
+ */
+function withTimeout(promise, ms, label = "upstream") {
+	let timer;
+	const deadline = new Promise((_, reject) => {
+		timer = setTimeout(() => reject(new Error(`${label} timeout (${ms}ms)`)), ms);
+		if (timer.unref) timer.unref();
+	});
+	return Promise.race([promise, deadline]).finally(() => clearTimeout(timer));
+}
+
+/**
+ * Logger yang mengarahkan SEMUA level ke process.stderr — stdout HANYA frame
+ * protocol (header atas). createRelayer default-nya `console` (info → stdout)
+ * dan itu korupsi stream; relayer standalone wajib dibuat lewat
+ * buildStandaloneDeps() agar wiring ini tidak bisa terlewat.
+ */
+function makeStderrLogger() {
+	const line = (...args) =>
+		process.stderr.write(args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" ") + "\n");
+	return { debug: line, info: line, warn: line, error: line };
+}
 
 function statusIrisMinIntervalMs() {
 	const raw = Number(process.env.BACKEND_STATUS_IRIS_RPS);
@@ -134,7 +192,7 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 		if (iris && now - lastIrisCallAt >= statusIrisMinIntervalMs()) {
 			lastIrisCallAt = now; // panggilan (sukses ATAU gagal) memakai slot
 			try {
-				const msg = await iris.getMessage(cfgChain.cctpDomain, tx);
+				const msg = await withTimeout(iris.getMessage(cfgChain.cctpDomain, tx), irisTimeoutMs(), "Iris lookup");
 				irisState = msg ? { status: msg.status, eventNonce: msg.eventNonce ?? null } : null;
 			} catch (e) {
 				irisState = { error: e.message };
@@ -147,11 +205,18 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 
 	async function hRelaySubmit(args) {
 		if (!relayer) throw toolError("relayer tidak aktif — jalankan backend dulu (npm run backend) untuk queue job");
+		// Gate tulis fail-closed: tanpa env eksplisit, MCP tidak mengubah state
+		// relayer sama sekali (mirror RELAYER_ENABLED/DRY_RUN).
+		if (!envBoolTrue("RELAYER_MCP_SUBMIT")) {
+			throw toolError(
+				"warparc_relay_submit dinonaktifkan (fail-closed) — set env RELAYER_MCP_SUBMIT=true untuk mengaktifkan enqueue via MCP"
+			);
+		}
 		const srcChain = reqString(args, "srcChain");
 		const burnTxHash = reqString(args, "burnTxHash");
 		if (!srcChain || !burnTxHash) throw toolError("srcChain and burnTxHash are required");
 		try {
-			await relayer.validateBurnTx(srcChain, burnTxHash);
+			await withTimeout(relayer.validateBurnTx(srcChain, burnTxHash), rpcTimeoutMs(), "RPC receipt lookup");
 			const job = relayer.enqueue(srcChain, burnTxHash);
 			return {
 				job,
@@ -226,7 +291,7 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 		},
 		{
 			name: "warparc_relay_submit",
-			description: "Queue satu burn tx untuk di-relay — GUARD sama dengan POST /relay: hanya mencatat job ops; pengiriman on-chain tetap dijalankan backend relayer yang LIVE (RELAYER_ENABLED=true && RELAYER_DRY_RUN=false && RELAYER_PRIVATE_KEY).",
+			description: "Queue satu burn tx untuk di-relay — GUARD sama dengan POST /relay: hanya mencatat job ops; pengiriman on-chain tetap dijalankan backend relayer yang LIVE (RELAYER_ENABLED=true && RELAYER_DRY_RUN=false && RELAYER_PRIVATE_KEY). Default NONAKTIF (fail-closed) — aktifkan dengan env RELAYER_MCP_SUBMIT=true.",
 			inputSchema: { type: "object", properties: { srcChain: { type: "string" }, burnTxHash: { type: "string" } } }
 		},
 		{
@@ -430,18 +495,32 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 // `node backend/src/mcp-server.js` (npm run backend:mcp). Mirip index.js tetapi:
 //   - relayer dibuat TANPA start() → MCP adalah sesi ops pasif: tidak ada tick,
 //     tidak ada submit ganda dengan proses `npm run backend` (lock relayer
-//     tetap milik backend utama). Enqueue via warparc_relay_submit tetap aman.
+//     tetap milik backend utama). Enqueue via warparc_relay_submit tetap aman
+//     (dan hanya bila RELAYER_MCP_SUBMIT=true — gate fail-closed di atas).
 //   - lock role terpisah ("mcp") mencegah dua proses MCP pada store yang sama.
-if (require.main === module) {
-	const backendCfg = loadBackendConfig();
+
+/**
+ * Rakit dependensi entry standalone. Diekspor agar wiring logger stderr bisa
+ * diuji (backend/test/mcp-smoke.js): relayer TIDAK PERNAH dibuat tanpa logger
+ * semua-level → stderr — default `console` createRelayer menulis info() ke
+ * stdout dan itu korupsi protocol stream.
+ */
+function buildStandaloneDeps({ backendCfg, log = makeStderrLogger() }) {
 	const store = new Store({ dir: backendCfg.dataDir });
-	const release = acquireLock({ dir: backendCfg.dataDir, role: "mcp" });
 	const indexerChains = getIndexerChains(backendCfg);
 	const chains = getRelayerChains(backendCfg);
-	const iris = createIrisClient({ baseUrl: backendCfg.cfg.iris[backendCfg.network] });
-	const relayer = createRelayer({ backendCfg, chains, store });
-	const mcp = createMcpServer({ backendCfg, store, relayer, iris, indexerChains });
-	console.error(
+	const iris = createIrisClient({ baseUrl: backendCfg.cfg.iris[backendCfg.network], timeoutMs: irisTimeoutMs() });
+	const relayer = createRelayer({ backendCfg, chains, store, log });
+	return { store, indexerChains, chains, iris, relayer };
+}
+
+if (require.main === module) {
+	const backendCfg = loadBackendConfig();
+	const log = makeStderrLogger();
+	const release = acquireLock({ dir: backendCfg.dataDir, role: "mcp" });
+	const { store, indexerChains, iris, relayer } = buildStandaloneDeps({ backendCfg, log });
+	const mcp = createMcpServer({ backendCfg, store, relayer, iris, indexerChains, log });
+	log.error(
 		`[mcp] stdio ready — network=${backendCfg.network} protocol=${LATEST_PROTOCOL}` +
 			` relayer=idle (no tick; submit via backend LIVE) data=${backendCfg.dataDir}`
 	);
@@ -469,7 +548,7 @@ if (require.main === module) {
 	process.on("SIGTERM", shutdown);
 }
 
-module.exports = { createMcpServer, PROTOCOL_VERSIONS, LATEST_PROTOCOL };
+module.exports = { createMcpServer, PROTOCOL_VERSIONS, LATEST_PROTOCOL, buildStandaloneDeps, makeStderrLogger, withTimeout };
 
 
 

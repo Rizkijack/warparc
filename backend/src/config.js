@@ -19,6 +19,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const vm = require("vm");
 
 const ROOT = path.join(__dirname, "..", "..");
 const FRONTEND_CONFIG = path.join(ROOT, "frontend", "js", "config.js");
@@ -27,11 +28,14 @@ const FRONTEND_CONFIG = path.join(ROOT, "frontend", "js", "config.js");
 const TESTNET_CCTP_CHAINS = ["arc", "ethereumSepolia", "baseSepolia", "arbitrumSepolia", "optimismSepolia"];
 const MAINNET_CCTP_CHAINS = ["ethereum", "base", "arbitrum", "optimism", "arcMainnet"];
 
-/** Load the frontend CONFIG object without a bundler (plain-script eval). */
+/** Load the frontend CONFIG object without a bundler (vm sandbox). */
 function loadFrontendConfig() {
 	const src = fs.readFileSync(FRONTEND_CONFIG, "utf8");
-	// eslint-disable-next-line no-eval
-	return (0, eval)(src + "\n;({ CONFIG }).CONFIG");
+	// const is block-scoped in vm — expose CONFIG to the sandbox explicitly
+	const wrapped = src + "\n;this.CONFIG = CONFIG;";
+	const sandbox = {};
+	vm.runInNewContext(wrapped, sandbox, { filename: FRONTEND_CONFIG });
+	return sandbox.CONFIG;
 }
 
 function boolEnv(name, fallback) {
