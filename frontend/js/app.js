@@ -796,6 +796,22 @@ async function acrossQuote(fromChain, toChain, amount, token) {
 }
 
 async function acrossExecute(quote) {
+	if (!quote || !quote.swapTx) throw new Error("No swap transaction in Across quote");
+	for (const approvalTx of (quote.approvalTxns || [])) {
+		const tx = await state.signer.sendTransaction({
+			to: approvalTx.to, data: approvalTx.data,
+			value: approvalTx.value ? BigInt(approvalTx.value) : 0n,
+		});
+		await tx.wait();
+	}
+	const tx = await state.signer.sendTransaction({
+		to: quote.swapTx.to, data: quote.swapTx.data,
+		value: quote.swapTx.value ? BigInt(quote.swapTx.value) : 0n,
+	});
+	const receipt = await tx.wait();
+	return { txHash: receipt.hash };
+}
+
 // --- Stargate V2 Integration --------------------------------------------------
 
 const STARGATE_ROUTER_ADDRESS = "0x150f4E4bD86B9b3655702eFEfB78c8b1D9b5d6c0";
@@ -890,21 +906,7 @@ async function socketExecute(quote) {
 	}
 	throw new Error("No executable transaction data in Socket route");
 }
-	if (!quote || !quote.swapTx) throw new Error("No swap transaction in Across quote");
-	for (const approvalTx of (quote.approvalTxns || [])) {
-		const tx = await state.signer.sendTransaction({
-			to: approvalTx.to, data: approvalTx.data,
-			value: approvalTx.value ? BigInt(approvalTx.value) : 0n,
-		});
-		await tx.wait();
-	}
-	const tx = await state.signer.sendTransaction({
-		to: quote.swapTx.to, data: quote.swapTx.data,
-		value: quote.swapTx.value ? BigInt(quote.swapTx.value) : 0n,
-	});
-	const receipt = await tx.wait();
-	return { txHash: receipt.hash };
-}
+
 // --- Protocol-aware quote fetching -------------------------------------------
 
 async function fetchProtocolQuote(fromKey, toKey, amountWei, token) {
@@ -2517,12 +2519,20 @@ function updateBridgeBtn() {
 	btn.disabled = false;
 }
 
-// A chain is bridgeable in the UI when Circle publishes a CCTP domain for it
-// (robinhood has none yet; arcMainnet stays disabled until launch-day values
-// are filled in — MAINNET-CHECKLIST.md Phase 1/2).
-function isBridgeableChain(chainKey) {
+// A chain is bridgeable in the UI. For USDC we require Circle CCTP V2 contracts.
+// For ETH (cross-chain bridging via LiFi/Across/Stargate/Relay/Socket) we only
+// need the chain to support ETH as native currency — no CCTP needed.
+function isBridgeableChain(chainKey, token) {
 	const c = CONFIG.chains[chainKey];
-	return !!(c && !c.disabled && c.cctpDomain != null && c.cctp && c.cctp.tokenMessengerV2);
+	if (!c || c.disabled) return false;
+	if (token === "ETH") {
+		// ETH bridging: must use ETH as native gas token, exclude Arc
+		if (chainKey === "arc" || chainKey === "arcMainnet") return false;
+		return c.nativeCurrency && c.nativeCurrency.symbol === "ETH";
+	}
+	// USDC/ABT bridging: requires Circle CCTP V2 contracts
+	// (robinhood has none yet; arcMainnet disabled until launch-day)
+	return !!(c.cctpDomain != null && c.cctp && c.cctp.tokenMessengerV2);
 }
 
 function getFilteredChains() {
@@ -2531,9 +2541,7 @@ function getFilteredChains() {
 	return Object.keys(CONFIG.chains).filter(k => {
 		const c = CONFIG.chains[k];
 		if (c.network !== mode) return false;
-		// ETH bridging: exclude Arc (USDC is gas on Arc, not ETH)
-		if (token === "ETH" && (k === "arc" || k === "arcMainnet")) return false;
-		return isBridgeableChain(k);
+		return isBridgeableChain(k, token);
 	});
 }
 
@@ -3063,16 +3071,21 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 	}
 
-	const toggle = el("network-mode-toggle");
-	if (toggle) {
-		toggle.checked = state.testnetMode;
-		toggle.addEventListener("change", () => {
-			state.testnetMode = toggle.checked;
-			populateChainSelects();
-			onChainChange();
-			renderWalletChainPicker();
-		});
+	// Network toggle buttons (Mainnet / Testnet)
+	const mainnetBtn = el("network-mainnet-btn");
+	const testnetBtn = el("network-testnet-btn");
+	function setNetworkMode(isTestnet) {
+		state.testnetMode = isTestnet;
+		if (mainnetBtn) mainnetBtn.classList.toggle("active", !isTestnet);
+		if (testnetBtn) testnetBtn.classList.toggle("active", isTestnet);
+		populateChainSelects();
+		onChainChange();
+		renderWalletChainPicker();
 	}
+	if (mainnetBtn) mainnetBtn.addEventListener("click", () => setNetworkMode(false));
+	if (testnetBtn) testnetBtn.addEventListener("click", () => setNetworkMode(true));
+	// Initialize button state
+	setNetworkMode(state.testnetMode);
 
 	// Language selector
 	const langBtn = el("lang-btn");

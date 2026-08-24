@@ -43,7 +43,7 @@ const CONFIG = {
 			name: "Ethereum Mainnet",
 			shortName: "Ethereum",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://rpc.ankr.com/eth",
+			rpcUrl: "https://ethereum-rpc.publicnode.com",
 			explorer: "https://etherscan.io",
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/ethereum.svg",
 			cctp: {
@@ -165,6 +165,96 @@ const CONFIG = {
 				lzExecutor: "0x41bdb4aa4a63a5b2efc531858d3118392b1a1c3d"
 			}
 		},
+		polygon: {
+			network: "mainnet",
+			chainId: 137,
+			cctpDomain: 7,
+			name: "Polygon",
+			shortName: "Polygon",
+			nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
+			rpcUrl: "https://polygon-bor-rpc.publicnode.com",
+			explorer: "https://polygonscan.com",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/polygon.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		bsc: {
+			network: "mainnet",
+			chainId: 56,
+			cctpDomain: 4,
+			name: "BNB Smart Chain",
+			shortName: "BSC",
+			nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+			rpcUrl: "https://bsc-dataseed1.binance.org",
+			explorer: "https://bscscan.com",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/bsc.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		avalanche: {
+			network: "mainnet",
+			chainId: 43114,
+			cctpDomain: 1,
+			name: "Avalanche",
+			shortName: "AVAX",
+			nativeCurrency: { name: "AVAX", symbol: "AVAX", decimals: 18 },
+			rpcUrl: "https://api.avax.network/ext/bc/C/rpc",
+			explorer: "https://snowtrace.io",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/avalanche.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		linea: {
+			network: "mainnet",
+			chainId: 59144,
+			cctpDomain: 11,
+			name: "Linea",
+			shortName: "Linea",
+			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+			rpcUrl: "https://rpc.linea.build",
+			explorer: "https://lineascan.build",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/linea.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		scroll: {
+			network: "mainnet",
+			chainId: 534352,
+			cctpDomain: 12,
+			name: "Scroll",
+			shortName: "Scroll",
+			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+			rpcUrl: "https://rpc.scroll.io",
+			explorer: "https://scrollscan.com",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/scroll.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		blast: {
+			network: "mainnet",
+			chainId: 81457,
+			cctpDomain: 13,
+			name: "Blast",
+			shortName: "Blast",
+			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+			rpcUrl: "https://rpc.blast.io",
+			explorer: "https://blastscan.io",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/blast.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
 		arc: {
 			// Arc Testnet — official docs https://docs.arc.io/arc/references/connect-to-arc
 			// Gas token = USDC (native 18 dec / ERC-20 iface 6 dec, same balance).
@@ -240,7 +330,7 @@ const CONFIG = {
 			name: "Arbitrum Sepolia",
 			shortName: "Arb Sepolia",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://sepolia.arbitrum.io",
+			rpcUrl: "https://arbitrum-sepolia-rpc.publicnode.com",
 			explorer: "https://sepolia.arbiscan.io",
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/arbitrum.svg",
 			cctp: {
@@ -315,6 +405,12 @@ const CONFIG = {
 				arbitrum: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
 				optimism: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
 				robinhood: null,
+				polygon: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+				bsc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+				avalanche: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+				linea: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff",
+				scroll: "0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4",
+				blast: "0x4300000000000000000000000000000000000003",
 				// Arc Testnet ERC-20 interface (native USDC is the same asset, 18 dec native view)
 				arc: "0x3600000000000000000000000000000000000000",
 				// Testnet USDC (faucet.circle.com) — verified from
@@ -338,6 +434,12 @@ const CONFIG = {
 				arbitrum: "0x0000000000000000000000000000000000000000",
 				optimism: "0x0000000000000000000000000000000000000000",
 				robinhood: "0x0000000000000000000000000000000000000000",
+				polygon: "0x0000000000000000000000000000000000000000",
+				bsc: "0x0000000000000000000000000000000000000000",
+				avalanche: "0x0000000000000000000000000000000000000000",
+				linea: "0x0000000000000000000000000000000000000000",
+				scroll: "0x0000000000000000000000000000000000000000",
+				blast: "0x0000000000000000000000000000000000000000",
 				arc: "0x0000000000000000000000000000000000000000",
 				ethereumSepolia: "0x0000000000000000000000000000000000000000",
 				baseSepolia: "0x0000000000000000000000000000000000000000",
