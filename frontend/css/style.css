@@ -269,14 +269,6 @@ nav {
 .btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-border); }
 .btn-primary:active { transform: scale(0.97); }
 
-.btn-danger {
-	background: transparent;
-	color: var(--red);
-	border-color: var(--red-bg);
-	background: var(--red-bg);
-}
-.btn-danger:hover { background: var(--red-bg); border-color: var(--red); }
-
 .btn-sm { padding: 0.32rem 0.8rem; font-size: 0.68rem; }
 
 .btn:disabled {
@@ -516,8 +508,6 @@ main {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-
-.gas-estimate .forward-hint { color: var(--text3); }
 
 .gas-estimate input[type="checkbox"] {
 	accent-color: var(--ink);
@@ -930,18 +920,6 @@ footer a:hover { color: var(--accent); }
 }
 
 /* --- Micro-utils ----------------------------------------------------------- */
-
-.loading-dots::after {
-	content: "...";
-	animation: dots 1.5s steps(4, end) infinite;
-}
-
-@keyframes dots {
-	0% { content: ""; }
-	25% { content: "."; }
-	50% { content: ".."; }
-	75% { content: "..."; }
-}
 
 @keyframes pulse {
 	0%, 100% { opacity: 1; }

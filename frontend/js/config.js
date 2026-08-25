@@ -363,9 +363,16 @@ const CONFIG = {
 		// infra submits the destination mint. Fee quote: /v2/burn/USDC/fees/...?forward=true
 		forwardHook: "0x636374702d666f72776172640000000000000000000000000000000000000000"
 	},
-	// CCTP V2 registry — canonical values from developers.circle.com/cctp/references/
-	// contract-addresses + contract-interfaces (fetched 2026-08-22). Contract addresses
-	// are shared per network tier (Circle bridges testnet<->testnet, mainnet<->mainnet).
+	// WalletConnect — remote/mobile wallet sessions. projectId is the active
+	// production value from https://cloud.walletconnect.com; it is a public
+	// client-side value.
+	walletconnect: {
+		projectId: "74c3944c7d1579478f020903a8e6d008",
+		sdkVersion: "2" // pinned @walletconnect/ethereum-provider major, served via jsdelivr +esm
+	},
+	// Per-chain CCTP V2 domains — mirror registry used by mint-arc.js cross-check.
+	// Per-chain contracts live on each chain's `chain.cctp.*` block; the legacy
+	// network-scoped `contracts` table is gone (callers use chain.cctp directly).
 	cctp: {
 		domains: {
 			ethereum: 0,
@@ -375,37 +382,9 @@ const CONFIG = {
 			robinhood: null, // not in the CCTP domain registry
 			arc: 26,
 			arcMainnet: null // UNVERIFIED until the Arc mainnet domain publishes
-		},
-		contracts: {
-			testnet: {
-				tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
-				messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275"
-			},
-			mainnet: {
-				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
-				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
-			}
-		},
-		attestationApi: "https://iris-api.circle.com/v2/attestations",
-		MESSAGE_SENT_TOPIC0: "0x2fa9ca894982930190727e75500a97d8dc500233a5065e0f3126c48fbe0343c0"
+		}
 	},
-	// WalletConnect — remote/mobile wallet sessions. projectId comes from
-	// https://cloud.walletconnect.com (free tier); it is a public client-side
-	// value. EMPTY => the WalletConnect option stays disabled (fail-closed).
-	walletconnect: {
-		projectId: "74c3944c7d1579478f020903a8e6d008",
-		sdkVersion: "2" // pinned @walletconnect/ethereum-provider major, served via jsdelivr +esm
-	},
-	lzScan: "https://layerzeroscan.com"
 };
-
-const LZ_ENDPOINT_ABI = [
-	"function send(bytes calldata _payload, bytes calldata _options, address _sendLib, address _receiveLib) external payable",
-	"function send(address _lzReceive, address _compose, uint32 _dstEid, bytes32 _messageGuid, bytes calldata _message, bytes calldata _extraOptions, address _receiveLib, address _sendLib) external payable",
-	"function quote(bytes calldata _payload, bytes calldata _options, address _sendLib, address _receiveLib) external view returns (uint256 nativeFee, uint256 lzTokenFee)",
-	"function estimateFees(uint32 _dstEid, address _receiver, bytes calldata _message, bool _payInZRO, bytes calldata _adapterParams) external view returns (uint256 nativeFee, uint256 lzTokenFee)",
-	"function lzReceive(uint32 _srcEid, bytes32 _sender, uint64 _nonce, bytes calldata _message, address _executor) external payable"
-];
 
 const ERC20_ABI = [
 	"function approve(address spender, uint256 amount) external returns (bool)",
