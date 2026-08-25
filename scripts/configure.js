@@ -87,16 +87,11 @@ async function setPeersFor(contractName, deployments) {
 async function main() {
 	const network = hre.network.name;
 
-	// Contracts are disabled (BridgeToken.sol.disabled / BridgeAdapter.sol.disabled):
-	// the OFT path is deprecated — canonical USDC route is Circle CCTP V2.
-	// Same hard-block as deploy.js / local-test.js.
-	const fs = require("fs");
-	const path = require("path");
-	if (!fs.existsSync(path.join(__dirname, "..", "contracts", "BridgeToken.sol"))) {
-		console.error("BLOCKED: BridgeToken/BridgeAdapter are DISABLED (.sol.disabled) — the LayerZero");
-		console.error("OFT path is deprecated; the canonical USDC route is Circle CCTP V2.");
-		process.exit(1);
-	}
+// Note: BridgeToken/BridgeAdapter are SAO with Pausable + EID allowlist
+// (revived 2026-08-24). For EID provenance see CHAIN_EIDS below + the
+// LayerZero docs registry link in the comment header. arc 30417 is
+// UNVERIFIED — do not configure a peer for arc without first confirming
+// against the official registry. See DEPLOY.md Appendix A.
 	// Only comments in both address maps — nothing to configure (pentest F3).
 	if (Object.keys(DEPLOYMENTS).length === 0 && Object.keys(ADAPTER_DEPLOYMENTS).length === 0) {
 		console.error("DEPLOYMENTS empty — nothing to configure. Fill addresses after deployment.");

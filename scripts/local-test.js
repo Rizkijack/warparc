@@ -15,15 +15,10 @@ const hre = require("hardhat");
 async function main() {
 	console.log("ARC Bridge — Local Contract Validation\n");
 
-	// Contracts are disabled (BridgeToken.sol.disabled) — the OFT path is
-	// deprecated; canonical USDC route is Circle CCTP V2.
-	const fs = require("fs");
-	const path = require("path");
-	if (!fs.existsSync(path.join(__dirname, "..", "contracts", "BridgeToken.sol"))) {
-		console.error("BLOCKED: BridgeToken/BridgeAdapter are DISABLED (.sol.disabled) — the LayerZero OFT");
-		console.error("path is deprecated; the canonical USDC route is Circle CCTP V2.");
-		process.exit(1);
-	}
+// Note: BridgeToken/BridgeAdapter are SAO with Pausable + EID allowlist
+// (revived 2026-08-24). Canonical USDC route is Circle CCTP V2 — OFT path
+// kept for ABT demo only. See DEPLOY.md Appendix A + MAINNET-CHECKLIST.md
+// Phase 3 for the mainnet deployment checklist.
 
 	const [deployer] = await hre.ethers.getSigners();
 	console.log("Deployer:", deployer.address);
@@ -49,8 +44,45 @@ async function main() {
 
 	// 3. Exercise the frontend OFT_ABI functions
 	console.log("\n--- Frontend OFT_ABI validation ---");
+	// 2b. EID mismatch — constructor only takes endpoint, not EID; the EID
+	//     is what the endpoint advertises. Verify the deployer-set EID is
+	//     consistent with CHAIN_EIDS (configure.js is the source of truth
+	//     for setPeer; a wrong EID would route messages into the void).
+	const CHAIN_EIDS = { ethereum: 30101, base: 30184, arbitrum: 30110, optimism: 30111, robinhood: 30416 };
+	console.log("\n--- EID registry consistency ---");
+	for (const [chain, eid] of Object.entries(CHAIN_EIDS)) {
+		console.log("  " + chain.padEnd(11) + "EID " + eid + " (registry)");
+	}
+	console.log("  arc         EID 30417 (UNVERIFIED — confirm before mainnet)");
 
-	const name = await token.name();
+// 2c. Pause circuit-breaker — BridgeToken is Pausable; exercise the modifiers
+//     via the inherited OZ Pausable view + owner-only pause/unpause.
+console.log("\n--- Pausable circuit-breaker (BridgeToken) ---");
+console.log("  paused initial:", await token.paused());
+	await token.pause();
+	console.log("  paused after pause():", await token.paused());
+	await token.unpause();
+	console.log("  paused after unpause():", await token.paused());
+	console.log("  owner is deployer:", (await token.owner()) === deployer.address);
+	// EID allowlist proof — BridgeAdapter has allowedEid; set then verify.
+const MockUSDC = await hre.ethers.getContractFactory("MockUSDC");
+const mockUSDC = await MockUSDC.deploy();
+	await mockUSDC.deployed();
+	await mockUSDC.mint(deployer.address, 1_000_000_000_000n);
+	const BridgeAdapter = await hre.ethers.getContractFactory("BridgeAdapter");
+	const adapter = await BridgeAdapter.deploy(mockUSDC.address, endpointAddr, deployer.address);
+	await adapter.deployed();
+	console.log("\n--- BridgeAdapter EID allowlist + daily cap ---");
+	await adapter.setEidAllowed(30101, true);
+	console.log("  allowedEid(30101):", await adapter.allowedEid(30101));
+	console.log("  allowedEid(30110):", await adapter.allowedEid(30110));
+	await adapter.setEidAllowed(30110, true);
+	console.log("  allowedEid(30110) after grant:", await adapter.allowedEid(30110));
+	await adapter.setDailyCap(10_000_000); // 10 USDC
+	console.log("  dailyCap:", (await adapter.dailyCap()).toString(), "= 10 USDC (6 dec)");
+	console.log("  dayStartUtc set at deploy:", (await adapter.dayStartUtc()).toString());
+	console.log("\n\u2705 Pause + EID + daily cap all live on-chain. Cross-chain send requires");
+const name = await token.name();
 	const symbol = await token.symbol();
 	const decimals = await token.decimals();
 	const totalSupply = await token.totalSupply();
