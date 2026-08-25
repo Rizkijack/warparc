@@ -2,48 +2,21 @@
 // Every Arc value traces to https://docs.arc.io (see ARC-REFERENCE.md, the local
 // source handbook — ARC-SOURCES.md is local-only and may be absent). Never fill
 // an unknown value from memory — re-fetch from the official docs instead.
+// Verified 2026-08-26: https://docs.arc.io/arc/references/contract-addresses — "Mainnet addresses are not yet available" (testnet 5042002); CCTP domains via https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 //
-// Legacy LayerZero V2 OFT data (chains.*.layerZero, OFT_ABI) is DEPRECATED and
-// kept for the ABT demo path only (deprecated legacy OFT path).
+// DEPRECATED — Legacy LayerZero V2 OFT data (chains.*.layerZero, OFT_ABI, LZ_ENDPOINT_ABI).
+// Canonical USDC route is Circle CCTP V2. Retained for reference/test scripts; do not use.
 const CONFIG = {
-	bridgeToken: {
-		deployments: {
-			ethereum:  null,
-			base:      null,
-			arbitrum:  null,
-			optimism:  null,
-			robinhood: null,
-			arc:       null
-		},
-		decimals: 18,
-		symbol: "ABT",
-		name: "ARC Bridge Token",
-		icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='10' height='10' rx='2' fill='%239b6ef0'/%3E%3Crect x='18' y='4' width='10' height='10' rx='2' fill='%239b6ef0' opacity='0.5'/%3E%3Crect x='4' y='18' width='10' height='10' rx='2' fill='%2310b981'/%3E%3Crect x='18' y='18' width='10' height='10' rx='2' fill='%2310b981' opacity='0.5'/%3E%3C/svg%3E"
-	},
-	bridgeAdapter: {
-		deployments: {
-			ethereum:  null,
-			base:      null,
-			arbitrum:  null,
-			optimism:  null,
-			robinhood: null,
-			arc:       null
-		},
-		decimals: 6,
-		symbol: "USDC",
-		name: "ARC Bridge USDC Adapter",
-		icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%232775CA'/%3E%3Cpath d='M16 7v18M20.8 11.2c-.8-1.2-2.6-1.9-4.8-1.9-2.7 0-4.7 1.3-4.7 3.3 0 4.4 9.6 2.4 9.6 6.7 0 2.1-2.1 3.4-5.1 3.4-2.5 0-4.3-.9-5.1-2.2' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"
-	},
 	chains: {
 		ethereum: {
 			network: "mainnet",
 			chainId: 1,
-			cctpDomain: 0,
+			cctpDomain: 0, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 			eid: 30101,
 			name: "Ethereum Mainnet",
 			shortName: "Ethereum",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://rpc.ankr.com/eth",
+			rpcUrl: "https://ethereum-rpc.publicnode.com",
 			explorer: "https://etherscan.io",
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/ethereum.svg",
 			cctp: {
@@ -51,6 +24,8 @@ const CONFIG = {
 				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
 				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
 			},
+			// DEPRECATED — LayerZero OFT path (canonical route is Circle CCTP V2).
+			// Retained for reference/test scripts; do not use in new code.
 			layerZero: {
 				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
 				sendUln302: "0xbb2ea70c9e858123480642cf96acbcce1372dce1",
@@ -66,7 +41,7 @@ const CONFIG = {
 		base: {
 			network: "mainnet",
 			chainId: 8453,
-			cctpDomain: 6,
+			cctpDomain: 6, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 			eid: 30184,
 			name: "Base Mainnet",
 			shortName: "Base",
@@ -78,6 +53,8 @@ const CONFIG = {
 				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
 				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
 			},
+			// DEPRECATED — LayerZero OFT path (canonical route is Circle CCTP V2).
+			// Retained for reference/test scripts; do not use in new code.
 			layerZero: {
 				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
 				sendUln302: "0xb5320b0b3a13cc860893e2bd79fcd7e13484dda2",
@@ -92,7 +69,7 @@ const CONFIG = {
 		arbitrum: {
 			network: "mainnet",
 			chainId: 42161,
-			cctpDomain: 3,
+			cctpDomain: 3, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 			eid: 30110,
 			name: "Arbitrum One",
 			shortName: "Arbitrum",
@@ -104,6 +81,8 @@ const CONFIG = {
 				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
 				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
 			},
+			// DEPRECATED — LayerZero OFT path (canonical route is Circle CCTP V2).
+			// Retained for reference/test scripts; do not use in new code.
 			layerZero: {
 				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
 				sendUln302: "0x975bcd720be66659e3eb3c0e4f1866a3020e493a",
@@ -118,7 +97,7 @@ const CONFIG = {
 		optimism: {
 			network: "mainnet",
 			chainId: 10,
-			cctpDomain: 2,
+			cctpDomain: 2, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 			eid: 30111,
 			name: "Optimism Mainnet",
 			shortName: "Optimism",
@@ -130,6 +109,8 @@ const CONFIG = {
 				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
 				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
 			},
+			// DEPRECATED — LayerZero OFT path (canonical route is Circle CCTP V2).
+			// Retained for reference/test scripts; do not use in new code.
 			layerZero: {
 				endpointV2: "0x1a44076050125825900e736c501f859c50fe728c",
 				sendUln302: "0x1322871e4ab09bc7f5717189434f97bbd9546e95",
@@ -163,6 +144,96 @@ const CONFIG = {
 				deadDVN: "0x6788f52439aca6bff597d3eec2dc9a44b8fee842",
 				endpointV2View: "0xaab5a48cfc03efa9cc34a2c1aacccb84b4b770e4",
 				lzExecutor: "0x41bdb4aa4a63a5b2efc531858d3118392b1a1c3d"
+			}
+		},
+		polygon: {
+			network: "mainnet",
+			chainId: 137,
+			cctpDomain: 7, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
+			name: "Polygon",
+			shortName: "Polygon",
+			nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
+			rpcUrl: "https://polygon-bor-rpc.publicnode.com",
+			explorer: "https://polygonscan.com",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/polygon.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		bsc: {
+			network: "mainnet",
+			chainId: 56,
+			cctpDomain: 4, // UNVERIFIED — Circle 2026-08-26 lists BSC 17 (USYC-only), 4=Noble V1 — re-verify (https://developers.circle.com/cctp/concepts/supported-chains-and-domains)
+			name: "BNB Smart Chain",
+			shortName: "BSC",
+			nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+			rpcUrl: "https://bsc-dataseed1.binance.org",
+			explorer: "https://bscscan.com",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/bsc.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		avalanche: {
+			network: "mainnet",
+			chainId: 43114,
+			cctpDomain: 1, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
+			name: "Avalanche",
+			shortName: "AVAX",
+			nativeCurrency: { name: "AVAX", symbol: "AVAX", decimals: 18 },
+			rpcUrl: "https://api.avax.network/ext/bc/C/rpc",
+			explorer: "https://snowtrace.io",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/avalanche.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		linea: {
+			network: "mainnet",
+			chainId: 59144,
+			cctpDomain: 11, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
+			name: "Linea",
+			shortName: "Linea",
+			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+			rpcUrl: "https://rpc.linea.build",
+			explorer: "https://lineascan.build",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/linea.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		scroll: {
+			network: "mainnet",
+			chainId: 534352,
+			cctpDomain: 12, // UNVERIFIED — 12=Codex, Scroll not in published list — TBD (2026-08-26)
+			name: "Scroll",
+			shortName: "Scroll",
+			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+			rpcUrl: "https://rpc.scroll.io",
+			explorer: "https://scrollscan.com",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/scroll.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+			}
+		},
+		blast: {
+			network: "mainnet",
+			chainId: 81457,
+			cctpDomain: 13, // UNVERIFIED — 13=Sonic, Blast not in published list — TBD (2026-08-26)
+			name: "Blast",
+			shortName: "Blast",
+			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+			rpcUrl: "https://rpc.blast.io",
+			explorer: "https://blastscan.io",
+			icon: "https://icons-ckg.pages.dev/lz-scan/networks/blast.svg",
+			cctp: {
+				tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+				messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
 			}
 		},
 		arc: {
@@ -240,7 +311,7 @@ const CONFIG = {
 			name: "Arbitrum Sepolia",
 			shortName: "Arb Sepolia",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-			rpcUrl: "https://sepolia.arbitrum.io",
+			rpcUrl: "https://arbitrum-sepolia-rpc.publicnode.com",
 			explorer: "https://sepolia.arbiscan.io",
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/arbitrum.svg",
 			cctp: {
@@ -264,23 +335,25 @@ const CONFIG = {
 			}
 		},
 		arcMainnet: {
-			// SKELETON ONLY — public mainnet launches September 16, 2026.
-			// Every value MUST come from docs.arc.io on launch day
-			// (MAINNET-CHECKLIST.md Phase 1). Never carry testnet values over.
-			// `disabled` keeps it out of the UI until real values are filled in.
+			// SKELETON ONLY — public mainnet launches September 16, 2026 (MAINNET-CHECKLIST.md Phase 1, frontend/js/config.js:342-372).
+			// Every value MUST come from https://docs.arc.io/arc/references/contract-addresses
+			// + https://docs.arc.io/arc/references/connect-to-arc on launch day — never carry testnet values over.
+			// Verified 2026-08-26: https://docs.arc.io/arc/references/contract-addresses — "Mainnet addresses are not yet available" (testnet 5042002).
+			// `disabled:true` keeps it out of the UI until real values are filled in (fail-closed, backend/src/config.js:74-83).
+			// Placeholder for vercel.json:14 CSP connect-src — add https://rpc.mainnet.arc.io + wss://... when published (MAINNET-CHECKLIST Phase 2).
 			disabled: true,
 			network: "mainnet",
-			chainId: null,           // ?TBD?
-			eid: null,               // UNVERIFIED — do NOT set from testnet value
-			cctpDomain: null,        // ?TBD?
+			chainId: null,           // ?TBD? — from connect-to-arc table (MAINNET-CHECKLIST 342-372)
+			eid: null,               // UNVERIFIED — do NOT set from testnet value 30417 (backend/src/config.js:74-83)
+			cctpDomain: null,        // ?TBD? — verify via https://developers.circle.com/cctp/concepts/supported-chains-and-domains on launch day
 			name: "Arc Mainnet",
 			shortName: "Arc",
 			nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-			rpcUrl: null,            // ?TBD?
-			explorer: null,          // ?TBD?
+			rpcUrl: null,            // ?TBD? — from connect-to-arc (MAINNET-CHECKLIST 342-372) + vercel.json:14 CSP
+			explorer: null,          // ?TBD? — from connect-to-arc
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/arc.svg",
 			cctp: {
-				usdc: null,              // ?TBD?
+				usdc: null,              // ?TBD? — contract-addresses (MAINNET-CHECKLIST 386-389)
 				tokenMessengerV2: null,  // ?TBD?
 				messageTransmitterV2: null, // ?TBD?
 				tokenMinterV2: null,     // ?TBD?
@@ -291,20 +364,6 @@ const CONFIG = {
 		}
 	},
 	tokens: {
-		ABT: {
-			name: "ARC Bridge Token",
-			symbol: "ABT",
-			decimals: 18,
-			addresses: {
-				ethereum:  null,
-				base:      null,
-				arbitrum:  null,
-				optimism:  null,
-				robinhood: null,
-				arc:       null
-			},
-			icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='10' height='10' rx='2' fill='%239b6ef0'/%3E%3Crect x='18' y='4' width='10' height='10' rx='2' fill='%239b6ef0' opacity='0.5'/%3E%3Crect x='4' y='18' width='10' height='10' rx='2' fill='%2310b981'/%3E%3Crect x='18' y='18' width='10' height='10' rx='2' fill='%2310b981' opacity='0.5'/%3E%3C/svg%3E"
-		},
 		USDC: {
 			name: "USD Coin",
 			symbol: "USDC",
@@ -315,6 +374,12 @@ const CONFIG = {
 				arbitrum: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
 				optimism: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
 				robinhood: null,
+				polygon: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+				bsc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+				avalanche: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+				linea: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff",
+				scroll: "0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4",
+				blast: "0x4300000000000000000000000000000000000003",
 				// Arc Testnet ERC-20 interface (native USDC is the same asset, 18 dec native view)
 				arc: "0x3600000000000000000000000000000000000000",
 				// Testnet USDC (faucet.circle.com) — verified from
@@ -338,6 +403,12 @@ const CONFIG = {
 				arbitrum: "0x0000000000000000000000000000000000000000",
 				optimism: "0x0000000000000000000000000000000000000000",
 				robinhood: "0x0000000000000000000000000000000000000000",
+				polygon: "0x0000000000000000000000000000000000000000",
+				bsc: "0x0000000000000000000000000000000000000000",
+				avalanche: "0x0000000000000000000000000000000000000000",
+				linea: "0x0000000000000000000000000000000000000000",
+				scroll: "0x0000000000000000000000000000000000000000",
+				blast: "0x0000000000000000000000000000000000000000",
 				arc: "0x0000000000000000000000000000000000000000",
 				ethereumSepolia: "0x0000000000000000000000000000000000000000",
 				baseSepolia: "0x0000000000000000000000000000000000000000",
@@ -345,7 +416,7 @@ const CONFIG = {
 				optimismSepolia: "0x0000000000000000000000000000000000000000",
 				arcMainnet: "0x0000000000000000000000000000000000000000"
 			},
-			icon: "https://icons-ckg.pages.dev/lz-scan/protocols/ether.svg"
+			icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23627EEA'/%3E%3Cpath d='M16 4v12l7-8.5L16 4z' fill='%23fff' opacity='0.8'/%3E%3Cpath d='M16 4v12l-7-8.5L16 4z' fill='%23fff'/%3E%3Cpath d='M16 19l-7 5 7 4v-9z' fill='%23fff'/%3E%3Cpath d='M16 19l7 5-7 4v-9z' fill='%23fff' opacity='0.8'/%3E%3C/svg%3E"
 		}
 	},
 	// Circle Iris attestation API (CCTP V2) — technical guide:
@@ -363,18 +434,24 @@ const CONFIG = {
 		// infra submits the destination mint. Fee quote: /v2/burn/USDC/fees/...?forward=true
 		forwardHook: "0x636374702d666f72776172640000000000000000000000000000000000000000"
 	},
-	// CCTP V2 registry — canonical values from developers.circle.com/cctp/references/
-	// contract-addresses + contract-interfaces (fetched 2026-08-22). Contract addresses
-	// are shared per network tier (Circle bridges testnet<->testnet, mainnet<->mainnet).
+	// CCTP V2 registry — canonical values from https://developers.circle.com/cctp/concepts/supported-chains-and-domains
+	// + https://developers.circle.com/cctp/references/contract-addresses (Verified 2026-08-26).
+	// Contract addresses are shared per network tier (Circle bridges testnet<->testnet, mainnet<->mainnet).
 	cctp: {
 		domains: {
-			ethereum: 0,
-			optimism: 2,
-			arbitrum: 3,
-			base: 6,
-			robinhood: null, // not in the CCTP domain registry
-			arc: 26,
-			arcMainnet: null // UNVERIFIED until the Arc mainnet domain publishes
+			ethereum: 0, // Verified 2026-08-26: supported-chains-and-domains
+			optimism: 2, // Verified 2026-08-26
+			arbitrum: 3, // Verified 2026-08-26
+			base: 6, // Verified 2026-08-26
+			polygon: 7, // Verified 2026-08-26
+			bsc: 4, // UNVERIFIED — Circle 2026-08-26 lists BSC 17 (USYC-only), 4=Noble V1 — re-verify
+			avalanche: 1, // Verified 2026-08-26
+			linea: 11, // Verified 2026-08-26
+			scroll: 12, // UNVERIFIED — 12=Codex, Scroll not in published list — TBD
+			blast: 13, // UNVERIFIED — 13=Sonic, Blast not in published list — TBD
+			robinhood: null, // not in the CCTP domain registry — watched in MAINNET-CHECKLIST Phase 0
+			arc: 26, // Verified 2026-08-26: https://docs.arc.io/arc/references/contract-addresses (Arc Testnet)
+			arcMainnet: null // UNVERIFIED until the Arc mainnet domain publishes (MAINNET-CHECKLIST 442-453)
 		},
 		contracts: {
 			testnet: {
@@ -387,7 +464,7 @@ const CONFIG = {
 			}
 		},
 		attestationApi: "https://iris-api.circle.com/v2/attestations",
-		MESSAGE_SENT_TOPIC0: "0x2fa9ca894982930190727e75500a97d8dc500233a5065e0f3126c48fbe0343c0"
+		MESSAGE_SENT_TOPIC0: "0x8c5261668696ce22758910d05bab8f186d6eb247ceac2af2e82c7dc17669b036", // keccak256("MessageSent(bytes)") — verified from circlefin/evm-cctp-contracts
 	},
 	// WalletConnect — remote/mobile wallet sessions. projectId comes from
 	// https://cloud.walletconnect.com (free tier); it is a public client-side
@@ -403,8 +480,22 @@ const CONFIG = {
 		acrossApi: "https://app.across.to/api",
 		socketApi: "https://public-backend.socket.tech/v3",
 		relayApi: "https://api.relay.link",
-		// Stargate Router V2 — same address on all EVM chains
-		stargateRouterAddress: "0x150f4E4bD86B9b3655702eFEfB78c8b1D9b5d6c0",
+		// Stargate V2 — DISABLED (fail-closed), frontend audit 2026-08.
+		// The value below was labelled "Router V2 — same address on all EVM
+		// chains", which does not exist for any Stargate deployment, and the
+		// paired STARGATE_ROUTER_ABI is Stargate-V1-shaped
+		// (swapETH(uint16 _dstChainId,...)) while LayerZero V2 EIDs (30101+)
+		// do not fit a uint16 dstChainId. Per repo law ("jangan pernah mengisi
+		// nilai dari ingatan") these values must be re-fetched from official
+		// Stargate/LayerZero docs before use — do NOT guess replacements.
+		// Re-enable path: verify address + V2 Router ABI, set disabled:false,
+		// unhide the #proto-stargate row in index.html. Code paths are kept
+		// intact but unreachable while disabled:true.
+		stargateV2: {
+			disabled: true,
+			reason: "unverified router address + Stargate-V1-shaped ABI (audit 2026-08)",
+			routerAddressUnverified: "0x150f4E4bD86B9b3655702eFEfB78c8b1D9b5d6c0"
+		},
 		// API keys — set via env or localStorage; never hardcode secrets here
 		apiKeys: {
 			across: "",       // set via ACROSS_API_KEY env or localStorage
@@ -414,6 +505,8 @@ const CONFIG = {
 	},
 };
 
+// DEPRECATED — LayerZero V2 endpoint ABI (OFT path, replaced by Circle CCTP V2).
+// Retained for reference/test scripts; do not use in new code.
 const LZ_ENDPOINT_ABI = [
 	"function send(bytes calldata _payload, bytes calldata _options, address _sendLib, address _receiveLib) external payable",
 	"function send(address _lzReceive, address _compose, uint32 _dstEid, bytes32 _messageGuid, bytes calldata _message, bytes calldata _extraOptions, address _receiveLib, address _sendLib) external payable",
@@ -444,9 +537,11 @@ const MESSAGE_TRANSMITTER_V2_ABI = [
 	"event MessageSent(bytes message)"
 ];
 
+// DEPRECATED — LayerZero OFT ABI (canonical route is Circle CCTP V2).
+// Retained for reference/test scripts; do not use in new code.
 const OFT_ABI = [
 	"function send((uint32 dstEid,bytes32 to,uint256 amountLD,uint256 minAmountLD,bytes extraOptions,bytes composeMsg,bytes oftCmd) _sendParam,(uint256 nativeFee,uint256 lzTokenFee) _fee,address _refundAddress) external payable returns ((bytes32 guid,uint64 nonce,uint256 fee) msgReceipt,(uint256 amountSentLD,uint256 amountReceivedLD) oftReceipt)",
-	"function quoteSend((uint32 dstEid,bytes32 to,uint256 amountLD,uint256 minAmountLD,bytes extraOptions,bytes composeMsg,bytes oftCmd) _sendParam,bool _payInLzToken) external view returns (uint256 nativeFee,uint256 lzTokenFee)",
+	"function quoteSend((uint32 dstEid,bytes32 to,uint256 amountLD,uint256 minAmountLD,bytes extraOptions,bytes composeMsg,bytes oftCmd) _sendParam,bool _payInLzToken) external view returns (uint256 nativeFee, uint256 lzTokenFee)",
 	"function setPeer(uint32 _eid,bytes32 _peer) external",
 	"function balanceOf(address account) external view returns (uint256)",
 	"function approve(address spender,uint256 amount) external returns (bool)",

@@ -27,7 +27,7 @@
 	</div>
 	<div class="nav-right">
 		<div class="lang-selector" id="lang-selector">
-			<button class="lang-btn" id="lang-btn" aria-label="Select language" title="Language">
+			<button class="lang-btn" id="lang-btn" aria-label="Select language" title="Language" aria-expanded="false" aria-haspopup="true">
 				<span class="lang-flag" id="lang-flag">EN</span>
 				<svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
 			</button>
@@ -45,12 +45,14 @@
 			</div>
 		</div>
 		<div class="network-toggle">
-			<span class="toggle-label" data-i18n="mainnet">Mainnet</span>
-			<label class="toggle-switch">
-				<input type="checkbox" id="network-mode-toggle" checked>
-				<span class="toggle-slider"></span>
-			</label>
-			<span class="toggle-label" data-i18n="testnet">Testnet</span>
+			<button class="network-btn" id="network-mainnet-btn" data-network="mainnet">
+				<span class="network-dot mainnet"></span>
+				<span data-i18n="mainnet">Mainnet</span>
+			</button>
+			<button class="network-btn active" id="network-testnet-btn" data-network="testnet">
+				<span class="network-dot testnet"></span>
+				<span data-i18n="testnet">Testnet</span>
+			</button>
 		</div>
 		<span class="network-badge" id="network-badge" style="display:none">
 			<span class="dot"></span> <span data-i18n="notConnected">Not Connected</span>
@@ -72,12 +74,11 @@
 			<select id="token-select" class="token-picker">
 				<option value="USDC">USDC · CCTP V2</option>
 				<option value="ETH">ETH · Native</option>
-				<option value="ABT">ABT · OFT (legacy)</option>
 			</select>
 		</div>
 
 		<div class="chain-selectors">
-			<select id="from-chain" class="chain-select"></select>
+			<select id="from-chain" class="chain-select" aria-label="Source chain"></select>
 		<button type="button" class="chain-arrow" id="swap-chains-btn" aria-label="Swap source and destination chains" title="Swap chains">
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
 				<polyline points="7 3 7 21"/>
@@ -86,12 +87,12 @@
 				<polyline points="13 7 17 3 21 7"/>
 			</svg>
 		</button>
-		<select id="to-chain" class="chain-select"></select>
+		<select id="to-chain" class="chain-select" aria-label="Destination chain"></select>
 		</div>
 
 		<div id="bridge-area">
 			<div class="input-group">
-				<label data-i18n="amount">Amount</label>
+				<label for="amount" data-i18n="amount">Amount</label>
 				<div class="input-wrap">
 					<input type="text" id="amount" placeholder="0.00" autocomplete="off" spellcheck="false">
 					<span class="token-tag" id="token-tag">
@@ -190,14 +191,14 @@
 			<span class="protocol-badge" id="protocol-badge">Relay</span>
 		</div>
 
-		<div class="protocol-table">
-			<div class="protocol-row protocol-row-header">
+		<div class="protocol-table" role="radiogroup" aria-label="Select bridge protocol">
+			<div class="protocol-row protocol-row-header" aria-hidden="true">
 				<span></span>
 				<span>Fee</span>
 				<span>Speed</span>
 				<span>Chains</span>
 			</div>
-			<button class="protocol-row active" data-protocol="relay" id="proto-relay">
+			<button class="protocol-row active" data-protocol="relay" id="proto-relay" role="radio" aria-checked="true">
 				<span class="protocol-name">
 					<span class="protocol-icon">⚡</span>
 					Relay
@@ -206,7 +207,7 @@
 				<span class="protocol-speed">&lt;3s</span>
 				<span class="protocol-chains">85+</span>
 			</button>
-			<button class="protocol-row" data-protocol="lifi" id="proto-lifi">
+			<button class="protocol-row" data-protocol="lifi" id="proto-lifi" role="radio" aria-checked="false">
 				<span class="protocol-name">
 					<span class="protocol-icon">🔗</span>
 					Li.Fi
@@ -215,16 +216,19 @@
 				<span class="protocol-speed">~30s</span>
 				<span class="protocol-chains">60+</span>
 			</button>
-			<button class="protocol-row" data-protocol="cctp" id="proto-cctp">
+			<button class="protocol-row" data-protocol="cctp" id="proto-cctp" role="radio" aria-checked="false">
 				<span class="protocol-name">
 					<span class="protocol-icon">🔵</span>
 					CCTP V2
 				</span>
 				<span class="protocol-fee">~$0.10</span>
 				<span class="protocol-speed">~15min</span>
-				<span class="protocol-chains">5</span>
+				<!-- 10 = enabled mainnet chains with CCTP V2 contracts in js/config.js
+					(ethereum, base, arbitrum, optimism, polygon, bsc, avalanche,
+					linea, scroll, blast) — was a stale "5" -->
+				<span class="protocol-chains">10+</span>
 			</button>
-<button class="protocol-row" data-protocol="across" id="proto-across">
+<button class="protocol-row" data-protocol="across" id="proto-across" role="radio" aria-checked="false">
 				<span class="protocol-name">
 					<span class="protocol-icon">⛓️</span>
 					Across
@@ -233,7 +237,11 @@
 				<span class="protocol-speed">~2s</span>
 				<span class="protocol-chains">24+</span>
 			</button>
-			<button class="protocol-row" data-protocol="stargateV2" id="proto-stargate">
+			<!-- Fail-closed (frontend audit 2026-08): Stargate V2 hidden while its
+				router address/ABI are unverified — see CONFIG.ethBridge.stargateV2
+				in js/config.js for the re-enable path (flip disabled:false AND
+				remove hidden here). Row kept so re-enabling is one flag. -->
+			<button class="protocol-row" data-protocol="stargateV2" id="proto-stargate" role="radio" aria-checked="false" hidden>
 				<span class="protocol-name">
 					<span class="protocol-icon">⚡</span>
 					Stargate V2
@@ -242,7 +250,7 @@
 				<span class="protocol-speed">~2min</span>
 				<span class="protocol-chains">15+</span>
 			</button>
-			<button class="protocol-row" data-protocol="socket" id="proto-bungee">
+			<button class="protocol-row" data-protocol="socket" id="proto-bungee" role="radio" aria-checked="false">
 				<span class="protocol-name">
 					<span class="protocol-icon">🔌</span>
 					Socket/Bungee

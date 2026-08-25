@@ -5,6 +5,8 @@
 // submits the destination mint (no destination gas needed). See the official
 // quickstart: developers.circle.com/cctp/quickstarts/transfer-usdc-ethereum-to-arc
 // The ABT token keeps the DEPRECATED legacy LayerZero OFT path (ABT demo only).
+"use strict";
+
 // --- i18n (internationalization) -----------------------------------------------
 const LANG_KEY = "warparc:lang";
 
@@ -34,8 +36,8 @@ const TRANSLATIONS = {
 		amountMustExceedFee: "Amount must exceed the CCTP fee",
 		switchingTo: "Switching wallet to", alreadyRelayed: "Mint was already submitted by a relayer — funds are on",
 		switchRejected: "Wallet switch rejected — cannot bridge from ",
-		forwarderStalled: "Forwarder belum selesai — melanjutkan dengan mint manual…",
-		resumeConfirm: "Burn ini dibuat untuk penerima",
+		forwarderStalled: "Forwarder hasn't completed — proceeding with manual mint…",
+		resumeConfirm: "This burn was created for recipient",
 		notOnChain: "Wallet is not on", abortMint: " — mint aborted before send",
 		walletChanged: "Wallet account or chain changed mid-flow — aborting before send (no transaction was submitted)",
 		noWallet: "No wallet detected. Install MetaMask.", connectionRejected: "Connection rejected: ",
@@ -49,6 +51,12 @@ const TRANSLATIONS = {
 		bridgeToken: "Bridge", to: "to",
 		ethNotAvailable: "ETH not available on",
 		ethOnlyEvm: "ETH bridging only available on EVM chains (not Arc)",
+		estFee: "Estimated Fee",
+		estOutput: "Estimated Output",
+		estTime: "Estimated Time",
+		relayDesc: "Relay Description",
+		route: "Route",
+		selectProtocol: "Select Protocol",
 	},
 	zh: {
 		mainnet: "主网", testnet: "测试网", notConnected: "未连接",
@@ -90,6 +98,12 @@ const TRANSLATIONS = {
 		bridgeToken: "桥接", to: "到",
 		ethNotAvailable: "ETH不可用于",
 		ethOnlyEvm: "ETH桥接仅适用于EVM链（不包括Arc）",
+		estFee: "预估费用",
+		estOutput: "预估输出",
+		estTime: "预计时间",
+		relayDesc: "中继描述",
+		route: "路由",
+		selectProtocol: "选择协议",
 	},
 	hi: {
 		mainnet: "मेननेट", testnet: "टेस्टनेट", notConnected: "कनेक्ट नहीं",
@@ -125,6 +139,12 @@ const TRANSLATIONS = {
 		forwardCompleted: "फॉरवर्ड पूर्ण — फंड हैं",
 		attestationTimeout: "अटेस्टेशन टाइमआउट — बर्न सफल; बर्न tx हैश से मिंट पुनः प्रयास करें",
 		forwardTimeout: "फॉरवर्ड पूर्णता टाइमआउट — अटेस्टेशन हस्ताक्षरित, मैनुअल मिंट संभव",
+		estFee: "अनुमानित शुल्क",
+		estOutput: "अनुमानित आउटपुट",
+		estTime: "अनुमानित समय",
+		relayDesc: "रिले विवरण",
+		route: "मार्ग",
+		selectProtocol: "प्रोटोकॉल चुनें",
 		forwardTimeoutNoAtt: "फॉरवर्ड पूर्णता टाइमआउट — अटेस्टेशन अभी तक हस्ताक्षरित नहीं; Circle अभी भी फॉरवर्ड कर सकता है",
 		usdcBridgingUnavailable: "USDC ब्रिजिंग उपलब्ध नहीं है",
 		bridgeNotDeployed: "ब्रिज तैनात नहीं है",
@@ -160,6 +180,12 @@ const TRANSLATIONS = {
 		forwarderStalled: "Reenviador no completó — mint manual continuando…",
 		resumeConfirm: "Esta quema fue creada para el destinatario",
 		notOnChain: "Billetera no está en", abortMint: " — mint abortado antes de enviar",
+		estFee: "Tarifa estimada",
+		estOutput: "Salida estimada",
+		estTime: "Tiempo estimado",
+		relayDesc: "Descripción del relé",
+		route: "Ruta",
+		selectProtocol: "Seleccionar protocolo",
 		walletChanged: "Cuenta o cadena cambió durante el flujo — abortando (sin transacción enviada)",
 		noWallet: "Sin billetera detectada. Instala MetaMask.", connectionRejected: "Conexión rechazada: ",
 		anotherBridge: "Otro flujo de puente en progreso",
@@ -194,6 +220,12 @@ const TRANSLATIONS = {
 		amountMustExceed0: "Le montant doit être supérieur à 0", amountExceeds: "Le montant dépasse votre",
 		cctpUnavailable: "CCTP non disponible sur cet itinéraire",
 		networkMismatch: "Source et destination doivent être sur le même réseau (testnet/mainnet)",
+		estFee: "Frais estimés",
+		estOutput: "Sortie estimée",
+		estTime: "Temps estimé",
+		relayDesc: "Description du relais",
+		route: "Route",
+		selectProtocol: "Sélectionner le protocole",
 		forwardUnavailable: "Cotisation de transfert indisponible — désactivez le service ou réessayez",
 		amountMustExceedFee: "Le montant doit dépasser les frais CCTP",
 		switchingTo: "Changement de portefeuille vers", alreadyRelayed: "Le mint a déjà été soumis par un relayer — fonds sur",
@@ -229,6 +261,12 @@ const TRANSLATIONS = {
 		sameChain: "نفس السلسلة المحددة", notDeployed: "غير مُنشر",
 		approving: "موافقة USDC...", burning: "حرق", waitingAttest: "انتظار الشهادة...",
 		minting: "سك على", waitingForward: "انتظار تحويل Circle...",
+		estFee: "الرسوم المقدرة",
+		estOutput: "المخرجات المقدرة",
+		estTime: "الوقت المقدر",
+		relayDesc: "وصف المرحّل",
+		route: "المسار",
+		selectProtocol: "اختيار البروتوكول",
 		bridgeComplete: "اكتمل الجسر!", bridgeFailed: "فشل الجسر: ",
 		resumeFailed: "فشل الاستئناف: ", connectFirst: "اربط محفظتك أولاً",
 		enterValidAmount: "أدخل مبلغًا صالحًا", invalidAmount: "تنسيق مبلغ غير صالح",
@@ -264,6 +302,12 @@ const TRANSLATIONS = {
 		unfinishedBridge: "অসম্পূর্ণ ব্রিজ সনাক্ত হয়েছে", resumeMint: "মিন্ট পুনরায় শুরু করুন",
 		dismiss: "বাতিল", burn: "বার্ন", attestation: "অ্যাটেস্টেশন", mint: "মিন্ট",
 		enterAmount: "পরিমাণ লিখুন", cctpContracts: "CCTP V2 কন্ট্র্যাক্ট",
+		estFee: "আনুমানিক ফি",
+		estOutput: "আনুমানিক আউটপুট",
+		estTime: "আনুমানিক সময়",
+		relayDesc: "রিলে বিবরণ",
+		route: "রুট",
+		selectProtocol: "প্রোটোকল নির্বাচন করুন",
 		txHistory: "লেনদেন ইতিহাস", noTxs: "এখনো কোনো লেনদেন নেই",
 		footerText: "WarpArc ব্রিজ · USDC Circle CCTP V2 এর মাধ্যমে",
 		systemStatus: "সিস্টেম স্ট্যাটাস", faucet: "ফসেট",
@@ -299,6 +343,12 @@ const TRANSLATIONS = {
 	pt: {
 		mainnet: "Mainnet", testnet: "Testnet", notConnected: "Não conectado",
 		connectWallet: "Conectar carteira", crossChainBridge: "Bridge cross-chain",
+		estFee: "Taxa estimada",
+		estOutput: "Saída estimada",
+		estTime: "Tempo estimado",
+		relayDesc: "Descrição do relé",
+		route: "Rota",
+		selectProtocol: "Selecionar protocolo",
 		amount: "Valor", balance: "Saldo", estGasFee: "Taxa de gas estimada (origem)",
 		cctpFee: "Taxa CCTP Fast-Transfer (USDC)",
 		forwardingService: "Serviço de encaminhamento — Circle envia o mint para você (taxa extra, sem gas de destino)",
@@ -334,6 +384,12 @@ const TRANSLATIONS = {
 		usdcBridgingUnavailable: "Bridge USDC indisponível em",
 		bridgeNotDeployed: "Bridge não implantado em",
 		bridgeToken: "Bridge", to: "para",
+		estFee: "Оценка комиссии",
+		estOutput: "Оценка вывода",
+		estTime: "Оценка времени",
+		relayDesc: "Описание реле",
+		route: "Маршрут",
+		selectProtocol: "Выбрать протокол",
 		ethNotAvailable: "ETH indisponível em",
 		ethOnlyEvm: "Bridge ETH disponível apenas em cadeias EVM (não Arc)",
 	},
@@ -369,6 +425,12 @@ const TRANSLATIONS = {
 		noWallet: "Кошелёк не обнаружен. Установите MetaMask.", connectionRejected: "Подключение отклонено: ",
 		anotherBridge: "Другой процесс моста выполняется",
 		forwardCompleted: "Пересылка завершена — средства на",
+		estFee: "推定手数料",
+		estOutput: "推定出力",
+		estTime: "推定時間",
+		relayDesc: "リレーの説明",
+		route: "ルート",
+		selectProtocol: "プロトコルを選択",
 		attestationTimeout: "Таймаут аттестации — сжигание успешно; повторите минт с хешем",
 		forwardTimeout: "Таймаут пересылки — аттестация подписана, ручной минт возможен",
 		forwardTimeoutNoAtt: "Таймаут пересылки — аттестация ещё не подписана; Circle может ещё переслать",
@@ -538,10 +600,10 @@ const PROTOCOLS = {
 		fee: "0%",
 		speed: "<3s",
 		chains: "85+",
-		desc: "Fastest cross-chain bridge. Intent-based, p50 <3s fill time. 0% fee for ETH→ETH.",
+		desc: "Fastest cross-chain bridge. Intent-based, p50 &lt;3s fill time. 0% fee for ETH→ETH. USDC also supported.",
 		apiBase: "https://api.relay.link",
 		testnetApiBase: "https://api.testnets.relay.link",
-		supportedTokens: ["ETH"],
+		supportedTokens: ["ETH", "USDC"],
 	},
 	lifi: {
 		name: "Li.Fi",
@@ -549,7 +611,7 @@ const PROTOCOLS = {
 		fee: "0.25%",
 		speed: "~30s",
 		chains: "60+",
-		desc: "Bridge aggregator routing through 20+ bridges for best rates. Supports Arc chain.",
+		desc: "Bridge aggregator routing through 20+ bridges for best rates. Supports ETH and USDC.",
 		apiBase: "https://li.quest/v1",
 		supportedTokens: ["ETH", "USDC"],
 	},
@@ -558,8 +620,8 @@ const PROTOCOLS = {
 		icon: "🔵",
 		fee: "~$0.10",
 		speed: "~15min",
-		chains: "5",
-		desc: "Circle's native USDC bridge. Burn-and-mint, no wrapped tokens. Canonical route for Arc.",
+		chains: "10+", // 10 enabled mainnet chains with CCTP V2 contracts in config.js
+		desc: "Circle's native USDC bridge. Burn-and-mint, no wrapped tokens. Canonical route for Arc only.",
 		supportedTokens: ["USDC"],
 	},
 	across: {
@@ -568,9 +630,9 @@ const PROTOCOLS = {
 		fee: "~0.05%",
 		speed: "~2s",
 		chains: "24+",
-		desc: "Fastest cross-chain (~2s fills). Uses optimistic relayers. Native ETH supported.",
+		desc: "Fastest cross-chain (~2s fills). Uses optimistic relayers. ETH and USDC supported.",
 		apiBase: "https://app.across.to/api",
-		supportedTokens: ["ETH"],
+		supportedTokens: ["ETH", "USDC"],
 	},
 	stargateV2: {
 		name: "Stargate V2",
@@ -580,6 +642,9 @@ const PROTOCOLS = {
 		chains: "15+",
 		desc: "LayerZero-based unified liquidity. Native ETH via Router contract.",
 		supportedTokens: ["ETH"],
+		// Fail-closed (frontend audit 2026-08): unverified router address/ABI in
+		// config.js — see CONFIG.ethBridge.stargateV2.disabled for re-enable path.
+		disabled: !!(CONFIG.ethBridge && CONFIG.ethBridge.stargateV2 && CONFIG.ethBridge.stargateV2.disabled),
 	},
 	socket: {
 		name: "Socket/Bungee",
@@ -600,7 +665,8 @@ function getSelectedProtocol() {
 }
 
 function setProtocol(proto) {
-	if (!PROTOCOLS[proto]) return;
+	// Fail-closed: disabled protocols can never be selected (clicks or restore).
+	if (!PROTOCOLS[proto] || PROTOCOLS[proto].disabled) return;
 	selectedProtocol = proto;
 	try { localStorage.setItem(PROTOCOL_KEY, proto); } catch {}
 	updateProtocolUI();
@@ -611,9 +677,15 @@ function setProtocol(proto) {
 function initProtocol() {
 	try {
 		const saved = localStorage.getItem(PROTOCOL_KEY);
-		if (saved && PROTOCOLS[saved]) selectedProtocol = saved;
+		// A saved-but-now-disabled protocol must not be restored (fail-closed).
+		if (saved && PROTOCOLS[saved] && !PROTOCOLS[saved].disabled) selectedProtocol = saved;
 	} catch {}
 	updateProtocolUI();
+}
+
+function isProtocolEnabled(key) {
+	const p = PROTOCOLS[key];
+	return !!(p && !p.disabled);
 }
 
 function updateProtocolUI() {
@@ -624,9 +696,48 @@ function updateProtocolUI() {
 	const badge = el("protocol-badge");
 	if (badge) badge.textContent = proto.name;
 
-	// Update active state
+	// Check if ARC is involved in current route
+	const fromKey = el("from-chain")?.value;
+	const toKey = el("to-chain")?.value;
+	const isArcRoute = fromKey === "arc" || fromKey === "arcMainnet" || toKey === "arc" || toKey === "arcMainnet";
+	const token = getSelectedToken();
+
+	// Show/hide CCTP option based on route
+	const cctpRow = el("proto-cctp");
+	if (cctpRow) {
+		// CCTP only for USDC + ARC routes
+		cctpRow.style.display = (token === "USDC" && isArcRoute) ? "grid" : "none";
+	}
+
+	// Fail-closed: hide protocols disabled in config/PROTOCOLS (Stargate V2 —
+	// unverified integration, see CONFIG.ethBridge.stargateV2).
 	document.querySelectorAll(".protocol-row[data-protocol]").forEach((row) => {
-		row.classList.toggle("active", row.getAttribute("data-protocol") === selectedProtocol);
+		const key = row.getAttribute("data-protocol");
+		if (!isProtocolEnabled(key)) row.style.display = "none";
+	});
+
+	// Recover if a stale/disabled selection somehow persisted.
+	if (selectedProtocol && !isProtocolEnabled(selectedProtocol)) {
+		selectedProtocol = "relay";
+	}
+
+	// Auto-select CCTP for ARC routes, or switch away from CCTP for non-ARC
+	if (token === "USDC" && isArcRoute && selectedProtocol !== "cctp") {
+		setProtocol("cctp");
+		return;
+	} else if (!isArcRoute && selectedProtocol === "cctp") {
+		setProtocol("relay"); // default to relay for non-ARC
+		return;
+	}
+
+	// Update active state + a11y
+	document.querySelectorAll(".protocol-row[data-protocol]").forEach((row) => {
+		const isActive = row.getAttribute("data-protocol") === selectedProtocol;
+		row.classList.toggle("active", isActive);
+		row.setAttribute("aria-checked", isActive ? "true" : "false");
+		// Hidden rows (e.g. stargate disabled) should not be focusable
+		if (row.style.display === "none" || row.hidden) row.setAttribute("aria-hidden", "true");
+		else row.removeAttribute("aria-hidden");
 	});
 
 	// Update description
@@ -806,15 +917,39 @@ async function acrossQuote(fromChain, toChain, amount, token) {
 }
 
 async function acrossExecute(quote) {
+	if (!quote || !quote.swapTx) throw new Error("No swap transaction in Across quote");
+	for (const approvalTx of (quote.approvalTxns || [])) {
+		const tx = await state.signer.sendTransaction({
+			to: approvalTx.to, data: approvalTx.data,
+			value: approvalTx.value ? BigInt(approvalTx.value) : 0n,
+		});
+		await tx.wait();
+	}
+	const tx = await state.signer.sendTransaction({
+		to: quote.swapTx.to, data: quote.swapTx.data,
+		value: quote.swapTx.value ? BigInt(quote.swapTx.value) : 0n,
+	});
+	const receipt = await tx.wait();
+	return { txHash: receipt.hash };
+}
+
 // --- Stargate V2 Integration --------------------------------------------------
 
-const STARGATE_ROUTER_ADDRESS = "0x150f4E4bD86B9b3655702eFEfB78c8b1D9b5d6c0";
+// DISABLED (audit 2026-08): the address lives only in
+// CONFIG.ethBridge.stargateV2.routerAddressUnverified and is never used for
+// quotes/execution while stargateV2.disabled is true. No hardcoded fallback —
+// an unverified address must not silently activate.
+const STARGATE_ROUTER_ADDRESS = (CONFIG.ethBridge && CONFIG.ethBridge.stargateV2 && !CONFIG.ethBridge.stargateV2.disabled)
+	? CONFIG.ethBridge.stargateV2.routerAddressUnverified || null
+	: null;
 const STARGATE_ROUTER_MIN_ABI = [
 	"function swapETH(uint16 _dstChainId, address payable _refundAddress, bytes calldata _toAddress, uint256 _amountLD, uint256 _minAmountLD, uint256 _dstGasForCall) external payable returns (uint256, uint256)",
 	"function quoteSendFee(uint16 _dstChainId, uint256 _amount) external view returns (uint256 nativeFee, uint256 zroFee)"
 ];
 
 async function stargateQuote(fromChain, toChain, amount, token) {
+	// Fail-closed (audit 2026-08): unverified router address/ABI — see config.js.
+	if (!isProtocolEnabled("stargateV2")) return null;
 	if (token !== "ETH") return null;
 	try {
 		const provider = getReadProvider(fromChain.key);
@@ -900,21 +1035,7 @@ async function socketExecute(quote) {
 	}
 	throw new Error("No executable transaction data in Socket route");
 }
-	if (!quote || !quote.swapTx) throw new Error("No swap transaction in Across quote");
-	for (const approvalTx of (quote.approvalTxns || [])) {
-		const tx = await state.signer.sendTransaction({
-			to: approvalTx.to, data: approvalTx.data,
-			value: approvalTx.value ? BigInt(approvalTx.value) : 0n,
-		});
-		await tx.wait();
-	}
-	const tx = await state.signer.sendTransaction({
-		to: quote.swapTx.to, data: quote.swapTx.data,
-		value: quote.swapTx.value ? BigInt(quote.swapTx.value) : 0n,
-	});
-	const receipt = await tx.wait();
-	return { txHash: receipt.hash };
-}
+
 // --- Protocol-aware quote fetching -------------------------------------------
 
 async function fetchProtocolQuote(fromKey, toKey, amountWei, token) {
@@ -923,10 +1044,21 @@ async function fetchProtocolQuote(fromKey, toKey, amountWei, token) {
 	if (!fromChain || !toChain) return null;
 
 	const proto = getSelectedProtocol();
+	const isArc = fromKey === "arc" || fromKey === "arcMainnet" || toKey === "arc" || toKey === "arcMainnet";
 
-	// CCTP uses existing flow — no external quote needed
-	if (proto === "cctp" || token === "USDC") {
+	// CCTP uses existing flow — no external quote needed (only for Arc routes)
+	if (proto === "cctp" || (token === "USDC" && isArc)) {
 		return { protocol: "cctp", output: null, feePercent: "~0.003%", estTimeSec: 900 };
+	}
+
+	// USDC on non-Arc EVM↔EVM routes: use external protocol quotes
+	if (token === "USDC" && !isArc) {
+		// Route to the selected protocol for USDC quote
+		if (proto === "relay") return await relayQuote(fromChain, toChain, amountWei, token);
+		if (proto === "lifi") return await lifiQuote(fromChain, toChain, amountWei, token);
+		if (proto === "across") return await acrossQuote(fromChain, toChain, amountWei, token);
+		// Fallback to LiFi for USDC
+		return await lifiQuote(fromChain, toChain, amountWei, token);
 	}
 
 	if (proto === "relay") {
@@ -942,6 +1074,8 @@ async function fetchProtocolQuote(fromKey, toKey, amountWei, token) {
 	}
 
 	if (proto === "stargateV2") {
+		// Fail-closed: disabled protocol never quotes (audit 2026-08).
+		if (!isProtocolEnabled("stargateV2")) return null;
 		return await stargateQuote(fromChain, toChain, amountWei, token);
 	}
 
@@ -975,7 +1109,7 @@ function updateQuoteDisplay(quote) {
 			? truncateUnits(quote.output, decimals, 4) + " " + symbol
 			: "—";
 	}
-	if (feeEl) feeEl.textContent = quote.feePercent ? `${quote.feePercent}%` : "—";
+	if (feeEl) feeEl.textContent = quote.feePercent || "—";
 	if (timeEl) {
 		const sec = quote.estTimeSec || 0;
 		if (sec < 60) timeEl.textContent = `${sec}s`;
@@ -988,7 +1122,18 @@ function updateQuoteDisplay(quote) {
 
 function saveTxHistory() {
 	try {
-		localStorage.setItem(HISTORY_KEY, JSON.stringify(state.txHistory.slice(-50)));
+		// Deduplicate by id (keep last occurrence) and cap at 50 entries
+		const seen = new Set();
+		const deduped = [];
+		for (let i = state.txHistory.length - 1; i >= 0; i--) {
+			const e = state.txHistory[i];
+			if (!e || seen.has(e.id)) continue;
+			seen.add(e.id);
+			deduped.unshift(e);
+			if (deduped.length >= 50) break;
+		}
+		state.txHistory = deduped;
+		localStorage.setItem(HISTORY_KEY, JSON.stringify(deduped));
 	} catch { /* storage full/blocked — history stays in-memory only */ }
 }
 
@@ -996,11 +1141,17 @@ function loadTxHistory() {
 	try {
 		const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
 		if (Array.isArray(raw)) {
-			state.txHistory = raw.filter(e =>
-				e && typeof e.id === "string" && typeof e.label === "string" &&
-				["pending", "success", "failed"].includes(e.status) &&
-				(typeof e.hash === "string" || e.hash == null)
-			);
+			const seen = new Set();
+			state.txHistory = raw.filter(e => {
+				if (!e || typeof e.id !== "string" || typeof e.label !== "string") return false;
+				if (!["pending", "success", "failed"].includes(e.status)) return false;
+				if (!(typeof e.hash === "string" || e.hash == null)) return false;
+				// Allow optional timestamp (number) — ignore malformed timestamps but keep entry
+				if (e.ts != null && typeof e.ts !== "number") return false;
+				if (seen.has(e.id)) return false;
+				seen.add(e.id);
+				return true;
+			}).slice(-50);
 		}
 	} catch { /* corrupt payload — start fresh */ }
 }
@@ -1046,7 +1197,7 @@ function showPendingBanner() {
 }
 
 function addTxEntry(txId, label, status, chainKey) {
-	state.txHistory.push({ id: txId, label, status, hash: "", chainKey });
+	state.txHistory.push({ id: txId, label, status, hash: "", chainKey, ts: Date.now() });
 	saveTxHistory();
 	renderTxHistory();
 }
@@ -1086,6 +1237,18 @@ function renderTxHistory() {
 		action.className = "tx-action";
 		action.textContent = entry.label;
 		detail.appendChild(action);
+
+		if (entry.ts) {
+			const ts = document.createElement("div");
+			ts.className = "tx-time";
+			try {
+				ts.textContent = new Date(entry.ts).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+			} catch { ts.textContent = ""; }
+			ts.style.fontSize = "0.58rem";
+			ts.style.color = "var(--text3)";
+			ts.style.fontFamily = "var(--font-mono)";
+			detail.appendChild(ts);
+		}
 
 		if (entry.hash) {
 			const chain = CONFIG.chains[entry.chainKey];
@@ -1289,13 +1452,16 @@ function onAccountChange() {
 		}
 
 		if (card) card.classList.remove("disconnected");
+		const bridgeArea = el("bridge-area");
+		if (bridgeArea) bridgeArea.style.display = "";
 		loadBalances();
 		updateContractInfo();
 	} else {
 		btn.textContent = t("connectWallet");
 		btn.className = "btn btn-primary btn-sm";
 		badge.style.display = "none";
-		bridgeArea.style.display = "none";
+		const bridgeArea = el("bridge-area");
+		if (bridgeArea) bridgeArea.style.display = "none";
 	}
 }
 
@@ -1320,18 +1486,6 @@ function getSelectedToken() {
 function isForwardEnabled() {
 	const t = el("forward-toggle");
 	return !!(t && t.checked);
-}
-
-function getBridgeContract(chainKey, signerOrProvider, token) {
-	const t = token || getSelectedToken();
-	if (t === "USDC") {
-		const addr = CONFIG.bridgeAdapter.deployments[chainKey];
-		if (!addr) return null;
-		return new ethers.Contract(addr, OFT_ABI, signerOrProvider);
-	}
-	const addr = CONFIG.bridgeToken.deployments[chainKey];
-	if (!addr) return null;
-	return new ethers.Contract(addr, OFT_ABI, signerOrProvider);
 }
 
 // Read-only provider for the SELECTED source chain. Balances and gas estimates
@@ -1364,18 +1518,7 @@ async function loadBalances() {
 	const seq = ++balSeq;
 	const isStale = () => seq !== balSeq;
 	try {
-		if (token === "ABT") {
-			const contract = getBridgeContract(fromKey, provider, "ABT");
-			if (contract) {
-				const bal = await contract.balanceOf(state.account);
-				if (isStale()) return;
-				state.lastFromBalanceRaw = bal;
-				el("from-balance").textContent = truncateUnits(bal, 18, 4);
-			} else {
-				state.lastFromBalanceRaw = null;
-				el("from-balance").textContent = "N/A";
-			}
-		} else if (token === "USDC") {
+		if (token === "USDC") {
 			// Always the 6-dec ERC-20 view (on Arc it is the same asset as native
 			// gas — one balance, two views; never sum or convert between them).
 			const addr = CONFIG.tokens.USDC.addresses[fromKey];
@@ -1452,18 +1595,11 @@ function renderContractList(chainKey) {
 	const chain = CONFIG.chains[chainKey] || {};
 	const c = chain.cctp || {};
 	const entries = [];
-	if (getSelectedToken() === "ABT") {
-		// Legacy LayerZero OFT deployments (deprecated; ABT demo only) — addresses are filled
-		// by scripts/deploy-all.js; null means not deployed on this chain.
-		entries.push(["BridgeToken (OFT)", CONFIG.bridgeToken.deployments[chainKey]]);
-		entries.push(["BridgeAdapter (OFT)", CONFIG.bridgeAdapter.deployments[chainKey]]);
-	} else {
-		const usdcAddr = c.usdc || (CONFIG.tokens.USDC.addresses || {})[chainKey];
-		if (usdcAddr) entries.push(["USDC", usdcAddr]);
-		if (c.tokenMessengerV2) entries.push(["TokenMessenger V2", c.tokenMessengerV2]);
-		if (c.messageTransmitterV2) entries.push(["MessageTransmitter V2", c.messageTransmitterV2]);
-		if (c.tokenMinterV2) entries.push(["TokenMinter V2", c.tokenMinterV2]);
-	}
+	const usdcAddr = c.usdc || (CONFIG.tokens.USDC.addresses || {})[chainKey];
+	if (usdcAddr) entries.push(["USDC", usdcAddr]);
+	if (c.tokenMessengerV2) entries.push(["TokenMessenger V2", c.tokenMessengerV2]);
+	if (c.messageTransmitterV2) entries.push(["MessageTransmitter V2", c.messageTransmitterV2]);
+	if (c.tokenMinterV2) entries.push(["TokenMinter V2", c.tokenMinterV2]);
 
 	const container = document.createElement("div");
 	container.className = "contract-list";
@@ -1550,13 +1686,14 @@ function extractFastQuote(data) {
 	const fast = list.find(e => e && Number(e.finalityThreshold) === 1000);
 	if (!fast || fast.minimumFee == null) return null;
 	try {
-		const minimumFee = BigInt(fast.minimumFee);
+		// minimumFee can be float (e.g. 1.3) — round to integer for BigInt
+		const minimumFee = BigInt(Math.round(Number(fast.minimumFee)));
 		let forwardFee = null;
 		if (fast.forwardFee && fast.forwardFee.high != null) {
 			forwardFee = {
-				low: BigInt(fast.forwardFee.low),
-				med: BigInt(fast.forwardFee.med),
-				high: BigInt(fast.forwardFee.high)
+				low: BigInt(Math.round(Number(fast.forwardFee.low))),
+				med: BigInt(Math.round(Number(fast.forwardFee.med))),
+				high: BigInt(Math.round(Number(fast.forwardFee.high)))
 			};
 		}
 		return { minimumFee, forwardFee };
@@ -1674,38 +1811,13 @@ async function estimateGas() {
 			}
 			return;
 		}
-
-		// ABT — deprecated legacy LayerZero OFT quote (ABT demo only)
-		const contract = getBridgeContract(fromKey, state.provider, token);
-		if (!contract) { elEst.textContent = "N/A (deploy first)"; return; }
-
-		const dstEid = toChain.eid;
-		const toBytes32 = "0x" + "0".repeat(24) + state.account.slice(2);
-		const amount = el("amount").value.trim();
-		const tokenDecimals = 18;
-		const amountLD = amount ? ethers.parseUnits(amount, tokenDecimals) : ethers.parseUnits("1", tokenDecimals);
-
-		const sendParam = {
-			dstEid: dstEid,
-			to: toBytes32,
-			amountLD: amountLD,
-			minAmountLD: amountLD,
-			extraOptions: "0x",
-			composeMsg: "0x",
-			oftCmd: "0x"
-		};
-
-		const quote = await contract.quoteSend(sendParam, false);
-		const feeBuffer = quote.nativeFee * 110n / 100n;
-		if (isStale()) return;
-		elEst.textContent = truncateUnits(feeBuffer, 18, 6);
 	} catch (e) {
 		if (!isStale()) elEst.textContent = "N/A";
 	}
 }
 
 // ---------------------------------------------------------------------------
-// Bridging — USDC via CCTP V2, ABT via legacy OFT
+// Bridging — USDC via CCTP V2, ETH via external protocols
 // ---------------------------------------------------------------------------
 
 async function bridge() {
@@ -1724,16 +1836,16 @@ async function bridge() {
 		const token = getSelectedToken();
 		const tokenDecimals = token === "USDC" ? 6 : 18;
 
-		if (!amount) { toast("Enter a valid amount", "error"); return; }
+		if (!amount) { toast(t("enterValidAmount"), "error"); return; }
 
 		let parsedAmount;
 		try {
 			parsedAmount = ethers.parseUnits(amount, tokenDecimals);
 		} catch {
-			toast("Invalid amount format", "error");
+			toast(t("invalidAmount"), "error");
 			return;
 		}
-		if (parsedAmount === 0n) { toast("Amount must be greater than 0", "error"); return; }
+		if (parsedAmount === 0n) { toast(t("amountMustExceed0"), "error"); return; }
 		// Pre-flight: wallet must sit on the UI-selected source chain before
 		// any further check or transaction (auto-switch on mismatch).
 		const walletChainBefore = state.chainId;
@@ -1746,31 +1858,35 @@ async function bridge() {
 		// lastFromBalanceRaw tracks the SELECTED source chain — reject before the
 		// approve can succeed and strand the user at a reverting burn.
 		if (state.lastFromBalanceRaw != null && parsedAmount > state.lastFromBalanceRaw) {
-			toast("Amount exceeds your " + token + " balance on " + CONFIG.chains[fromKey].shortName, "error");
+			toast(t("amountExceeds") + " " + token + " " + t("balance").toLowerCase() + " " + CONFIG.chains[fromKey].shortName, "error");
 			return;
 		}
 
 		const proto = getSelectedProtocol();
+		const isArcRoute = fromKey === "arc" || fromKey === "arcMainnet" || toKey === "arc" || toKey === "arcMainnet";
 
-		if (token === "USDC" && proto === "cctp") {
+		// Routing logic:
+		// - USDC + ARC route → CCTP (Circle's native bridge for Arc)
+		// - USDC + non-ARC route → Relay/Li.Fi (external protocols)
+		// - ETH → always Relay/Li.Fi (CCTP doesn't support ETH)
+		if (token === "USDC" && isArcRoute) {
 			await bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey);
-		} else if (token === "ETH" && proto === "relay") {
-			await bridgeViaRelay(amount, parsedAmount, fromKey, toKey);
-		} else if (token === "ETH" && proto === "lifi") {
-			await bridgeViaLiFi(amount, parsedAmount, fromKey, toKey);
-		} else if (token === "ETH" && proto === "across") {
-			await bridgeViaAcross(amount, parsedAmount, fromKey, toKey);
-		} else if (token === "ETH" && proto === "stargateV2") {
-			await bridgeViaStargate(amount, parsedAmount, fromKey, toKey);
-		} else if (token === "ETH" && proto === "socket") {
-			await bridgeViabungee(amount, parsedAmount, fromKey, toKey);
+		} else if (token === "USDC" && !isArcRoute) {
+			// USDC between non-ARC chains → use external protocol
+			if (proto === "relay") await bridgeViaRelay(amount, parsedAmount, fromKey, toKey);
+			else if (proto === "lifi") await bridgeViaLiFi(amount, parsedAmount, fromKey, toKey);
+			else if (proto === "across") await bridgeViaAcross(amount, parsedAmount, fromKey, toKey);
+			else if (proto === "stargateV2") await bridgeViaStargate(amount, parsedAmount, fromKey, toKey);
+			else if (proto === "socket") await bridgeViabungee(amount, parsedAmount, fromKey, toKey);
+			else await bridgeViaRelay(amount, parsedAmount, fromKey, toKey); // default fallback
 		} else if (token === "ETH") {
-			// Multi-protocol fallback — tries LiFi → Relay → Across → Stargate → Socket
-			await bridgeETHNative(amount, parsedAmount, fromKey, toKey);
-		} else if (token === "USDC") {
-			await bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey);
-		} else {
-			await bridgeLegacyOFT(amount, parsedAmount, fromKey, toKey, token);
+			// ETH → always use external protocol (CCTP doesn't support ETH)
+			if (proto === "relay") await bridgeViaRelay(amount, parsedAmount, fromKey, toKey);
+			else if (proto === "lifi") await bridgeViaLiFi(amount, parsedAmount, fromKey, toKey);
+			else if (proto === "across") await bridgeViaAcross(amount, parsedAmount, fromKey, toKey);
+			else if (proto === "stargateV2") await bridgeViaStargate(amount, parsedAmount, fromKey, toKey);
+			else if (proto === "socket") await bridgeViabungee(amount, parsedAmount, fromKey, toKey);
+			else await bridgeETHNative(amount, parsedAmount, fromKey, toKey); // fallback
 		}
 	} finally {
 		state.isBridging = false;
@@ -1791,11 +1907,11 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 	const forward = isForwardEnabled();
 
 	if (!usdcAddr || !fromChain.cctp || !toChain.cctp) {
-		toast("CCTP not available on this route", "error");
+		toast(t("cctpUnavailable"), "error");
 		return;
 	}
 	if (fromChain.network !== toChain.network) {
-		toast("Source and destination must be on the same network (testnet/mainnet)", "error");
+		toast(t("networkMismatch"), "error");
 		return;
 	}
 
@@ -1806,14 +1922,14 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 
 	const quote = await quoteBurnFee(fromChain, toChain, forward, parsedAmount);
 	if (!quote) {
-		toast("Forwarding fee quote unavailable — turn off Forwarding Service or retry", "error");
+		toast(t("forwardUnavailable"), "error");
 		return;
 	}
 	// The executed fee is deducted from the transferred amount — an amount at or
 	// below the fee would burn everything (or revert).
 	const feeTotal = quote.minimumFee + (quote.forwardFee || 0n);
 	if (parsedAmount <= feeTotal) {
-		toast("Amount must exceed the CCTP fee (" + truncateUnits(feeTotal, 6, 4) + " USDC)", "error");
+		toast(t("amountMustExceedFee") + " (" + truncateUnits(feeTotal, 6, 4) + " USDC)", "error");
 		return;
 	}
 
@@ -2214,6 +2330,7 @@ async function bridgeLegacyOFT(amount, parsedAmount, fromKey, toKey, token) {
 	}
 }
 
+
 // ETH native bridge — multi-protocol fallback router.
 // Tries protocols in order: Li.Fi → Relay → Across (if API key) → Stargate V2 → Socket/Bungee.
 // Each bridgeViaXxx manages its own UI, tx entries, and errors. If one throws, the next is tried.
@@ -2230,14 +2347,16 @@ async function bridgeETHNative(amount, parsedAmount, fromKey, toKey) {
 		return;
 	}
 
-	const apiKeyAcross = CONFIG.ethBridge?.apiKeys?.across || "";
 	const protocols = [
 		{ name: "Li.Fi",      fn: bridgeViaLiFi },
 		{ name: "Relay",      fn: bridgeViaRelay },
 	];
+	const apiKeyAcross = CONFIG.ethBridge?.apiKeys?.across || "";
 	if (apiKeyAcross) protocols.push({ name: "Across", fn: bridgeViaAcross });
+	// Fail-closed: Stargate V2 only joins the fallback chain when enabled
+	// (disabled while its router address/ABI are unverified — audit 2026-08).
+	if (isProtocolEnabled("stargateV2")) protocols.push({ name: "Stargate V2", fn: bridgeViaStargate });
 	protocols.push(
-		{ name: "Stargate V2",  fn: bridgeViaStargate },
 		{ name: "Socket/Bungee",fn: bridgeViabungee }
 	);
 
@@ -2274,11 +2393,12 @@ async function bridgeViaRelay(amount, parsedAmount, fromKey, toKey) {
 			await refreshProvider();
 		}
 
+		const token = getSelectedToken();
 		btn.textContent = "Getting Relay quote...";
-		addTxEntry(txId, `Bridge ${amount} ETH → ${toChain.shortName} (Relay)`, "pending", fromKey);
+		addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName} (Relay)`, "pending", fromKey);
 
 		// Get quote from Relay API
-		const quote = await relayQuote(fromChain, toChain, parsedAmount, "ETH");
+		const quote = await relayQuote(fromChain, toChain, parsedAmount, token);
 		if (!quote || !quote.steps || !quote.steps.length) {
 			throw new Error("Relay quote unavailable for this route");
 		}
@@ -2290,7 +2410,7 @@ async function bridgeViaRelay(amount, parsedAmount, fromKey, toKey) {
 		const result = await relayExecute(quote);
 
 		updateTxEntry(txId, "success", result.txHash);
-		toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName} (Relay)`, "success");
+		toast(`${t("bridgeComplete")} ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Relay)`, "success");
 		loadBalances();
 	} catch (e) {
 		updateTxEntry(txId, "failed", "");
@@ -2320,10 +2440,11 @@ async function bridgeViaAcross(amount, parsedAmount, fromKey, toKey) {
 			await refreshProvider();
 		}
 
+		const token = getSelectedToken();
 		btn.textContent = "Getting Across quote...";
-		addTxEntry(txId, `Bridge ${amount} ETH → ${toChain.shortName} (Across)`, "pending", fromKey);
+		addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName} (Across)`, "pending", fromKey);
 
-		const quote = await acrossQuote(fromChain, toChain, parsedAmount, "ETH");
+		const quote = await acrossQuote(fromChain, toChain, parsedAmount, token);
 		if (!quote || !quote.swapTx) {
 			throw new Error("Across quote unavailable for this route");
 		}
@@ -2334,7 +2455,7 @@ async function bridgeViaAcross(amount, parsedAmount, fromKey, toKey) {
 		const result = await acrossExecute(quote);
 
 		updateTxEntry(txId, "success", result.txHash);
-		toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName} (Across)`, "success");
+		toast(`${t("bridgeComplete")} ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Across)`, "success");
 		loadBalances();
 	} catch (e) {
 		updateTxEntry(txId, "failed", "");
@@ -2347,7 +2468,13 @@ async function bridgeViaAcross(amount, parsedAmount, fromKey, toKey) {
 }
 
 // Stargate V2 bridge — LayerZero-based, direct contract interaction.
+// DISABLED (fail-closed) via CONFIG.ethBridge.stargateV2.disabled while the
+// router address/ABI are unverified (frontend audit 2026-08). The guard below
+// fires before any UI state or transaction side effects.
 async function bridgeViaStargate(amount, parsedAmount, fromKey, toKey) {
+	if (!isProtocolEnabled("stargateV2")) {
+		throw new Error("Stargate V2 is disabled (unverified integration)");
+	}
 	const fromChain = CONFIG.chains[fromKey];
 	const toChain = CONFIG.chains[toKey];
 
@@ -2367,7 +2494,7 @@ async function bridgeViaStargate(amount, parsedAmount, fromKey, toKey) {
 		}
 
 		btn.textContent = "Getting Stargate quote...";
-		addTxEntry(txId, `Bridge ${amount} ETH → ${toChain.shortName} (Stargate V2)`, "pending", fromKey);
+		addTxEntry(txId, `Bridge ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Stargate V2)`, "pending", fromKey);
 
 		const quote = await stargateQuote(fromChain, toChain, parsedAmount, "ETH");
 		if (!quote || !quote.dstChainId) {
@@ -2380,7 +2507,7 @@ async function bridgeViaStargate(amount, parsedAmount, fromKey, toKey) {
 		const result = await stargateExecute(quote, fromKey, toKey, parsedAmount);
 
 		updateTxEntry(txId, "success", result.txHash);
-		toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName} (Stargate V2)`, "success");
+		toast(`${t("bridgeComplete")} ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Stargate V2)`, "success");
 		loadBalances();
 	} catch (e) {
 		updateTxEntry(txId, "failed", "");
@@ -2413,7 +2540,7 @@ async function bridgeViabungee(amount, parsedAmount, fromKey, toKey) {
 		}
 
 		btn.textContent = "Getting Socket quote...";
-		addTxEntry(txId, `Bridge ${amount} ETH → ${toChain.shortName} (Socket)`, "pending", fromKey);
+		addTxEntry(txId, `Bridge ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Socket)`, "pending", fromKey);
 
 		const quote = await socketQuote(fromChain, toChain, parsedAmount, "ETH");
 		if (!quote || !quote.route) {
@@ -2426,7 +2553,7 @@ async function bridgeViabungee(amount, parsedAmount, fromKey, toKey) {
 		const result = await socketExecute(quote);
 
 		updateTxEntry(txId, "success", result.txHash);
-		toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName} (Socket)`, "success");
+		toast(`${t("bridgeComplete")} ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Socket)`, "success");
 		loadBalances();
 	} catch (e) {
 		updateTxEntry(txId, "failed", "");
@@ -2460,11 +2587,12 @@ async function bridgeViaLiFi(amount, parsedAmount, fromKey, toKey) {
 			await refreshProvider();
 		}
 
+		const token = getSelectedToken();
 		btn.textContent = "Getting Li.Fi quote...";
-		addTxEntry(txId, `Bridge ${amount} ETH → ${toChain.shortName} (Li.Fi)`, "pending", fromKey);
+		addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName} (Li.Fi)`, "pending", fromKey);
 
 		// Get quote from Li.Fi API
-		const quote = await lifiQuote(fromChain, toChain, parsedAmount, "ETH");
+		const quote = await lifiQuote(fromChain, toChain, parsedAmount, token);
 		if (!quote || !quote.transactionRequest) {
 			throw new Error("Li.Fi quote unavailable for this route");
 		}
@@ -2476,7 +2604,7 @@ async function bridgeViaLiFi(amount, parsedAmount, fromKey, toKey) {
 		const result = await lifiExecute(quote);
 
 		updateTxEntry(txId, "success", result.txHash);
-		toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName} (Li.Fi)`, "success");
+		toast(`${t("bridgeComplete")} ${amount} ${getSelectedToken()} \u2192 ${toChain.shortName} (Li.Fi)`, "success");
 		loadBalances();
 	} catch (e) {
 		updateTxEntry(txId, "failed", "");
@@ -2508,10 +2636,20 @@ function updateBridgeBtn() {
 	if (fromKey === toKey) { btn.textContent = t("sameChain"); btn.disabled = true; return; }
 
 	if (token === "USDC") {
-		if (!CONFIG.tokens.USDC.addresses[fromKey] || !CONFIG.chains[fromKey].cctp) {
-			btn.textContent = t("usdcBridgingUnavailable") + " " + CONFIG.chains[fromKey].shortName;
-			btn.disabled = true;
-			return;
+		// Arc → requires CCTP V2; EVM non-Arc → just needs USDC token address (protocols handle the bridge)
+		const isArc = fromKey === "arc" || fromKey === "arcMainnet" || toKey === "arc" || toKey === "arcMainnet";
+		if (isArc) {
+			if (!CONFIG.tokens.USDC.addresses[fromKey] || !CONFIG.chains[fromKey].cctp) {
+				btn.textContent = t("usdcBridgingUnavailable") + " " + CONFIG.chains[fromKey].shortName;
+				btn.disabled = true;
+				return;
+			}
+		} else {
+			if (!CONFIG.tokens.USDC.addresses[fromKey]) {
+				btn.textContent = "USDC not available on " + CONFIG.chains[fromKey].shortName;
+				btn.disabled = true;
+				return;
+			}
 		}
 	} else if (token === "ETH") {
 		// ETH bridging: only on chains with ETH as native currency (not Arc)
@@ -2527,15 +2665,6 @@ function updateBridgeBtn() {
 			btn.disabled = true;
 			return;
 		}
-	} else {
-		// Truthy check: testnet keys are absent from deployments (undefined),
-		// which must count as not deployed — `!== null` would let them through.
-		const bridgeDeployed = !!CONFIG.bridgeToken.deployments[fromKey];
-		if (!bridgeDeployed) {
-			btn.textContent = t("bridgeNotDeployed") + " " + CONFIG.chains[fromKey].shortName;
-			btn.disabled = true;
-			return;
-		}
 	}
 
 	if (!amount || Number(amount) <= 0) { btn.textContent = t("enterAmount"); btn.disabled = true; return; }
@@ -2544,12 +2673,29 @@ function updateBridgeBtn() {
 	btn.disabled = false;
 }
 
-// A chain is bridgeable in the UI when Circle publishes a CCTP domain for it
-// (robinhood has none yet; arcMainnet stays disabled until launch-day values
-// are filled in — MAINNET-CHECKLIST.md Phase 1/2).
-function isBridgeableChain(chainKey) {
+// A chain is bridgeable in the UI. For USDC: if Arc → requires CCTP V2 contracts;
+// if EVM non-Arc → only needs a USDC token address (bridged via LiFi/etc. backend).
+// For ETH (cross-chain bridging via LiFi/Across/Stargate/Relay/Socket) we only
+// need the chain to support ETH as native currency — no CCTP needed.
+function isBridgeableChain(chainKey, token) {
 	const c = CONFIG.chains[chainKey];
-	return !!(c && !c.disabled && c.cctpDomain != null && c.cctp && c.cctp.tokenMessengerV2);
+	if (!c || c.disabled) return false;
+	if (token === "ETH") {
+		// ETH bridging: must use ETH as native gas token, exclude Arc
+		if (chainKey === "arc" || chainKey === "arcMainnet") return false;
+		return c.nativeCurrency && c.nativeCurrency.symbol === "ETH";
+	}
+	if (token === "USDC") {
+		// Arc → only via CCTP (must have CCTP contracts)
+		if (chainKey === "arc" || chainKey === "arcMainnet") {
+			return !!(c.cctpDomain != null && c.cctp && c.cctp.tokenMessengerV2);
+		}
+		// EVM non-Arc → bridge via configured protocols (LiFi/Relay/etc.),
+		// just need a USDC token address — no CCTP required here
+		return !!CONFIG.tokens.USDC.addresses[chainKey];
+	}
+	// ABT bridging: requires Circle CCTP V2 contracts on the route
+	return !!(c.cctpDomain != null && c.cctp && c.cctp.tokenMessengerV2);
 }
 
 function getFilteredChains() {
@@ -2558,9 +2704,7 @@ function getFilteredChains() {
 	return Object.keys(CONFIG.chains).filter(k => {
 		const c = CONFIG.chains[k];
 		if (c.network !== mode) return false;
-		// ETH bridging: exclude Arc (USDC is gas on Arc, not ETH)
-		if (token === "ETH" && (k === "arc" || k === "arcMainnet")) return false;
-		return isBridgeableChain(k);
+		return isBridgeableChain(k, token);
 	});
 }
 
@@ -2603,18 +2747,33 @@ function onChainChange() {
 
 	updateContractInfo();
 	updateBridgeBtn();
+	updateProtocolUI(); // Update protocol selector based on route
 	if (state.account) loadBalances();
 	estimateGas();
 }
 
+// Sanitize free-form amount: keep digits + single dot, cap at 6 decimals (USDC precision;
+// ETH tolerates 6 displayed decimals — full precision still validated via parseUnits).
+function sanitizeAmountInput() {
+	const input = el("amount");
+	if (!input) return;
+	let v = input.value.replace(/[^0-9.]/g, "");
+	const parts = v.split(".");
+	if (parts.length > 2) v = parts[0] + "." + parts.slice(1).join("");
+	if (parts[1] && parts[1].length > 6) v = parts[0] + "." + parts[1].slice(0, 6);
+	if (v.length > 1 && v[0] === "0" && v[1] !== ".") v = v.replace(/^0+/, "0");
+	if (v !== input.value) input.value = v;
+}
+
 function onAmountChange() {
+	sanitizeAmountInput();
 	updateBridgeBtn();
 	estimateGas();
 }
 
 function onTokenChange() {
 	const token = getSelectedToken();
-	const meta = CONFIG.tokens[token] || CONFIG.bridgeToken;
+	const meta = CONFIG.tokens[token];
 	const img = el("token-tag").querySelector("img");
 	const sym = el("token-symbol");
 	img.src = meta.icon || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%232775CA'/%3E%3Cpath d='M16 7v18M20.8 11.2c-.8-1.2-2.6-1.9-4.8-1.9-2.7 0-4.7 1.3-4.7 3.3 0 4.4 9.6 2.4 9.6 6.7 0 2.1-2.1 3.4-5.1 3.4-2.5 0-4.3-.9-5.1-2.2' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E";
@@ -3090,28 +3249,36 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 	}
 
-	const toggle = el("network-mode-toggle");
-	if (toggle) {
-		toggle.checked = state.testnetMode;
-		toggle.addEventListener("change", () => {
-			state.testnetMode = toggle.checked;
-			populateChainSelects();
-			onChainChange();
-			renderWalletChainPicker();
-		});
+	// Network toggle buttons (Mainnet / Testnet)
+	const mainnetBtn = el("network-mainnet-btn");
+	const testnetBtn = el("network-testnet-btn");
+	function setNetworkMode(isTestnet) {
+		state.testnetMode = isTestnet;
+		if (mainnetBtn) mainnetBtn.classList.toggle("active", !isTestnet);
+		if (testnetBtn) testnetBtn.classList.toggle("active", isTestnet);
+		populateChainSelects();
+		onChainChange();
+		renderWalletChainPicker();
 	}
+	if (mainnetBtn) mainnetBtn.addEventListener("click", () => setNetworkMode(false));
+	if (testnetBtn) testnetBtn.addEventListener("click", () => setNetworkMode(true));
+	// Initialize button state
+	setNetworkMode(state.testnetMode);
 
-	// Language selector
+	// Language selector — keep aria-expanded in sync for a11y
 	const langBtn = el("lang-btn");
 	const langDropdown = el("lang-dropdown");
 	if (langBtn && langDropdown) {
+		const syncLangExpanded = () => langBtn.setAttribute("aria-expanded", langDropdown.classList.contains("open") ? "true" : "false");
 		langBtn.addEventListener("click", (e) => {
 			e.stopPropagation();
 			langDropdown.classList.toggle("open");
+			syncLangExpanded();
 		});
 		document.addEventListener("click", (e) => {
 			if (!langDropdown.contains(e.target) && e.target !== langBtn) {
 				langDropdown.classList.remove("open");
+				syncLangExpanded();
 			}
 		});
 		langDropdown.querySelectorAll(".lang-option").forEach((opt) => {
@@ -3119,7 +3286,16 @@ document.addEventListener("DOMContentLoaded", () => {
 				const lang = opt.getAttribute("data-lang");
 				setLanguage(lang);
 				langDropdown.classList.remove("open");
+				syncLangExpanded();
 			});
+		});
+		// Close on Escape
+		document.addEventListener("keydown", (e) => {
+			if (e.key === "Escape" && langDropdown.classList.contains("open")) {
+				langDropdown.classList.remove("open");
+				syncLangExpanded();
+				langBtn.focus();
+			}
 		});
 	}
 	initLanguage();
