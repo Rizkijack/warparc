@@ -786,6 +786,14 @@ async function ensureWalletOnFromChain(fromChain) {
 	try {
 		await switchChain(fromChain.chainId);
 		await refreshProvider();
+		// A wallet may silently ignore (or partially apply) the switch request —
+		// verify the resulting chainId actually matches before any flow that
+		// trusts it proceeds (audit #6a). USDC path has assertWalletStable();
+		// this guard closes the gap for the other sub-flows.
+		if (state.chainId !== fromChain.chainId) {
+			toast(t("switchRejected") + " " + fromChain.name, "error");
+			return false;
+		}
 		return true;
 	} catch (e) {
 		toast(t("switchRejected") + " " + fromChain.name, "error");
@@ -1043,7 +1051,9 @@ async function loadBalances() {
 	} catch {
 		if (isStale()) return;
 		state.lastFromBalanceRaw = null;
-		el("from-balance").textContent = "0.00";
+		// RPC failure must not read as an empty balance (audit #6b) — show
+		// N/A so a user never mistakes a fetch error for "no funds".
+		el("from-balance").textContent = "N/A";
 	}
 }
 
@@ -1417,11 +1427,25 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, useForwar
 		toast(t("forwardUnavailable"), "error");
 		return;
 	}
-	// The executed fee is deducted from the transferred amount — an amount at or
-	// below the fee would burn everything (or revert).
-	const feeTotal = quote.minimumFee + (quote.forwardFee || 0n);
-	if (parsedAmount <= feeTotal) {
-		toast(t("amountMustExceedFee") + " (" + truncateUnits(feeTotal, 6, 4) + " USDC)", "error");
+	// Fee-aware pre-flight (audit #3). The previous check only compared the
+	// amount against the minimum fee, but the contract enforces `amount >
+	// maxFee` (direct path) and `amount + maxFee ≤ balance` (forward path,
+	// where the relayer burns amount + maxFee together — the official
+	// quickstart). Amounts that satisfy neither check let the user approve +
+	// submit a burn that always reverts, wasting gas.
+	// Direct path: amount must strictly exceed maxFee.
+	// Forward path: the burn is `parsedAmount + maxFee`; the user's USDC
+	// balance must cover the combined total. lastFromBalanceRaw is invalidated
+	// across chain switches, but bridge() is guarded by ensureWalletOnFromChain
+	// above, so the cached balance is the current source chain.
+	const maxFee = quote.maxFee;
+	if (!forward && parsedAmount <= maxFee) {
+		toast(t("amountMustExceedFee") + " (maxFee " + truncateUnits(maxFee, 6, 4) + " USDC)", "error");
+		return;
+	}
+	if (forward && state.lastFromBalanceRaw != null && (parsedAmount + maxFee) > state.lastFromBalanceRaw) {
+		toast(t("amountExceeds") + " " + token + " balance on " + CONFIG.chains[fromKey].shortName +
+			" (burn total = amount + maxFee " + truncateUnits(maxFee, 6, 4) + " USDC)", "error");
 		return;
 	}
 
@@ -1446,15 +1470,17 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, useForwar
 			}
 		};
 
-		// 2. Approve TokenMessengerV2 to burn USDC
+		// 2. Approve TokenMessengerV2 to burn USDC. The forward path approves
+		// `parsedAmount + maxFee` because the contract pulls both together.
 		const messengerAddr = fromChain.cctp.tokenMessengerV2;
 		const usdc = new ethers.Contract(usdcAddr, ERC20_ABI, state.signer);
+		const approveAmount = forward ? parsedAmount + maxFee : parsedAmount;
 		const allowance = await usdc.allowance(state.account, messengerAddr);
-		if (allowance < parsedAmount + quote.maxFee) {
+		if (allowance < approveAmount) {
 			assertWalletStable();
 			btn.textContent = t("approving");
 			toast(t("approving"), "info");
-			const approveTx = await usdc.approve(messengerAddr, parsedAmount + quote.maxFee, arcOverrides(fromKey));
+			const approveTx = await usdc.approve(messengerAddr, approveAmount, arcOverrides(fromKey));
 			await approveTx.wait();
 			toast("USDC approved", "success");
 		}
@@ -1575,8 +1601,21 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, useForwar
 // receiveMessage on the destination MessageTransmitterV2. Tolerates the case
 // where a relayer already processed the nonce — then the funds HAVE arrived,
 // which is a success, not an error.
+//
+// "Already relayed" is determined from the on-chain witness `usedNonces(nonce)`
+// (the same source the backend relayer uses — see backend/src/relayer.js). A
+// mere substring match on the revert text is too loose: any message containing
+// "used"/"replay"/"already" used to be misclassified as success (audit #2).
 async function submitMint(toChain, att, mintTxId, toKey, amount) {
 	const transmitter = new ethers.Contract(toChain.cctp.messageTransmitterV2, MESSAGE_TRANSMITTER_V2_ABI, state.signer);
+	// Read-only view provider (state.provider) so usedNonces() doesn't require
+	// the user's wallet to be on the destination chain.
+	const viewProvider = new ethers.JsonRpcProvider(toChain.rpcUrl, { chainId: toChain.chainId, name: toKey });
+	// Pull the destination nonce from the V2 message header (offset 12, 32B) —
+	// mirrors backend/src/cctp.js::parseCctpV2Message so a successful match
+	// is byte-equal to the on-chain witness.
+	const nonceHex = "0x" + att.message.slice(2 + 12 * 2, 2 + 12 * 2 + 64);
+
 	const overrides = toKey === "arc"
 		? { maxFeePerGas: ethers.parseUnits("30", "gwei"), maxPriorityFeePerGas: 0n }
 		: {};
@@ -1595,8 +1634,21 @@ async function submitMint(toChain, att, mintTxId, toKey, amount) {
 			updateStepper("mint", "failed");
 		}
 	} catch (e) {
-		const msg = String(e.reason || e.shortMessage || e.message || "");
-		if (/already|replay|used/i.test(msg)) {
+		// On-chain witness first: usedNonces(nonce) is the honest truth.
+		// Only treat as "already relayed by someone else" when the view call
+		// confirms the nonce was consumed. Otherwise the burn is still pending
+		// and the resume banner must survive for a retry.
+		let nonceConsumed = false;
+		try {
+			nonceConsumed = await viewProvider.call({
+				to: toChain.cctp.messageTransmitterV2,
+				data: new ethers.Contract(toChain.cctp.messageTransmitterV2, MESSAGE_TRANSMITTER_V2_ABI, viewProvider).interface.encodeFunctionData("usedNonces", [nonceHex])
+			}).then((raw) => new ethers.Contract(toChain.cctp.messageTransmitterV2, MESSAGE_TRANSMITTER_V2_ABI, viewProvider).interface.decodeFunctionResult("usedNonces", raw)[0]);
+		} catch (_) {
+			// View call failed (RPC down / network mismatch) — fall through to
+			// the conservative path: keep the burn pending.
+		}
+		if (nonceConsumed) {
 			updateTxEntry(mintTxId, "success", "");
 			toast("Mint was already submitted by a relayer — funds are on " + toChain.shortName, "success");
 			clearPendingCctp();
@@ -1617,14 +1669,14 @@ async function submitMint(toChain, att, mintTxId, toKey, amount) {
 // submit receiveMessage (destinationCaller = zero), so finish the mint by
 // hand. submitMint clears the pending record on success, keeps it on failure.
 async function manualMintFallback(toChain, toKey, att, amount, labelSuffix = " (manual fallback)") {
-	toast("Forwarder belum selesai — melanjutkan dengan mint manual…", "info");
+	toast(t("forwarderStalled"), "info");
 	await switchChain(toChain.chainId);
 	await refreshProvider();
 	onAccountChange();
 	// Same defense as the other pre-mint paths: a silently-ignored chain switch
 	// would send the mint to the wrong network (wasted gas — USDC on Arc).
 	if (state.chainId !== toChain.chainId) {
-		throw new Error(`Wallet is not on ${toChain.name} — mint aborted before send`);
+		throw new Error(`${t("notOnChain")} ${toChain.name}${t("abortMint")}`);
 	}
 	const mintTxId = "mint-" + Date.now();
 	addTxEntry(mintTxId, `Mint ${amount} USDC on ${toChain.shortName}${labelSuffix}`, "pending", toKey);
@@ -1672,7 +1724,7 @@ async function resumePendingCctp() {
 			// The mint always pays the ORIGINAL recipient; a different connected
 			// account only pays the gas — make that explicit before proceeding.
 			if (p.recipient && state.account && p.recipient.toLowerCase() !== state.account.toLowerCase() &&
-				!window.confirm("Burn ini dibuat untuk penerima " + shortAddr(p.recipient) + ", BUKAN akun yang tersambung sekarang. Mint manual akan mengirim dana ke penerima asli (gas dibayar akun sekarang). Lanjutkan?")) {
+				!window.confirm(t("resumeConfirm") + " " + shortAddr(p.recipient) + ", BUKAN akun yang tersambung sekarang. Mint manual akan mengirim dana ke penerima asli (gas dibayar akun sekarang). Lanjutkan?")) {
 				return;
 			}
 			btn.textContent = t("waitingAttest");
@@ -1822,9 +1874,13 @@ async function bridgeLegacyOFT(amount, parsedAmount, fromKey, toKey, token) {
 	}
 }
 
-// ETH native bridge — direct transfer via backend relayer (lock-and-release).
-// User sends ETH on source chain; relayer detects and releases on destination.
-// Not available on Arc (USDC is gas there, not ETH).
+// ETH native bridge — DISABLED. The lock-and-release relayer flow does not
+// exist in this app: the previous implementation was a self-transfer on the
+// source chain that the UI mislabeled as a successful cross-chain bridge
+// (audit finding #1, critical). The path is preserved so callers don't break,
+// but the user is told up-front that no cross-chain movement happens and the
+// transaction is NOT submitted. Re-enable only when an actual backend relayer
+// is wired up AND the UI waits for on-chain confirmation on the destination.
 async function bridgeETHNative(amount, parsedAmount, fromKey, toKey) {
 	const fromChain = CONFIG.chains[fromKey];
 	const toChain = CONFIG.chains[toKey];
@@ -1838,39 +1894,15 @@ async function bridgeETHNative(amount, parsedAmount, fromKey, toKey) {
 		return;
 	}
 
-	const txId = "eth-" + Date.now();
-	const btn = el("bridge-btn");
-	setFlowsBusy(true);
-
-	try {
-		// Send ETH directly to destination (simple cross-chain transfer via relayer)
-		// For testnet: user sends ETH to their own address on source chain,
-		// backend relayer detects and releases on destination
-		btn.textContent = `Sending ${amount} ETH...`;
-		addTxEntry(txId, `${t("bridgeToken")} ${amount} ETH ${t("to")} ${toChain.shortName}`, "pending", fromKey);
-
-		// Direct ETH transfer to self on source chain (triggers relayer detection)
-		const tx = await state.signer.sendTransaction({
-			to: state.account,
-			value: parsedAmount,
-			...(fromKey === "arc" ? { maxFeePerGas: ethers.parseUnits("30", "gwei"), maxPriorityFeePerGas: 0n } : {})
-		});
-
-		updateTxEntry(txId, "pending", tx.hash);
-		const receipt = await tx.wait();
-
-		if (receipt.status === 1) {
-			updateTxEntry(txId, "success", tx.hash);
-			toast(`${t("bridgeComplete")} ${amount} ETH → ${toChain.shortName}`, "success");
-			loadBalances();
-		} else {
-			updateTxEntry(txId, "failed", tx.hash);
-			toast("Transaction failed", "error");
-		}
-	} catch (e) {
-		updateTxEntry(txId, "failed", "");
-		toast(`${t("bridgeFailed")}${e.reason || e.shortMessage || e.message || "Unknown error"}`, "error");
-	}
+	// Hard-stop: do not submit any transaction. Surface a clear, auditable
+	// explanation so the user knows the funds stay on the source chain.
+	console.warn(
+		`[bridgeETHNative] blocked: ${fromKey}→${toKey} ${amount} ETH. ` +
+			`Lock-and-release relayer not implemented. ` +
+			`Source-chain only transfer would be a self-transfer — the previous ` +
+			`flow claimed cross-chain success without actually moving funds.`
+	);
+	toast(t("ethBridgeDisabled") || "ETH cross-chain bridge is not yet available — no transaction submitted", "error");
 }
 
 // Both action buttons go quiet while any bridge/resume flow runs; only the
@@ -2157,9 +2189,10 @@ async function initWalletConnect() {
 	if (window.__wcProvider) return window.__wcProvider;
 	if (!wcInitPromise) {
 		wcInitPromise = (async () => {
-			// SRI cannot cover a transitive ESM graph; pinning the major version
-			// (+ CONFIG.walletconnect.sdkVersion) against jsdelivr's official npm
-			// mirror is the practical mitigation.
+			// SRI cannot cover a transitive ESM graph; pinning the exact version
+			// (+ CONFIG.walletconnect.sdkVersion, now full semver) against
+			// jsdelivr's official npm mirror is the practical mitigation
+			// (audit #7a: major-only pin auto-trusted every 2.x release).
 			const mod = await import(`https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@${wcConfig.sdkVersion}/+esm`);
 			const EthereumProvider = mod.EthereumProvider ||
 				(mod.default && mod.default.EthereumProvider) || mod.default;

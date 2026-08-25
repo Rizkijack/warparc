@@ -190,7 +190,7 @@ function testServerHostGuard() {
 	const store = new Store({ dir });
 	const backendCfg = {
 		network: "testnet",
-		cfg: { iris: { testnet: "stub" }, chains: {} },
+		cfg: { iris: { testnet: "stub" }, chains: { testnet: { chainId: 31337 } } },
 		server: { host: "127.0.0.1", port: 0 }
 	};
 	const relayerStub = { stats: () => ({ mode: "watch-only" }), getJobs: () => ({}) };
@@ -231,8 +231,20 @@ function testServerHostGuard() {
 				return httpGet(`127.0.0.1:${port}`, "/events?kind=erc20");
 			})
 			.then((r) => {
-				ok(r.status === 200, "kind=erc20 → 200");
-				return httpGet(`127.0.0.1:${port}`, "/events");
+				// server.js now REQUIRES ?chain= (audit fix): a chain-less query is
+				// indistinguishable from "nothing indexed", so it must 400.
+				ok(r.status === 400 && /chain/.test(r.body.error), "missing chain → 400 with 'chain' in error");
+				return httpGet(`127.0.0.1:${port}`, "/events?chain=unknownChain&kind=erc20");
+			})
+			.then((r) => {
+				ok(r.status === 400 && /chain/i.test(r.body.error), "unknown chain → 400");
+				return httpGet(`127.0.0.1:${port}`, "/events?chain=testnet&kind=erc20");
+			})
+			.then((r) => {
+				// "testnet" exists in backendCfg.cfg.chains (see the stub config
+				// above), so this must be a 200 with an (empty) events array.
+				ok(r.status === 200 && Array.isArray(r.body.events), "known chain + kind=erc20 → 200");
+				return httpGet(`127.0.0.1:${port}`, "/events?chain=testnet");
 			})
 			.then((r) => {
 				ok(r.status === 200, "no kind param → 200");
@@ -336,9 +348,12 @@ function testStoreKindDedup() {
 	const s = new Store({ dir });
 	const txA = "0x" + "ab".repeat(32);
 	const txB = "0x" + "cd".repeat(32);
-	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: "0x1", emitter: ERC20 });
-	s.appendEvent({ chain: "arc", block: 11, from: BOB, to: ALICE, amount6: "200", kind: "system", txHash: txB, logIndex: "0x2", emitter: SYSTEM });
-	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: "0x1", emitter: ERC20 });
+	// logIndex matches the production indexer schema (indexer.js stores
+	// parseInt(log,16) — a NUMBER). The old "0x1" strings here never matched
+	// what the writer emits.
+	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: 1, emitter: ERC20 });
+	s.appendEvent({ chain: "arc", block: 11, from: BOB, to: ALICE, amount6: "200", kind: "system", txHash: txB, logIndex: 2, emitter: SYSTEM });
+	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: 1, emitter: ERC20 });
 	ok(s.queryEvents({ kind: "erc20" }).length === 1, "kind=erc20 returns 1 (duplicate deduped)");
 	ok(s.queryEvents({ kind: "system" }).length === 1, "kind=system returns 1");
 	ok(s.queryEvents().length === 2, "no kind returns 2 unique events (dedup removed duplicate)");

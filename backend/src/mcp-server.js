@@ -114,6 +114,13 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 		if (kind !== null && kind !== "erc20" && kind !== "system") {
 			throw toolError("kind must be 'erc20' or 'system' (Arc dual-emitter — jangan jumlahkan lintas kind)");
 		}
+		// Chain WAJIB dan harus dikenal — konsisten dengan GET /events
+		// (backend/src/server.js): chain typo tidak boleh diam-diam return
+		// kosong karena tak terbedakan dari "belum ada event terindeks".
+		if (!chain) throw toolError("chain is required (mis. 'arc', 'baseSepolia')");
+		if (!backendCfg.cfg.chains[chain]) {
+			throw toolError(`unknown chain \"${chain}\"`);
+		}
 		const lim = parseInt(args && args.limit, 10);
 		const limit = Number.isInteger(lim) && lim > 0 ? Math.min(lim, 1000) : 100;
 		const events = store.queryEvents({ chain, address, kind, limit });

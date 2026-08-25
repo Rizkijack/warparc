@@ -177,8 +177,16 @@ class Store {
         if (from !== want && to !== want) continue;
       }
       if (kind != null && e.kind !== kind) continue;
-      const key = `${e.chain}|${e.txHash}|${e.logIndex}|${e.emitter}`;
-      if (!key.includes("undefined")) {
+      // Dedupe key needs all four fields — validate them EXPLICITLY instead of
+      // sniffing the composed string for "undefined" (fragile if a hex field
+      // ever legitimately contains that substring, or the schema grows).
+      if (
+        typeof e.chain === "string" &&
+        typeof e.txHash === "string" &&
+        Number.isFinite(e.logIndex) &&
+        typeof e.emitter === "string"
+      ) {
+        const key = `${e.chain}|${e.txHash}|${e.logIndex}|${e.emitter}`;
         if (seen.has(key)) continue;
         seen.add(key);
       }

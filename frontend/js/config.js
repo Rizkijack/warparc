@@ -365,10 +365,12 @@ const CONFIG = {
 	},
 	// WalletConnect — remote/mobile wallet sessions. projectId is the active
 	// production value from https://cloud.walletconnect.com; it is a public
-	// client-side value.
+	// client-side value. sdkVersion pinned to the EXACT version (audit #7a):
+	// jsdelivr's +esm has no SRI, so a major-only pin would auto-trust every
+	// future 2.x release. Bump deliberately, not implicitly.
 	walletconnect: {
 		projectId: "74c3944c7d1579478f020903a8e6d008",
-		sdkVersion: "2" // pinned @walletconnect/ethereum-provider major, served via jsdelivr +esm
+		sdkVersion: "2.23.10" // exact semver; resolved from major=2 on 2026-08-26 via data.jsdelivr.com
 	},
 	// Per-chain CCTP V2 domains — mirror registry used by mint-arc.js cross-check.
 	// Per-chain contracts live on each chain's `chain.cctp.*` block; the legacy

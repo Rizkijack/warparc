@@ -100,8 +100,15 @@ async function runUnitTests() {
 	r = JSON.parse(await call(JSON.stringify({ jsonrpc: "2.0", id: 8, method: "tools/call", params: { name: "warparc_events", arguments: { kind: "invalid" } } })));
 	ok(r.result.isError === true && /kind/.test(r.result.content[0].text), "warparc_events kind=invalid → tool isError");
 
-	r = JSON.parse(await call(JSON.stringify({ jsonrpc: "2.0", id: 9, method: "tools/call", params: { name: "warparc_events", arguments: { limit: 5000 } } })));
+	r = JSON.parse(await call(JSON.stringify({ jsonrpc: "2.0", id: 9, method: "tools/call", params: { name: "warparc_events", arguments: { chain: "arc", limit: 5000 } } })));
 	ok(JSON.parse(r.result.content[0].text).limit === 1000, "warparc_events limit capped at 1000");
+
+	// chain is REQUIRED and validated (parity with GET /events) — a missing or
+	// unknown chain is a domain tool error, never a silent empty result.
+	r = JSON.parse(await call(JSON.stringify({ jsonrpc: "2.0", id: "9b", method: "tools/call", params: { name: "warparc_events", arguments: { limit: 10 } } })));
+	ok(r.result.isError === true && /chain/.test(r.result.content[0].text), "warparc_events without chain → tool isError");
+	r = JSON.parse(await call(JSON.stringify({ jsonrpc: "2.0", id: "9c", method: "tools/call", params: { name: "warparc_events", arguments: { chain: "nope" } } })));
+	ok(r.result.isError === true && /unknown chain/.test(r.result.content[0].text), "warparc_events unknown chain → tool isError");
 
 	r = JSON.parse(await call(JSON.stringify({ jsonrpc: "2.0", id: 10, method: "tools/call", params: { name: "warparc_relay_submit", arguments: { srcChain: "baseSepolia", burnTxHash: "0x" + "ab".repeat(32) } } })));
 	ok(r.result.isError === true && /relayer tidak aktif/.test(r.result.content[0].text), "warparc_relay_submit without relayer → refused (fail-closed)");
