@@ -720,9 +720,14 @@ function updateProtocolUI() {
 		return;
 	}
 
-	// Update active state
+	// Update active state + a11y
 	document.querySelectorAll(".protocol-row[data-protocol]").forEach((row) => {
-		row.classList.toggle("active", row.getAttribute("data-protocol") === selectedProtocol);
+		const isActive = row.getAttribute("data-protocol") === selectedProtocol;
+		row.classList.toggle("active", isActive);
+		row.setAttribute("aria-checked", isActive ? "true" : "false");
+		// Hidden rows (e.g. stargate disabled) should not be focusable
+		if (row.style.display === "none" || row.hidden) row.setAttribute("aria-hidden", "true");
+		else row.removeAttribute("aria-hidden");
 	});
 
 	// Update description
@@ -1107,7 +1112,18 @@ function updateQuoteDisplay(quote) {
 
 function saveTxHistory() {
 	try {
-		localStorage.setItem(HISTORY_KEY, JSON.stringify(state.txHistory.slice(-50)));
+		// Deduplicate by id (keep last occurrence) and cap at 50 entries
+		const seen = new Set();
+		const deduped = [];
+		for (let i = state.txHistory.length - 1; i >= 0; i--) {
+			const e = state.txHistory[i];
+			if (!e || seen.has(e.id)) continue;
+			seen.add(e.id);
+			deduped.unshift(e);
+			if (deduped.length >= 50) break;
+		}
+		state.txHistory = deduped;
+		localStorage.setItem(HISTORY_KEY, JSON.stringify(deduped));
 	} catch { /* storage full/blocked — history stays in-memory only */ }
 }
 
@@ -1115,11 +1131,17 @@ function loadTxHistory() {
 	try {
 		const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
 		if (Array.isArray(raw)) {
-			state.txHistory = raw.filter(e =>
-				e && typeof e.id === "string" && typeof e.label === "string" &&
-				["pending", "success", "failed"].includes(e.status) &&
-				(typeof e.hash === "string" || e.hash == null)
-			);
+			const seen = new Set();
+			state.txHistory = raw.filter(e => {
+				if (!e || typeof e.id !== "string" || typeof e.label !== "string") return false;
+				if (!["pending", "success", "failed"].includes(e.status)) return false;
+				if (!(typeof e.hash === "string" || e.hash == null)) return false;
+				// Allow optional timestamp (number) — ignore malformed timestamps but keep entry
+				if (e.ts != null && typeof e.ts !== "number") return false;
+				if (seen.has(e.id)) return false;
+				seen.add(e.id);
+				return true;
+			}).slice(-50);
 		}
 	} catch { /* corrupt payload — start fresh */ }
 }
@@ -1165,7 +1187,7 @@ function showPendingBanner() {
 }
 
 function addTxEntry(txId, label, status, chainKey) {
-	state.txHistory.push({ id: txId, label, status, hash: "", chainKey });
+	state.txHistory.push({ id: txId, label, status, hash: "", chainKey, ts: Date.now() });
 	saveTxHistory();
 	renderTxHistory();
 }
@@ -1205,6 +1227,18 @@ function renderTxHistory() {
 		action.className = "tx-action";
 		action.textContent = entry.label;
 		detail.appendChild(action);
+
+		if (entry.ts) {
+			const ts = document.createElement("div");
+			ts.className = "tx-time";
+			try {
+				ts.textContent = new Date(entry.ts).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+			} catch { ts.textContent = ""; }
+			ts.style.fontSize = "0.58rem";
+			ts.style.color = "var(--text3)";
+			ts.style.fontFamily = "var(--font-mono)";
+			detail.appendChild(ts);
+		}
 
 		if (entry.hash) {
 			const chain = CONFIG.chains[entry.chainKey];
@@ -1390,6 +1424,8 @@ function onAccountChange() {
 		}
 
 		if (card) card.classList.remove("disconnected");
+		const bridgeArea = el("bridge-area");
+		if (bridgeArea) bridgeArea.style.display = "";
 		loadBalances();
 		updateContractInfo();
 	} else {
@@ -1772,20 +1808,20 @@ async function bridge() {
 		const token = getSelectedToken();
 		const tokenDecimals = token === "USDC" ? 6 : 18;
 
-		if (!amount) { toast("Enter a valid amount", "error"); return; }
+		if (!amount) { toast(t("enterValidAmount"), "error"); return; }
 
 		let parsedAmount;
 		try {
 			parsedAmount = ethers.parseUnits(amount, tokenDecimals);
 		} catch {
-			toast("Invalid amount format", "error");
+			toast(t("invalidAmount"), "error");
 			return;
 		}
-		if (parsedAmount === 0n) { toast("Amount must be greater than 0", "error"); return; }
+		if (parsedAmount === 0n) { toast(t("amountMustExceed0"), "error"); return; }
 		// lastFromBalanceRaw tracks the SELECTED source chain — reject before the
 		// approve can succeed and strand the user at a reverting burn.
 		if (state.lastFromBalanceRaw != null && parsedAmount > state.lastFromBalanceRaw) {
-			toast("Amount exceeds your " + token + " balance on " + CONFIG.chains[fromKey].shortName, "error");
+			toast(t("amountExceeds") + " " + token + " " + t("balance").toLowerCase() + " " + CONFIG.chains[fromKey].shortName, "error");
 			return;
 		}
 
@@ -1834,11 +1870,11 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 	const forward = isForwardEnabled();
 
 	if (!usdcAddr || !fromChain.cctp || !toChain.cctp) {
-		toast("CCTP not available on this route", "error");
+		toast(t("cctpUnavailable"), "error");
 		return;
 	}
 	if (fromChain.network !== toChain.network) {
-		toast("Source and destination must be on the same network (testnet/mainnet)", "error");
+		toast(t("networkMismatch"), "error");
 		return;
 	}
 
@@ -1849,14 +1885,14 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
 
 	const quote = await quoteBurnFee(fromChain, toChain, forward, parsedAmount);
 	if (!quote) {
-		toast("Forwarding fee quote unavailable — turn off Forwarding Service or retry", "error");
+		toast(t("forwardUnavailable"), "error");
 		return;
 	}
 	// The executed fee is deducted from the transferred amount — an amount at or
 	// below the fee would burn everything (or revert).
 	const feeTotal = quote.minimumFee + (quote.forwardFee || 0n);
 	if (parsedAmount <= feeTotal) {
-		toast("Amount must exceed the CCTP fee (" + truncateUnits(feeTotal, 6, 4) + " USDC)", "error");
+		toast(t("amountMustExceedFee") + " (" + truncateUnits(feeTotal, 6, 4) + " USDC)", "error");
 		return;
 	}
 
@@ -2620,7 +2656,21 @@ function onChainChange() {
 	estimateGas();
 }
 
+// Sanitize free-form amount: keep digits + single dot, cap at 6 decimals (USDC precision;
+// ETH tolerates 6 displayed decimals — full precision still validated via parseUnits).
+function sanitizeAmountInput() {
+	const input = el("amount");
+	if (!input) return;
+	let v = input.value.replace(/[^0-9.]/g, "");
+	const parts = v.split(".");
+	if (parts.length > 2) v = parts[0] + "." + parts.slice(1).join("");
+	if (parts[1] && parts[1].length > 6) v = parts[0] + "." + parts[1].slice(0, 6);
+	if (v.length > 1 && v[0] === "0" && v[1] !== ".") v = v.replace(/^0+/, "0");
+	if (v !== input.value) input.value = v;
+}
+
 function onAmountChange() {
+	sanitizeAmountInput();
 	updateBridgeBtn();
 	estimateGas();
 }
@@ -3119,17 +3169,20 @@ document.addEventListener("DOMContentLoaded", () => {
 	// Initialize button state
 	setNetworkMode(state.testnetMode);
 
-	// Language selector
+	// Language selector — keep aria-expanded in sync for a11y
 	const langBtn = el("lang-btn");
 	const langDropdown = el("lang-dropdown");
 	if (langBtn && langDropdown) {
+		const syncLangExpanded = () => langBtn.setAttribute("aria-expanded", langDropdown.classList.contains("open") ? "true" : "false");
 		langBtn.addEventListener("click", (e) => {
 			e.stopPropagation();
 			langDropdown.classList.toggle("open");
+			syncLangExpanded();
 		});
 		document.addEventListener("click", (e) => {
 			if (!langDropdown.contains(e.target) && e.target !== langBtn) {
 				langDropdown.classList.remove("open");
+				syncLangExpanded();
 			}
 		});
 		langDropdown.querySelectorAll(".lang-option").forEach((opt) => {
@@ -3137,7 +3190,16 @@ document.addEventListener("DOMContentLoaded", () => {
 				const lang = opt.getAttribute("data-lang");
 				setLanguage(lang);
 				langDropdown.classList.remove("open");
+				syncLangExpanded();
 			});
+		});
+		// Close on Escape
+		document.addEventListener("keydown", (e) => {
+			if (e.key === "Escape" && langDropdown.classList.contains("open")) {
+				langDropdown.classList.remove("open");
+				syncLangExpanded();
+				langBtn.focus();
+			}
 		});
 	}
 	initLanguage();

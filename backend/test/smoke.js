@@ -54,6 +54,7 @@ function testStore() {
 	fs.appendFileSync(path.join(dir, "events.jsonl"), "{corrupt\n");
 	ok(new Store({ dir }).queryEvents({ limit: 10 }).length === 3, "corrupt events line skipped");
 	fs.writeFileSync(path.join(dir, "state.json"), "not json");
+	fs.writeFileSync(path.join(dir, "state-indexer.json"), "not json");
 	ok(new Store({ dir }).getState("indexer:arc", null) === null, "corrupt state.json → fallback (no throw)");
 
 	// P1-1: split-role fresh-read — a second Store instance must see appends
@@ -63,6 +64,83 @@ function testStore() {
 	s.appendEvent({ chain: "arc", block: 12, from: ALICE, to: BOB, amount6: "400" });
 	ok(reader.countEvents() === 4, "queryEvents/countEvents re-read file changed by another process");
 	ok(reader.countEvents("arc") === 3, "countEvents per chain");
+}
+
+// --- Store rotation threshold (synthetic 1MB) --------------------------------
+
+function testRotationThreshold() {
+	console.log("[smoke] Store rotation threshold (synthetic 1MB)");
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "warparc-rotation-"));
+	const prev = process.env.BACKEND_EVENTS_MAX_MB;
+	process.env.BACKEND_EVENTS_MAX_MB = "1";
+	try {
+		const s = new Store({ dir });
+		const big = "x".repeat(600 * 1024); // ~600KB payload
+		const txA = "0x" + "11".repeat(32);
+		const txB = "0x" + "22".repeat(32);
+		s.appendEvent({ chain: "arc", block: 1, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: "0x0", emitter: ERC20, data: big });
+		s.appendEvent({ chain: "arc", block: 2, from: ALICE, to: BOB, amount6: "200", kind: "erc20", txHash: txB, logIndex: "0x1", emitter: ERC20, data: big });
+		const files = fs.readdirSync(dir);
+		const rotated = files.filter((n) => /^events-\d{8}-\d{3}\.jsonl$/.test(n));
+		ok(rotated.length >= 1, "rotation created events-YYYYMMDD-NNN.jsonl (threshold 1MB)");
+		ok(fs.existsSync(path.join(dir, "events.jsonl")), "active events.jsonl still exists after rotation");
+		const both = s.queryEvents({ limit: 10 });
+		ok(both.length === 2, "queryEvents across rotated files returns all (2)");
+		ok(s.countEvents() === 2, "countEvents after rotation =2");
+		const s2 = new Store({ dir });
+		ok(s2.queryEvents({ limit: 10 }).length === 2, "second Store instance sees rotated events");
+		ok(s2.queryEvents({ limit: 1 })[0].block === 2, "newest-first after rotation");
+		ok(typeof s._discoverEventFiles === "function", "_discoverEventFiles exists");
+		const discovered = s._discoverEventFiles();
+		ok(discovered[0] === s.eventsPath, "_discoverEventFiles newest-first starts with active");
+		ok(s._eventsMaxMb() === 1, "_eventsMaxMb respects env");
+		ok(typeof s._rotate === "function", "_rotate exists");
+	} finally {
+		if (prev === undefined) delete process.env.BACKEND_EVENTS_MAX_MB;
+		else process.env.BACKEND_EVENTS_MAX_MB = prev;
+		try { fs.rmSync(dir, { recursive: true, force: true }); } catch (_) {}
+	}
+}
+
+// --- Store state sharding LWW cross-role ------------------------------------
+
+function testStateShardingLWW() {
+	console.log("[smoke] Store state sharding LWW cross-role");
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "warparc-shard-"));
+	const s = new Store({ dir });
+	s.setState("indexer:arc", 100);
+	s.setState("relayer", { jobs: { a: 1 } });
+	ok(fs.existsSync(path.join(dir, "state-indexer.json")), "state-indexer.json created");
+	ok(fs.existsSync(path.join(dir, "state-relayer.json")), "state-relayer.json created");
+	ok(s.getState("indexer:arc") === 100, "indexer shard readback");
+	ok(s.getState("relayer").jobs.a === 1, "relayer shard readback");
+	// cross-role: concurrent writes from different Store instances (simulating indexer vs relayer)
+	const sIndexer = new Store({ dir });
+	const sRelayer = new Store({ dir });
+	sIndexer.setState("indexer:arc", 200);
+	sRelayer.setState("relayer:budget", { date: "2026-08-26", perChain: {} });
+	ok(sIndexer.getState("indexer:arc") === 200, "indexer shard updated via cross-role");
+	ok(sRelayer.getState("relayer:budget").date === "2026-08-26", "relayer shard budget written");
+	ok(sIndexer.getState("relayer").jobs.a === 1, "relayer key not clobbered by indexer write (sharding LWW)");
+	ok(sRelayer.getState("indexer:arc") === 200, "cross-role visibility for indexer key");
+	// lazy migration from legacy state.json
+	const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), "warparc-migrate-"));
+	fs.writeFileSync(path.join(dir2, "state.json"), JSON.stringify({ "indexer:arc": 999, "relayer": { jobs: { x: 1 } }, "indexer:baseSepolia": 555 }));
+	const sMig = new Store({ dir: dir2 });
+	ok(sMig.getState("indexer:arc") === 999, "lazy migration indexer from legacy");
+	ok(sMig.getState("relayer").jobs.x === 1, "lazy migration relayer from legacy");
+	ok(fs.existsSync(path.join(dir2, "state-indexer.json")), "migration created state-indexer.json");
+	ok(sMig.getState("indexer:baseSepolia") === 555, "migration preserved other indexed keys");
+	sMig.setState("indexer:arc", 1000);
+	ok(sMig.getState("indexer:arc") === 1000, "shard setState after migration");
+	ok(sMig.getState("relayer").jobs.x === 1, "relayer still intact after indexer update post-migration");
+	try { fs.rmSync(dir, { recursive: true, force: true }); } catch (_) {}
+	try { fs.rmSync(dir2, { recursive: true, force: true }); } catch (_) {}
+	ok(typeof s._pathForKey === "function", "_pathForKey exists");
+	ok(s._pathForKey("indexer:arc").endsWith("state-indexer.json"), "_pathForKey indexer -> state-indexer.json");
+	ok(s._pathForKey("relayer").endsWith("state-relayer.json"), "_pathForKey relayer -> state-relayer.json");
+	ok(s._pathForKey("relayer:budget").endsWith("state-relayer.json"), "_pathForKey relayer:budget -> state-relayer.json");
+	ok(s._pathForKey("otherKey").endsWith("state.json"), "_pathForKey generic -> state.json");
 }
 
 // --- Lock ---------------------------------------------------------------------
@@ -206,8 +284,9 @@ function testServerHostGuard() {
 					let body = "";
 					res.on("data", (chunk) => body += chunk);
 					res.on("end", () => {
-						try { resolve({ status: res.statusCode, body: JSON.parse(body) }); }
-						catch (_) { resolve({ status: res.statusCode, body }); }
+						const headers = res.headers;
+						try { resolve({ status: res.statusCode, headers, body: JSON.parse(body) }); }
+						catch (_) { resolve({ status: res.statusCode, headers, body }); }
 					});
 				}).on("error", reject);
 			});
@@ -236,6 +315,13 @@ function testServerHostGuard() {
 			})
 			.then((r) => {
 				ok(r.status === 200, "no kind param → 200");
+				return httpGet(`127.0.0.1:${port}`, "/metrics");
+			})
+			.then((r) => {
+				ok(r.status === 200, "GET /metrics →200");
+				ok(String(r.headers["content-type"] || "").includes("text/plain"), "GET /metrics Content-Type text/plain");
+				ok(typeof r.body === "string" && r.body.includes("warparc_events_total"), "metrics body contains warparc_events_total");
+				ok(typeof r.body === "string" && r.body.includes("warparc_uptime_seconds"), "metrics body contains warparc_uptime_seconds");
 				srv.close();
 				finish();
 			})
@@ -428,6 +514,8 @@ testLock();
 testCctpParser();
 testCctpParseError();
 testStoreKindDedup();
+testRotationThreshold();
+testStateShardingLWW();
 testRelayerGuards();
 testRelayerModuleShape();
 testIndexer(); // async tail → testEvmOnlyChain → testServerHostGuard → finish

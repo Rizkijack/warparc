@@ -7,6 +7,7 @@
  *   GET  /jobs                         — relayer job list
  *   POST /relay {srcChain, burnTxHash} — queue a burn for relaying
  *   GET  /status?srcChain=&txHash=     — job state + live Iris attestation state
+ *   GET  /metrics                      — Prometheus text exposition (no auth)
  *
  * Binds 127.0.0.1 by default (BACKEND_HOST/BACKEND_PORT to change) — it is an
  * ops API, not a public service. Responses never contain secrets: the relayer
@@ -18,6 +19,71 @@ const http = require("http");
 const { URL } = require("url");
 
 const MAX_BODY = 4096;
+
+// Structured JSON logging helper — LOG_JSON=true switches to JSON lines on stderr.
+function createLogger() {
+	const useJson = process.env.LOG_JSON === "true";
+	function out(level, msg, extra) {
+		if (useJson) {
+			const rec = { ts: new Date().toISOString(), level, msg, ...extra };
+			console.error(JSON.stringify(rec));
+		} else {
+			const tag = `[server] ${msg}`;
+			const suffix = extra && Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : "";
+			const line = tag + suffix;
+			if (level === "info" && console.info) console.info(line);
+			else if (level === "warn" && console.warn) console.warn(line);
+			else console.error(line);
+		}
+	}
+	return {
+		info: (msg, extra) => out("info", msg, extra),
+		warn: (msg, extra) => out("warn", msg, extra),
+		error: (msg, extra) => out("error", msg, extra)
+	};
+}
+
+// Prometheus metrics renderer — <50 lines, zero-dep.
+function renderMetrics({ store, relayer, indexerChains, startTime, requestCounts }) {
+	const lines = [];
+	const uptime = Math.floor((Date.now() - startTime) / 1000);
+	lines.push("# HELP warparc_uptime_seconds Backend uptime in seconds.");
+	lines.push("# TYPE warparc_uptime_seconds gauge");
+	lines.push(`warparc_uptime_seconds ${uptime}`);
+	lines.push("# HELP warparc_events_total Total indexed events.");
+	lines.push("# TYPE warparc_events_total counter");
+	let perChain = {};
+	if (typeof store.getMetrics === "function") {
+		try { perChain = store.getMetrics().perChainCounts || {}; } catch (_) { perChain = {}; }
+	} else {
+		for (const c of indexerChains) perChain[c.key] = store.countEvents(c.key);
+	}
+	for (const c of indexerChains) {
+		const v = perChain[c.key] != null ? perChain[c.key] : store.countEvents(c.key);
+		lines.push(`warparc_events_total{chain="${c.key}"} ${v}`);
+	}
+	lines.push("# HELP warparc_indexer_last_indexed_block_plus_one Next block to index.");
+	lines.push("# TYPE warparc_indexer_last_indexed_block_plus_one gauge");
+	for (const c of indexerChains) {
+		const raw = store.getState(`indexer:${c.key}`, 0);
+		const n = raw == null ? 0 : Number(raw);
+		lines.push(`warparc_indexer_last_indexed_block_plus_one{chain="${c.key}"} ${Number.isFinite(n) ? n : 0}`);
+	}
+	lines.push("# HELP warparc_relayer_jobs_total Relayer jobs by status.");
+	lines.push("# TYPE warparc_relayer_jobs_total gauge");
+	const byStatus = relayer ? (relayer.stats().byStatus || {}) : {};
+	for (const [st, cnt] of Object.entries(byStatus)) lines.push(`warparc_relayer_jobs_total{status="${st}"} ${cnt}`);
+	lines.push("# HELP warparc_relayer_budget_spent Gas budget spent per chain.");
+	lines.push("# TYPE warparc_relayer_budget_spent gauge");
+	const budgets = relayer ? (relayer.stats().budgets || {}) : {};
+	for (const [chain, b] of Object.entries(budgets)) lines.push(`warparc_relayer_budget_spent{chain="${chain}",unit="${b.unit}"} ${b.spent}`);
+	if (requestCounts && Object.keys(requestCounts).length) {
+		lines.push("# HELP warparc_api_requests_total API requests by route.");
+		lines.push("# TYPE warparc_api_requests_total counter");
+		for (const [route, cnt] of Object.entries(requestCounts)) lines.push(`warparc_api_requests_total{route="${route}"} ${cnt}`);
+	}
+	return lines.join("\n") + "\n";
+}
 
 // In-memory rate limiter for POST /relay: max 10 requests per minute per IP.
 const relayRateLimit = new Map();
@@ -56,6 +122,8 @@ function statusIrisMinIntervalMs() {
 
 function createServer({ backendCfg, store, relayer, iris, indexerChains, log = console }) {
 	const startedAt = Date.now();
+	const logger = log === console ? createLogger() : log;
+	const apiRequests = {};
 	// CORS is opt-in: no header at all unless an operator explicitly allows an
 	// origin — a wildcard on an unauthenticated state-changing route would let
 	// any webpage in the operator's browser queue relay jobs.
@@ -64,12 +132,12 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 	if (corsOrigin === "") corsOrigin = null;
 	// Guard CRLF injection: reject if value contains \r or \n (trim handles edges, this handles interior).
 	if (corsOrigin && /[\r\n]/.test(corsOrigin)) {
-		log.warn("[server] BACKEND_CORS_ORIGIN contains CRLF — rejected (fail-closed)");
+		logger.warn("[server] BACKEND_CORS_ORIGIN contains CRLF — rejected (fail-closed)");
 		corsOrigin = null;
 	}
 	// Reject wildcard "*" — fail-closed: treat as no header (any origin could enqueue).
 	if (corsOrigin && corsOrigin.trim() === "*") {
-		log.warn('[server] BACKEND_CORS_ORIGIN="*" rejected — wildcard CORS is not allowed (fail-closed)');
+		logger.warn('[server] BACKEND_CORS_ORIGIN="*" rejected — wildcard CORS is not allowed (fail-closed)');
 		corsOrigin = null;
 	}
 	// Timestamp of the last live Iris lookup made by /status (any outcome).
@@ -237,6 +305,7 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 	};
 
 	const server = http.createServer(async (req, res) => {
+		const t0 = Date.now();
 		try {
 			// DNS-rebinding guard: strict allow-list — only requests whose Host
 			// header is exactly this server's host:port (or localhost on the same
@@ -245,25 +314,50 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 			const expectedHost = `${backendCfg.server.host}:${backendCfg.server.port}`.toLowerCase();
 			const localhostHost = `localhost:${backendCfg.server.port}`;
 			if (hostHeader !== expectedHost && hostHeader !== localhostHost) {
-				return json(res, 403, { error: "unexpected Host header" });
+				json(res, 403, { error: "unexpected Host header" });
+				logger.info("request", { method: req.method, path: req.url, status: 403, durationMs: Date.now() - t0 });
+				return;
 			}
 			const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
 			const key = `${req.method} ${url.pathname}`;
+			// In-memory per-route counter for Prometheus (optional).
+			apiRequests[key] = (apiRequests[key] || 0) + 1;
 			if (req.method === "OPTIONS") {
 				res.writeHead(204, corsHeaders());
 				res.end();
+				logger.info("request", { method: req.method, path: url.pathname, status: 204, durationMs: Date.now() - t0 });
+				return;
+			}
+			if (req.method === "GET" && url.pathname === "/metrics") {
+				const body = renderMetrics({ store, relayer, indexerChains, startTime: startedAt, requestCounts: apiRequests });
+				res.writeHead(200, {
+					"Content-Type": "text/plain; version=0.0.4",
+					"Content-Length": Buffer.byteLength(body),
+					...corsHeaders(),
+					"Cache-Control": "no-store",
+					"X-Content-Type-Options": "nosniff",
+					"X-Frame-Options": "DENY"
+				});
+				res.end(body);
+				logger.info("request", { method: req.method, path: url.pathname, status: 200, durationMs: Date.now() - t0 });
 				return;
 			}
 			const handler = routes[key];
-			if (!handler) return json(res, 404, { error: `no route ${key}` });
+			if (!handler) {
+				json(res, 404, { error: `no route ${key}` });
+				logger.info("request", { method: req.method, path: url.pathname, status: 404, durationMs: Date.now() - t0 });
+				return;
+			}
 			const result = await handler(url.searchParams, req);
 			const out = Array.isArray(result) ? result[0] : result;
 			const code = Array.isArray(result) ? result[1] || 200 : 200;
 			const extraHeaders = Array.isArray(result) && result[2] && typeof result[2] === "object" ? result[2] : {};
 			json(res, code, out, extraHeaders);
+			logger.info("request", { method: req.method, path: url.pathname, status: code, durationMs: Date.now() - t0 });
 		} catch (e) {
 			const code = e.statusCode || 500;
-			if (code === 500) log.error(`[server] ${req.method} ${req.url}: ${e.message}`);
+			if (code === 500) logger.error(`[server] ${req.method} ${req.url}: ${e.message}`, { method: req.method, path: req.url, status: code });
+			else logger.info("request", { method: req.method, path: req.url, status: code, durationMs: Date.now() - t0, error: e.message });
 			json(res, code, { error: e.message });
 		}
 	});
@@ -274,4 +368,4 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 	return server;
 }
 
-module.exports = { createServer };
+module.exports = { createServer, renderMetrics, createLogger };

@@ -780,6 +780,13 @@ main {
 
 .tx-detail .tx-hash:hover { color: var(--accent); text-decoration: none; }
 
+.tx-time {
+	color: var(--text3);
+	font-size: 0.58rem;
+	font-family: var(--font-mono);
+	white-space: nowrap;
+}
+
 .tx-badge {
 	font-size: 0.56rem;
 	font-weight: 700;

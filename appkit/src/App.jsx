@@ -21,6 +21,45 @@ const appKit = new AppKit();
 const AMOUNT_RE = /^\d+(?:\.\d{1,6})?$/;
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
+// Surface SDK typed fields (errorCode/step) instead of raw JSON dump.
+// BridgeResult shape: { state: 'success'|'pending'|'error', steps:[{name,state,error,errorCode,txHash}], error, errorCode }
+function formatBridgeResult(result) {
+	if (!result || typeof result !== "object") return String(result);
+	const steps = Array.isArray(result.steps) ? result.steps : [];
+	const failed = steps.filter(s => s.state === "error");
+	const header = result.state === "success"
+		? "SUCCESS"
+		: result.state === "pending"
+			? "PENDING — transfer still in progress"
+			: "FAILED" + (failed.length ? ` at step(s): ${failed.map(s => s.name).join(", ")}` : "");
+	const lines = [header];
+	if (failed.length) {
+		failed.forEach(s => {
+			const code = s.errorCode || s.code || "";
+			const msg = s.error || s.message || s.reason || "";
+			lines.push(`  \u2022 ${s.name}: ${code ? `[${code}] ` : ""}${msg || "failed"}`);
+			if (s.txHash) lines.push(`    tx: ${s.txHash}`);
+		});
+	}
+	if (result.error) {
+		const rcode = result.errorCode || result.code || "";
+		lines.push(`error: ${rcode ? `[${rcode}] ` : ""}${result.error}`);
+	}
+	const summary = steps.map(s => `${s.name}:${s.state}`).join(" \u2192 ");
+	if (summary) lines.push(`steps: ${summary}`);
+	try {
+		const json = JSON.stringify(result, null, 2);
+		lines.push(json.length > 4000 ? json.slice(0, 4000) + "\n\u2026 (truncated)" : json);
+	} catch {}
+	return lines.join("\n");
+}
+
+function formatError(e) {
+	const code = e && (e.errorCode || e.code);
+	const msg = (e && (e.message || e.reason || e.error)) || String(e);
+	return code ? `[${code}] ${msg}` : msg;
+}
+
 const styles = {
 	page: { fontFamily: "'SF Pro Display', 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif", maxWidth: 760, margin: "0 auto", padding: "32px 24px 56px", color: "#2F3437", background: "#F7F6F3", minHeight: "100vh", lineHeight: 1.6 },
 	card: { border: "1px solid #EAEAEA", borderRadius: 10, padding: 20, marginBottom: 16, background: "#FFFFFF", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" },
@@ -102,19 +141,13 @@ function BridgeTab({ busy, setBusy }) {
 				})
 				: await appKit.bridge({
 					from: { adapter: adapterFrom, chain: CHAIN_ID_TO_KIT_NAME[fromId] },
-					to: { adapter: adapterFrom, chain: CHAIN_ID_TO_KIT_NAME[toId] },
+					to: { adapter: await getAdapter(toId), chain: CHAIN_ID_TO_KIT_NAME[toId] },
 					amount
 				});
 			setLastBridge(result);
-			const failedSteps = (result.steps || []).filter(s => s.state === "error").map(s => s.name);
-			const header = result.state === "success"
-				? "SUCCESS"
-				: result.state === "pending"
-					? "PENDING — transfer still in progress, result below"
-					: "FAILED" + (failedSteps.length ? ` at step(s): ${failedSteps.join(", ")}` : "");
-			setStatus(header + "\n" + JSON.stringify(result, null, 2));
+			setStatus(formatBridgeResult(result));
 		} catch (e) {
-			setStatus("FAILED: " + (e.message || String(e)));
+			setStatus("FAILED: " + formatError(e));
 		} finally {
 			setBusy(false);
 		}
@@ -177,7 +210,7 @@ function UnifiedTab({ busy, setBusy }) {
 			});
 			setStatus("SUCCESS\n" + JSON.stringify(result, null, 2));
 		} catch (e) {
-			setStatus("FAILED: " + (e.message || String(e)));
+			setStatus("FAILED: " + formatError(e));
 		} finally {
 			setBusy(false);
 		}
@@ -203,7 +236,7 @@ function UnifiedTab({ busy, setBusy }) {
 			});
 			setStatus("SUCCESS\n" + JSON.stringify(result, null, 2));
 		} catch (e) {
-			setStatus("FAILED: " + (e.message || String(e)));
+			setStatus("FAILED: " + formatError(e));
 		} finally {
 			setBusy(false);
 		}
@@ -222,7 +255,7 @@ function UnifiedTab({ busy, setBusy }) {
 			});
 			setStatus("SUCCESS\n" + JSON.stringify(balances, null, 2));
 		} catch (e) {
-			setStatus("FAILED: " + (e.message || String(e)));
+			setStatus("FAILED: " + formatError(e));
 		} finally {
 			setBusy(false);
 		}

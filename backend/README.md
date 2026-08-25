@@ -102,6 +102,8 @@ npm run backend:server
 | `RELAYER_MCP_SUBMIT` | `false` | opt-in ketat (fail-closed): tanpa ini tool submit via MCP hanya mengantri job ops, tidak mendorong ke jalur kirim |
 | `MCP_IRIS_TIMEOUT_MS` | `15000` | deadline lookup Iris di `warparc_status` + fetch klien Iris standalone (mcp-server.js:81) — upstream menggantung → frame error JSON-RPC, bukan diam |
 | `MCP_RPC_TIMEOUT_MS` | `15000` | deadline `validateBurnTx` (lookup receipt RPC) saat submit via MCP (mcp-server.js:84) |
+| `ARC_MAINNET_RPC` / `ARC_MAINNET_CHAIN_ID` | — (kosong) | Arc mainnet RPC/chainId — kosong = fail-closed, isi hanya dari https://docs.arc.io/arc/references/connect-to-arc (Verified 2026-08-26 "Mainnet addresses are not yet available", testnet 5042002); aktivasi `arcMainnet` di `frontend/js/config.js:342-372` + `hardhat.config.js:59-103` + `.env.example:33-39` |
+| `LOG_JSON` | `false` | `true` → log terstruktur JSON ke stderr `{ts,level,msg,...}`, `false` (default) → plain `[server]/[indexer]/[relayer]` — backward compat |
 
 ## API
 
@@ -113,10 +115,24 @@ curl -X POST http://127.0.0.1:8932/relay \
   -d '{"srcChain":"baseSepolia","burnTxHash":"0x…"}'
 curl "http://127.0.0.1:8932/status?srcChain=baseSepolia&txHash=0x…"
 curl http://127.0.0.1:8932/jobs
+curl http://127.0.0.1:8932/metrics  # Prometheus text/plain; version=0.0.4 — no auth, same Host guard + CORS as GET lain
 ```
 
 Job lifecycle: `queued → attestation_wait → ready → submitting → relayed`
 (`skipped`/`failed` terminal; `ready` menunggu di mode watch-only).
+
+## Observability — metrics, log terstruktur, dashboard (zero-dep, minimal)
+
+- **GET /metrics** — Prometheus text exposition (`Content-Type: text/plain; version=0.0.4`, no auth, same Host guard + CORS as other GETs). Helper `renderMetrics({store, relayer, indexerChains, startTime})` (<50 baris, zero-dep) membaca `store.getState` + `countEvents`/`getMetrics` (reuse cache, TODO double-scan untuk testnet sederhana) dan:
+  - `warparc_uptime_seconds` (gauge)
+  - `warparc_events_total{chain="arc"}` via `store.countEvents`
+  - `warparc_indexer_last_indexed_block_plus_one{chain="arc"}` via `state.json` `indexer:<chain>`
+  - `warparc_relayer_jobs_total{status="queued|ready|..."}` via `relayer.stats().byStatus`
+  - `warparc_relayer_budget_spent{chain="arc",unit="USDC"}` via `relayer.stats().budgets`
+  - `warparc_api_requests_total{route="GET /health"}` (optional, in-memory counter per route)
+- **Structured JSON logging** — tiap file `backend/src/{server,indexer,relayer,store}.js` punya helper `createLogger()`; `LOG_JSON=true` → `JSON.stringify({ts,level,msg,...})` ke stderr, default `false` → plain `console.error("[...]")` (backward compat). `server.js` log setiap request `{method,path,status,durationMs}`.
+- **Store helper** — `store.getMetrics()` → `{totalEvents, perChainCounts}` single-scan (reuse `queryEvents` cache), untuk dashboard/metrics tanpa double full-scan.
+- **Dashboard minimal** — scrape `/metrics` langsung dengan Prometheus/Grafana; zero dependency tambahan.
 
 ## Membidik live (setelah review manual)
 

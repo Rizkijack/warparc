@@ -2,6 +2,7 @@
 // Every Arc value traces to https://docs.arc.io (see ARC-REFERENCE.md, the local
 // source handbook — ARC-SOURCES.md is local-only and may be absent). Never fill
 // an unknown value from memory — re-fetch from the official docs instead.
+// Verified 2026-08-26: https://docs.arc.io/arc/references/contract-addresses — "Mainnet addresses are not yet available" (testnet 5042002); CCTP domains via https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 //
 // DEPRECATED — Legacy LayerZero V2 OFT data (chains.*.layerZero, OFT_ABI, LZ_ENDPOINT_ABI).
 // Canonical USDC route is Circle CCTP V2. Retained for reference/test scripts; do not use.
@@ -10,7 +11,7 @@ const CONFIG = {
 		ethereum: {
 			network: "mainnet",
 			chainId: 1,
-			cctpDomain: 0,
+			cctpDomain: 0, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 			eid: 30101,
 			name: "Ethereum Mainnet",
 			shortName: "Ethereum",
@@ -40,7 +41,7 @@ const CONFIG = {
 		base: {
 			network: "mainnet",
 			chainId: 8453,
-			cctpDomain: 6,
+			cctpDomain: 6, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 			eid: 30184,
 			name: "Base Mainnet",
 			shortName: "Base",
@@ -68,7 +69,7 @@ const CONFIG = {
 		arbitrum: {
 			network: "mainnet",
 			chainId: 42161,
-			cctpDomain: 3,
+			cctpDomain: 3, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 			eid: 30110,
 			name: "Arbitrum One",
 			shortName: "Arbitrum",
@@ -96,7 +97,7 @@ const CONFIG = {
 		optimism: {
 			network: "mainnet",
 			chainId: 10,
-			cctpDomain: 2,
+			cctpDomain: 2, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 			eid: 30111,
 			name: "Optimism Mainnet",
 			shortName: "Optimism",
@@ -148,7 +149,7 @@ const CONFIG = {
 		polygon: {
 			network: "mainnet",
 			chainId: 137,
-			cctpDomain: 7,
+			cctpDomain: 7, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 			name: "Polygon",
 			shortName: "Polygon",
 			nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
@@ -163,7 +164,7 @@ const CONFIG = {
 		bsc: {
 			network: "mainnet",
 			chainId: 56,
-			cctpDomain: 4,
+			cctpDomain: 4, // UNVERIFIED — Circle 2026-08-26 lists BSC 17 (USYC-only), 4=Noble V1 — re-verify (https://developers.circle.com/cctp/concepts/supported-chains-and-domains)
 			name: "BNB Smart Chain",
 			shortName: "BSC",
 			nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
@@ -178,7 +179,7 @@ const CONFIG = {
 		avalanche: {
 			network: "mainnet",
 			chainId: 43114,
-			cctpDomain: 1,
+			cctpDomain: 1, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 			name: "Avalanche",
 			shortName: "AVAX",
 			nativeCurrency: { name: "AVAX", symbol: "AVAX", decimals: 18 },
@@ -193,7 +194,7 @@ const CONFIG = {
 		linea: {
 			network: "mainnet",
 			chainId: 59144,
-			cctpDomain: 11,
+			cctpDomain: 11, // Verified 2026-08-26: https://developers.circle.com/cctp/concepts/supported-chains-and-domains
 			name: "Linea",
 			shortName: "Linea",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -208,7 +209,7 @@ const CONFIG = {
 		scroll: {
 			network: "mainnet",
 			chainId: 534352,
-			cctpDomain: 12,
+			cctpDomain: 12, // UNVERIFIED — 12=Codex, Scroll not in published list — TBD (2026-08-26)
 			name: "Scroll",
 			shortName: "Scroll",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -223,7 +224,7 @@ const CONFIG = {
 		blast: {
 			network: "mainnet",
 			chainId: 81457,
-			cctpDomain: 13,
+			cctpDomain: 13, // UNVERIFIED — 13=Sonic, Blast not in published list — TBD (2026-08-26)
 			name: "Blast",
 			shortName: "Blast",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -334,23 +335,25 @@ const CONFIG = {
 			}
 		},
 		arcMainnet: {
-			// SKELETON ONLY — public mainnet launches September 16, 2026.
-			// Every value MUST come from docs.arc.io on launch day
-			// (MAINNET-CHECKLIST.md Phase 1). Never carry testnet values over.
-			// `disabled` keeps it out of the UI until real values are filled in.
+			// SKELETON ONLY — public mainnet launches September 16, 2026 (MAINNET-CHECKLIST.md Phase 1, frontend/js/config.js:342-372).
+			// Every value MUST come from https://docs.arc.io/arc/references/contract-addresses
+			// + https://docs.arc.io/arc/references/connect-to-arc on launch day — never carry testnet values over.
+			// Verified 2026-08-26: https://docs.arc.io/arc/references/contract-addresses — "Mainnet addresses are not yet available" (testnet 5042002).
+			// `disabled:true` keeps it out of the UI until real values are filled in (fail-closed, backend/src/config.js:74-83).
+			// Placeholder for vercel.json:14 CSP connect-src — add https://rpc.mainnet.arc.io + wss://... when published (MAINNET-CHECKLIST Phase 2).
 			disabled: true,
 			network: "mainnet",
-			chainId: null,           // ?TBD?
-			eid: null,               // UNVERIFIED — do NOT set from testnet value
-			cctpDomain: null,        // ?TBD?
+			chainId: null,           // ?TBD? — from connect-to-arc table (MAINNET-CHECKLIST 342-372)
+			eid: null,               // UNVERIFIED — do NOT set from testnet value 30417 (backend/src/config.js:74-83)
+			cctpDomain: null,        // ?TBD? — verify via https://developers.circle.com/cctp/concepts/supported-chains-and-domains on launch day
 			name: "Arc Mainnet",
 			shortName: "Arc",
 			nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-			rpcUrl: null,            // ?TBD?
-			explorer: null,          // ?TBD?
+			rpcUrl: null,            // ?TBD? — from connect-to-arc (MAINNET-CHECKLIST 342-372) + vercel.json:14 CSP
+			explorer: null,          // ?TBD? — from connect-to-arc
 			icon: "https://icons-ckg.pages.dev/lz-scan/networks/arc.svg",
 			cctp: {
-				usdc: null,              // ?TBD?
+				usdc: null,              // ?TBD? — contract-addresses (MAINNET-CHECKLIST 386-389)
 				tokenMessengerV2: null,  // ?TBD?
 				messageTransmitterV2: null, // ?TBD?
 				tokenMinterV2: null,     // ?TBD?
@@ -431,18 +434,24 @@ const CONFIG = {
 		// infra submits the destination mint. Fee quote: /v2/burn/USDC/fees/...?forward=true
 		forwardHook: "0x636374702d666f72776172640000000000000000000000000000000000000000"
 	},
-	// CCTP V2 registry — canonical values from developers.circle.com/cctp/references/
-	// contract-addresses + contract-interfaces (fetched 2026-08-22). Contract addresses
-	// are shared per network tier (Circle bridges testnet<->testnet, mainnet<->mainnet).
+	// CCTP V2 registry — canonical values from https://developers.circle.com/cctp/concepts/supported-chains-and-domains
+	// + https://developers.circle.com/cctp/references/contract-addresses (Verified 2026-08-26).
+	// Contract addresses are shared per network tier (Circle bridges testnet<->testnet, mainnet<->mainnet).
 	cctp: {
 		domains: {
-			ethereum: 0,
-			optimism: 2,
-			arbitrum: 3,
-			base: 6,
-			robinhood: null, // not in the CCTP domain registry
-			arc: 26,
-			arcMainnet: null // UNVERIFIED until the Arc mainnet domain publishes
+			ethereum: 0, // Verified 2026-08-26: supported-chains-and-domains
+			optimism: 2, // Verified 2026-08-26
+			arbitrum: 3, // Verified 2026-08-26
+			base: 6, // Verified 2026-08-26
+			polygon: 7, // Verified 2026-08-26
+			bsc: 4, // UNVERIFIED — Circle 2026-08-26 lists BSC 17 (USYC-only), 4=Noble V1 — re-verify
+			avalanche: 1, // Verified 2026-08-26
+			linea: 11, // Verified 2026-08-26
+			scroll: 12, // UNVERIFIED — 12=Codex, Scroll not in published list — TBD
+			blast: 13, // UNVERIFIED — 13=Sonic, Blast not in published list — TBD
+			robinhood: null, // not in the CCTP domain registry — watched in MAINNET-CHECKLIST Phase 0
+			arc: 26, // Verified 2026-08-26: https://docs.arc.io/arc/references/contract-addresses (Arc Testnet)
+			arcMainnet: null // UNVERIFIED until the Arc mainnet domain publishes (MAINNET-CHECKLIST 442-453)
 		},
 		contracts: {
 			testnet: {

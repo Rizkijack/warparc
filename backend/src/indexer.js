@@ -29,6 +29,25 @@ function directionOf(from, to) {
 	return "transfer";
 }
 
+function createLogger() {
+	return {
+		info: (msg, extra) => {
+			if (process.env.LOG_JSON === "true") console.error(JSON.stringify({ ts: new Date().toISOString(), level: "info", msg, ...extra }));
+			else if (console.info) console.info(msg + (extra && Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ""));
+			else console.error(msg);
+		},
+		warn: (msg, extra) => {
+			if (process.env.LOG_JSON === "true") console.error(JSON.stringify({ ts: new Date().toISOString(), level: "warn", msg, ...extra }));
+			else if (console.warn) console.warn(msg + (extra && Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ""));
+			else console.error(msg);
+		},
+		error: (msg, extra) => {
+			if (process.env.LOG_JSON === "true") console.error(JSON.stringify({ ts: new Date().toISOString(), level: "error", msg, ...extra }));
+			else console.error(msg + (extra && Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ""));
+		}
+	};
+}
+
 function classify(chain, emitter) {
 	const e = emitter.toLowerCase();
 	if (chain.usdcEmitters.includes(e)) return { kind: "erc20", divide: false };
@@ -43,6 +62,7 @@ function classify(chain, emitter) {
  * full) leaves the range unfetched, never silently lost.
  */
 function createChainIndexer({ chain, rpcCall, getState, setState, persist, log = console }) {
+	if (log === console) log = createLogger();
 	const watermarkKey = `indexer:${chain.key}`;
 	const seen = new Set(); // "block:txHash:logIndex" dedupe, pruned below watermark
 	// Arc's RPC caps getLogs result size (~860 blocks × dual emitters today);
@@ -228,6 +248,7 @@ function makeRpcCall(rpcUrl) {
  * for the next interval tick.
  */
 function runIndexer({ chains, store, log = console, pollMs = 5000, useWs = true }) {
+	if (log === console) log = createLogger();
 	const pollers = chains.map((chain) =>
 		createChainIndexer({
 			chain,
@@ -352,16 +373,4 @@ function runIndexer({ chains, store, log = console, pollMs = 5000, useWs = true 
 	return { stop };
 }
 
-function debounce(fn, ms) {
-	let t = null;
-	return () => {
-		if (t) clearTimeout(t);
-		t = setTimeout(() => {
-			t = null;
-			fn();
-		}, ms);
-		if (t.unref) t.unref();
-	};
-}
-
-module.exports = { createChainIndexer, runIndexer, makeRpcCall, TRANSFER_TOPIC };
+module.exports = { createChainIndexer, runIndexer, makeRpcCall, TRANSFER_TOPIC, createLogger };
