@@ -496,7 +496,8 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 	// --- loop -----------------------------------------------------------------
 
 	let timer = null;
-	let ticking = Promise.resolve(); // in-flight tick — stop() awaits it
+	let ticking = false; // reentrancy guard: true while a tick is still awaiting
+	let inFlightTick = Promise.resolve(); // latest started tick — stop() awaits it
 	let irisCursor = 0; // round-robin cursor over attestation polling
 	async function tick() {
 		const jobs = loadJobs();
@@ -534,7 +535,13 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 				`${rcfg.autoRelay ? ", auto-relay ON" : ""})`
 		);
 		timer = setInterval(() => {
-			ticking = tick().catch((e) => log.error(`[relayer] tick error (continuing): ${e.message}`));
+			if (ticking) return; // previous tick still running — skip this beat (no overlap)
+			ticking = true;
+			inFlightTick = tick()
+				.catch((e) => log.error(`[relayer] tick error (continuing): ${e.message}`))
+				.finally(() => {
+					ticking = false;
+				});
 		}, rcfg.pollMs);
 	}
 	function stop() {
@@ -542,7 +549,7 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 		timer = null;
 		// Await the in-flight tick AND any open submits — a killed submit stays
 		// "submitting" on disk and re-broadcasts after restart (wasting gas).
-		return Promise.allSettled([ticking, ...submitPromises]).then(() => {});
+		return Promise.allSettled([inFlightTick, ...submitPromises]).then(() => {});
 	}
 
 	function getJobs() {

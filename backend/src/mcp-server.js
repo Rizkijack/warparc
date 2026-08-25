@@ -447,16 +447,32 @@ if (require.main === module) {
 	);
 
 	const readline = require("readline");
+	// Cap frame (line-delimited): baris >256KB ditolak tanpa diproses — mencegah
+	// flooding stdin menumpuk memori tak terbatas (mirror MAX_BODY server.js).
+	const MAX_LINE_BYTES = 262144;
+	// Serialisasi handler: request ke-N menunggu ke-(N-1) selesai (antrean
+	// berurutan; respons tetap benar urut via id-matching).
+	let chain = Promise.resolve();
+	const enqueue = (job) => {
+		chain = chain.then(job, job);
+		return chain;
+	};
 	const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
-	rl.on("line", async (line) => {
-		const text = line.trim();
-		if (text === "") return;
-		try {
-			const resp = await mcp.handleFrame(text);
-			if (resp !== null) process.stdout.write(resp + "\n");
-		} catch (e) {
-			console.error(`[mcp] handler error: ${e.message}`);
+	rl.on("line", (line) => {
+		if (Buffer.byteLength(line) > MAX_LINE_BYTES) {
+			process.stdout.write(
+				JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: ERR_INVALID_REQUEST, message: "request too large" } }) + "\n"
+			);
+			return;
 		}
+		enqueue(async () => {
+			try {
+				const resp = await mcp.handleFrame(line);
+				if (resp !== null) process.stdout.write(resp + "\n");
+			} catch (e) {
+				console.error(`[mcp] handler error: ${e.message}`);
+			}
+		});
 	});
 	function shutdown() {
 		try {

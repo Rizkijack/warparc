@@ -81,6 +81,7 @@ npm run backend:server
 | `BACKEND_DATA_DIR` | `backend/data` | events.jsonl + state.json (gitignored) |
 | `BACKEND_HOST` / `BACKEND_PORT` | `127.0.0.1` / `8932` | bind API |
 | `BACKEND_CORS_ORIGIN` | — (tidak diset) | origin yang diizinkan; **tanpa env ini CORS nonaktif** (API same-origin/localhost saja) |
+| `BACKEND_STATUS_IRIS_RPS` | `2` | throttle lookup Iris di endpoint `/status` (req/s; jaga budget global relayer 40 req/s) |
 | `RELAYER_ENABLED` | `false` | master switch pengiriman |
 | `RELAYER_DRY_RUN` | `true` | `false` + enabled → benar-benar kirim |
 | `RELAYER_PRIVATE_KEY` | — | env saja; key relayer (gas), bukan key user |
@@ -91,8 +92,10 @@ npm run backend:server
 | `RELAYER_IRIS_CHECKS_PER_TICK` | `20` | max cek attestation per tick (jaga limit Iris 40 req/s) |
 | `RELAYER_ALLOW_HOOKS` | `false` | izinkan relay burn ber-hook |
 | `RELAYER_POLL_MS` | `5000` | interval tick relayer |
-| `RELAYER_MAX_JOBS` | `500` | cap store job (terminal terlama dipangkas) |
+| `RELAYER_MAX_JOBS` | `500` | cap store job (terminal terlama dipangkas); `0` = tanpa cap |
 | `RELAYER_ATTESTATION_TIMEOUT_MS` | `600000` | batas tunggu attestation per job |
+| `RELAYER_IRIS_TIMEOUT_MS` | `10000` | timeout per request HTTP ke Iris (cegah tick loop membeku) |
+| `RELAYER_MAX_ATTEMPTS` | `5` | max retry submit tx per job sebelum terminal `failed` |
 
 ## API
 

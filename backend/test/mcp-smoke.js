@@ -4,8 +4,10 @@
  *
  * Liputan: version negotiation initialize, tools/list + tools/call (health,
  * jobs, events, budget, config, guard relay_submit), resources/list + read,
- * prompts/list + get, ping, pemetaan error JSON-RPC, dan SATU spawn end-to-end
- * server stdio asli (framing line-delimited lewat child process).
+ * prompts/list + get, ping, pemetaan error JSON-RPC, dan TIGA spawn end-to-end
+ * server stdio asli (framing line-delimited lewat child process): handshake +
+ * tools/list, warparc_status/warparc_budget, dan penolakan frame >256KB
+ * (-32600 'request too large', proses tetap hidup).
  */
 "use strict";
 
@@ -190,9 +192,84 @@ async function runSpawnE2E() {
 	fs.rmSync(dir, { recursive: true, force: true });
 }
 
+// ---- helper sesi spawn (pola runSpawnE2E): request→respons berurutan --------
+function startMcpSession(dir) {
+	const child = spawn(process.execPath, [path.join(__dirname, "..", "src", "mcp-server.js")], {
+		cwd: path.join(__dirname, "..", ".."),
+		env: { ...process.env, BACKEND_DATA_DIR: dir, BACKEND_NETWORK: "testnet" },
+		stdio: ["pipe", "pipe", "pipe"]
+	});
+	let out = "";
+	let cursor = 0;
+	child.stdout.setEncoding("utf8");
+	child.stderr.setEncoding("utf8");
+	child.stdout.on("data", (c) => (out += c));
+	// Tulis satu frame, tunggu persis satu frame balasan berikutnya.
+	async function rpc(msg, timeoutMs = 8000) {
+		child.stdin.write(JSON.stringify(msg) + "\n");
+		const t0 = Date.now();
+		for (;;) {
+			const lines = out.split("\n").filter((l) => l.trim() !== "");
+			if (lines.length > cursor) return JSON.parse(lines[cursor++]);
+			if (Date.now() - t0 > timeoutMs) throw new Error(`timeout waiting for response (id=${msg.id})`);
+			await new Promise((r) => setTimeout(r, 25));
+		}
+	}
+	return { child, rpc };
+}
+
+// ---- E2E warparc_status + warparc_budget ------------------------------------
+const TX_HASH = "0x" + "ab".repeat(32); // 64 hex valid
+
+async function runStatusBudgetE2E() {
+	console.log("[mcp-smoke] E2E warparc_status + warparc_budget (spawned server)");
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "warparc-mcp-e2e-status-"));
+	const sess = startMcpSession(dir);
+	try {
+		await sess.rpc({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "mcp-smoke-e2e-status", version: "0.0.0" } } });
+		const st = await sess.rpc({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "warparc_status", arguments: { srcChain: "baseSepolia", txHash: TX_HASH } } });
+		ok(st.result && !st.error, "E2E warparc_status: hasil object ada & tanpa protocol error");
+		ok(typeof st.result.content[0].text === "string", "E2E warparc_status: content teks terkirim (error domain boleh isError)");
+
+		const bd = await sess.rpc({ jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "warparc_budget", arguments: {} } });
+		ok(bd.result && !bd.error, "E2E warparc_budget: respons sukses tanpa protocol error");
+		const budget = JSON.parse(bd.result.content[0].text);
+		ok(typeof budget.mode === "string" && budget.budgets !== null && typeof budget.budgets === "object",
+			"E2E warparc_budget: field `mode` (string) & `budgets` (object) tersedia");
+	} finally {
+		sess.child.stdin.end();
+		await new Promise((resolve) => sess.child.on("exit", resolve));
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+}
+
+// ---- E2E negatif ukuran frame (>256KB ditolak; proses tetap hidup) ----------
+async function runOversizeFrameE2E() {
+	console.log("[mcp-smoke] E2E oversized frame (>256KB) rejection");
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "warparc-mcp-e2e-big-"));
+	const sess = startMcpSession(dir);
+	try {
+		await sess.rpc({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "mcp-smoke-e2e-big", version: "0.0.0" } } });
+
+		const bigMethod = "x".repeat(300 * 1024); // satu baris JSON ~300KB > MAX_LINE_BYTES
+		const err = await sess.rpc({ jsonrpc: "2.0", id: 99, method: bigMethod });
+		ok(err.error && err.error.code === -32600 && /too large/.test(err.error.message),
+			"E2E oversize: error -32600 'request too large' untuk baris >256KB");
+
+		const pong = await sess.rpc({ jsonrpc: "2.0", id: 100, method: "ping" });
+		ok(pong.result !== undefined && !pong.error,
+			"E2E oversize: proses tetap hidup — ping setelahnya dijawab");
+	} finally {
+		sess.child.stdin.end();
+		await new Promise((resolve) => sess.child.on("exit", resolve));
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+}
+
 async function main() {
 	await runUnitTests();
-	await runSpawnE2E();
+	await runStatusBudgetE2E();
+	await runOversizeFrameE2E();
 	console.log(`\n[mcp-smoke] ${passed} assertions passed`);
 }
 

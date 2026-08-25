@@ -24,6 +24,61 @@
 const fs = require("fs");
 const path = require("path");
 
+// Cross-process lock for setState — split-role mode (indexer writes, server
+// reads, relayer writes) can race on state.json otherwise. Lockfile with
+// O_EXCL create: a stale holder (process died) is reclaimed after 5s.
+// If the lock cannot be acquired after retries, log once per process and
+// write anyway (don't disable the feature for transient contention).
+const STATE_LOCK_RETRY = 20;
+const STATE_LOCK_DELAY_MS = 25;
+const STATE_LOCK_STALE_MS = 5_000;
+let _stateLockWarned = false;
+/** Synchronous pause without burning CPU (parks the thread on a futex). */
+function stateLockSleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function withStateLock(lockPath, fn) {
+  // Only the ACQUIRE step retries; fn() runs exactly once — an error thrown
+  // by the write must propagate untouched, never be replayed.
+  for (let i = 0; i < STATE_LOCK_RETRY; i++) {
+    let fd;
+    try {
+      fd = fs.openSync(lockPath, "wx"); // EEXIST when another process holds it
+    } catch (e) {
+      if (e.code !== "EEXIST") throw e; // genuine FS failure — not contention
+      // Lock held: is the holder stale (>5s old — its process died)?
+      let ageMs = -1;
+      try {
+        ageMs = Date.now() - fs.statSync(lockPath).mtimeMs;
+      } catch (_) { /* vanished: holder released; retry immediately */ continue; }
+      if (ageMs <= STATE_LOCK_STALE_MS) {
+        stateLockSleep(STATE_LOCK_DELAY_MS);
+        continue;
+      }
+      try { fs.unlinkSync(lockPath); } catch (_) { /* raced, fine */ }
+      continue; // stale taken over — retry creating immediately
+    }
+    try {
+      fs.writeSync(fd, `${process.pid} ${Date.now()}`);
+    } finally {
+      fs.closeSync(fd);
+    }
+    // Lock acquired — hold it only for fn(); release even when fn() throws.
+    try {
+      return fn();
+    } finally {
+      try { fs.unlinkSync(lockPath); } catch (_) { /* already gone */ }
+    }
+  }
+  if (!_stateLockWarned) {
+    console.warn("[store] state lock contended — falling back to unlocked write (logged once per process)");
+    _stateLockWarned = true;
+  }
+  return fn();
+}
+
+
 class Store {
   /**
    * @param {{ dir: string }} opts directory for events.jsonl + state.json
@@ -37,6 +92,7 @@ class Store {
     this.dir = dir;
     this.eventsPath = path.join(dir, "events.jsonl");
     this.statePath = path.join(dir, "state.json");
+    this.stateLockPath = path.join(dir, ".state.lock");
     this._events = null; // parsed events cache (null = not loaded yet)
     this._eventsMtimeMs = null; // mtime of the file the cache was built from
     this._eventsSizeWarned = false;
@@ -149,16 +205,18 @@ class Store {
 
   /** Read-modify-write one key of state.json, atomically (tmp + rename). */
   setState(key, value) {
-    // Merge against the CURRENT file, not a cache — a stale cache would let
-    // one process silently erase another process's keys (last-writer-wins).
-    const state = this._readState();
-    state[key] = value;
-    fs.mkdirSync(this.dir, { recursive: true });
-    // pid-unique tmp name: a fixed name lets two interleaved processes corrupt
-    // each other's tmp file before the rename lands.
-    const tmp = `${this.statePath}.${process.pid}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(state, null, 2) + "\n");
-    fs.renameSync(tmp, this.statePath);
+    withStateLock(this.stateLockPath, () => {
+      // Merge against the CURRENT file, not a cache — a stale cache would let
+      // one process silently erase another process's keys (last-writer-wins).
+      const state = this._readState();
+      state[key] = value;
+      fs.mkdirSync(this.dir, { recursive: true });
+      // pid-unique tmp name: a fixed name lets two interleaved processes corrupt
+      // each other's tmp file before the rename lands.
+      const tmp = `${this.statePath}.${process.pid}.tmp`;
+      fs.writeFileSync(tmp, JSON.stringify(state, null, 2) + "\n");
+      fs.renameSync(tmp, this.statePath);
+    });
   }
 
   /** Read + parse events.jsonl once; corrupt lines are skipped silently. */
