@@ -24,7 +24,7 @@ https://modelcontextprotocol.io: discovery → deployment path → scaffold → 
 
 ```bash
 npm run backend:mcp          # jalankan server; stdout = protocol, log di stderr
-npm run backend:mcp:smoke    # 30+ asersi offline (protocol/tools/resources/prompts/E2E)
+npm run backend:mcp:smoke    # 40+ asersi offline (protocol/tools/resources/prompts/gate/stdout-purity/timeout/E2E)
 ```
 
 Koneksi client (contoh `.mcp.json` di root repo — **jangan commit bila memuat
@@ -45,7 +45,21 @@ env secret**):
 Server berjalan sebagai **sesi ops pasif**: relayer dibuat tanpa tick (tidak
 akan double-submit dengan `npm run backend`); satu-satunya tool yang menulis
 (`warparc_relay_submit`) hanya mencatat job ops — mengikuti guard yang sama
-dengan `POST /relay`.
+dengan `POST /relay`, dan **nonaktif default** (lihat Environment di bawah).
+
+Hygiene stdout: **semua** log proses — termasuk `[relayer] queued …` dari
+relayer internal — dipaksa ke stderr (relayer standalone selalu dibuat lewat
+`buildStandaloneDeps()`); stdout murni frame JSON-RPC line-delimited.
+
+## Environment (fail-closed)
+
+| Env | Default | Arti |
+|---|---|---|
+| `RELAYER_MCP_SUBMIT` | *(absen = off)* | Gerbang tool tulis `warparc_relay_submit`. Tanpa nilai/false → tool menolak (`isError`) dengan pesan cara mengaktifkan; `true` → enqueue berjalan (guard relayer `RELAYER_ENABLED/DRY_RUN/PRIVATE_KEY` tetap berlaku). |
+| `MCP_IRIS_TIMEOUT_MS` | `15000` | Deadline lookup Iris di `warparc_status` + fetch klien Iris standalone. Upstream menggantung → frame error JSON-RPC, bukan diam. |
+| `MCP_RPC_TIMEOUT_MS` | `15000` | Deadline `validateBurnTx` (lookup receipt RPC) saat submit. |
+
+Knob relayer internal (`RELAYER_*` lain) tidak berubah — lihat backend/README.md.
 
 ## Tools (7)
 
@@ -54,8 +68,8 @@ dengan `POST /relay`.
 | `warparc_health` | — | Liveness + ringkasan indexer/relayer |
 | `warparc_jobs` | `status?` | Daftar job relayer (+filter status) |
 | `warparc_events` | `chain? address? kind? limit?` | Query event USDC terindeks; `kind` = erc20\|system (Arc dual-emitter — jangan dijumlahkan lintas kind); limit cap 1000 |
-| `warparc_status` | `srcChain txHash` | Job + state Iris live; di-throttle (`BACKEND_STATUS_IRIS_RPS`) agar tidak memakai budget 40 req/s relayer |
-| `warparc_relay_submit` | `srcChain burnTxHash` | **Enqueue saja**; submit on-chain tetap butuh relayer LIVE (`RELAYER_ENABLED=true && RELAYER_DRY_RUN=false && RELAYER_PRIVATE_KEY`) |
+| `warparc_status` | `srcChain txHash` | Job + state Iris live; di-throttle (`BACKEND_STATUS_IRIS_RPS`) agar tidak memakai budget 40 req/s relayer; deadline `MCP_IRIS_TIMEOUT_MS` |
+| `warparc_relay_submit` | `srcChain burnTxHash` | **Enqueue saja** — nonaktif default (fail-closed): butuh `RELAYER_MCP_SUBMIT=true`; saat aktif pun submit on-chain tetap butuh relayer LIVE (`RELAYER_ENABLED=true && RELAYER_DRY_RUN=false && RELAYER_PRIVATE_KEY`) |
 | `warparc_budget` | — | Budget gas harian per chain tujuan (USDC Arc / ETH EVM) + state pause |
 | `warparc_config` | — | Ringkasan network/chains/CCTP domain — **tidak pernah memuat secret** |
 
@@ -76,6 +90,8 @@ dengan `POST /relay`.
 ## Keamanan (fail-closed)
 
 - Default testnet + watch-only; MCP tidak pernah mengekspos private key.
+- Tool tulis ter-gate ganda: `RELAYER_MCP_SUBMIT=true` (env, default off)
+  lalu guard relayer LIVE yang sama dengan HTTP API.
 - Tool deskripsi jujur (spec: "descriptions of tool behavior should be
   considered untrusted unless from a trusted server" — server ini trusted,
   deskripsi mencerminkan guard asli).

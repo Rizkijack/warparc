@@ -471,8 +471,22 @@ const CONFIG = {
 		acrossApi: "https://app.across.to/api",
 		socketApi: "https://public-backend.socket.tech/v3",
 		relayApi: "https://api.relay.link",
-		// Stargate Router V2 — same address on all EVM chains
-		stargateRouterAddress: "0x150f4E4bD86B9b3655702eFEfB78c8b1D9b5d6c0",
+		// Stargate V2 — DISABLED (fail-closed), frontend audit 2026-08.
+		// The value below was labelled "Router V2 — same address on all EVM
+		// chains", which does not exist for any Stargate deployment, and the
+		// paired STARGATE_ROUTER_ABI is Stargate-V1-shaped
+		// (swapETH(uint16 _dstChainId,...)) while LayerZero V2 EIDs (30101+)
+		// do not fit a uint16 dstChainId. Per repo law ("jangan pernah mengisi
+		// nilai dari ingatan") these values must be re-fetched from official
+		// Stargate/LayerZero docs before use — do NOT guess replacements.
+		// Re-enable path: verify address + V2 Router ABI, set disabled:false,
+		// unhide the #proto-stargate row in index.html. Code paths are kept
+		// intact but unreachable while disabled:true.
+		stargateV2: {
+			disabled: true,
+			reason: "unverified router address + Stargate-V1-shaped ABI (audit 2026-08)",
+			routerAddressUnverified: "0x150f4E4bD86B9b3655702eFEfB78c8b1D9b5d6c0"
+		},
 		// API keys — set via env or localStorage; never hardcode secrets here
 		apiKeys: {
 			across: "",       // set via ACROSS_API_KEY env or localStorage

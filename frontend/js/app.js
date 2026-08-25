@@ -1,7 +1,7 @@
-// WarpArc â€” USDC bridges via Circle CCTP V2 (burn-and-mint, the only canonical
+// WarpArc — USDC bridges via Circle CCTP V2 (burn-and-mint, the only canonical
 // route to/from Arc per https://docs.arc.io/integrate/infrastructure/bridges).
-// Manual flow: approve â†’ depositForBurn â†’ poll Iris attestation â†’ receiveMessage.
-// Forwarding Service: approve â†’ depositForBurnWithHook("cctp-forward") â†’ Circle
+// Manual flow: approve → depositForBurn → poll Iris attestation → receiveMessage.
+// Forwarding Service: approve → depositForBurnWithHook("cctp-forward") → Circle
 // submits the destination mint (no destination gas needed). See the official
 // quickstart: developers.circle.com/cctp/quickstarts/transfer-usdc-ethereum-to-arc
 // The ABT token keeps the DEPRECATED legacy LayerZero OFT path (ABT demo only).
@@ -16,12 +16,12 @@ const TRANSLATIONS = {
 		connectWallet: "Connect Wallet", crossChainBridge: "Cross-Chain Bridge",
 		amount: "Amount", balance: "Balance", estGasFee: "Estimated Gas Fee (source)",
 		cctpFee: "CCTP Fast-Transfer Fee (USDC)",
-		forwardingService: "Forwarding Service â€” Circle submits the mint for you (extra fee, no destination gas needed)",
+		forwardingService: "Forwarding Service — Circle submits the mint for you (extra fee, no destination gas needed)",
 		unfinishedBridge: "Unfinished bridge detected", resumeMint: "Resume mint",
 		dismiss: "Dismiss", burn: "Burn", attestation: "Attestation", mint: "Mint",
 		enterAmount: "Enter amount", cctpContracts: "CCTP V2 Contracts",
 		txHistory: "Transaction History", noTxs: "No transactions yet",
-		footerText: "WarpArc Bridge Â· USDC via Circle CCTP V2",
+		footerText: "WarpArc Bridge · USDC via Circle CCTP V2",
 		systemStatus: "System Status", faucet: "Faucet",
 		sameChain: "Same chain selected", notDeployed: "not deployed",
 		approving: "Approving USDC...", burning: "Burning", waitingAttest: "Waiting for attestation...",
@@ -32,19 +32,19 @@ const TRANSLATIONS = {
 		amountMustExceed0: "Amount must be greater than 0", amountExceeds: "Amount exceeds your",
 		cctpUnavailable: "CCTP not available on this route",
 		networkMismatch: "Source and destination must be on the same network (testnet/mainnet)",
-		forwardUnavailable: "Forwarding fee quote unavailable â€” turn off Forwarding Service or retry",
+		forwardUnavailable: "Forwarding fee quote unavailable — turn off Forwarding Service or retry",
 		amountMustExceedFee: "Amount must exceed the CCTP fee",
-		switchingTo: "Switching wallet to", alreadyRelayed: "Mint was already submitted by a relayer â€” funds are on",
-		forwarderStalled: "Forwarder hasn't completed â€” proceeding with manual mintâ€¦",
+		switchingTo: "Switching wallet to", alreadyRelayed: "Mint was already submitted by a relayer — funds are on",
+		forwarderStalled: "Forwarder hasn't completed — proceeding with manual mint…",
 		resumeConfirm: "This burn was created for recipient",
-		notOnChain: "Wallet is not on", abortMint: " â€” mint aborted before send",
-		walletChanged: "Wallet account or chain changed mid-flow â€” aborting before send (no transaction was submitted)",
+		notOnChain: "Wallet is not on", abortMint: " — mint aborted before send",
+		walletChanged: "Wallet account or chain changed mid-flow — aborting before send (no transaction was submitted)",
 		noWallet: "No wallet detected. Install MetaMask.", connectionRejected: "Connection rejected: ",
 		anotherBridge: "Another bridge flow is in progress",
-		forwardCompleted: "Forward completed â€” funds are on",
-		attestationTimeout: "Attestation timeout â€” the burn succeeded; mint can be retried with the burn tx hash",
-		forwardTimeout: "Forward completion timeout â€” attestation signed, manual mint possible",
-		forwardTimeoutNoAtt: "Forward completion timeout â€” attestation not signed yet; Circle may still forward it, or resume later from this page",
+		forwardCompleted: "Forward completed — funds are on",
+		attestationTimeout: "Attestation timeout — the burn succeeded; mint can be retried with the burn tx hash",
+		forwardTimeout: "Forward completion timeout — attestation signed, manual mint possible",
+		forwardTimeoutNoAtt: "Forward completion timeout — attestation not signed yet; Circle may still forward it, or resume later from this page",
 		usdcBridgingUnavailable: "USDC bridging unavailable on",
 		bridgeNotDeployed: "Bridge not deployed on",
 		bridgeToken: "Bridge", to: "to",
@@ -58,44 +58,44 @@ const TRANSLATIONS = {
 		selectProtocol: "Select Protocol",
 	},
 	zh: {
-		mainnet: "ä¸»ç½‘", testnet: "æµ‹è¯•ç½‘", notConnected: "æœªè¿žæŽ¥",
-		connectWallet: "è¿žæŽ¥é’±åŒ…", crossChainBridge: "è·¨é“¾æ¡¥",
-		amount: "é‡‘é¢", balance: "ä½™é¢", estGasFee: "é¢„ä¼°Gasè´¹ï¼ˆæºé“¾ï¼‰",
-		cctpFee: "CCTPå¿«é€Ÿè½¬è´¦è´¹ï¼ˆUSDCï¼‰",
-		forwardingService: "è½¬å‘æœåŠ¡ â€” Circleä¸ºæ‚¨æäº¤é“¸é€ ï¼ˆé¢å¤–è´¹ç”¨ï¼Œæ— éœ€ç›®æ ‡é“¾Gasï¼‰",
-		unfinishedBridge: "æ£€æµ‹åˆ°æœªå®Œæˆçš„æ¡¥æŽ¥", resumeMint: "æ¢å¤é“¸é€ ",
-		dismiss: "å…³é—­", burn: "é”€æ¯", attestation: "è¯æ˜Ž", mint: "é“¸é€ ",
-		enterAmount: "è¾“å…¥é‡‘é¢", cctpContracts: "CCTP V2 åˆçº¦",
-		txHistory: "äº¤æ˜“åŽ†å²", noTxs: "æš‚æ— äº¤æ˜“",
-		footerText: "WarpArcæ¡¥ Â· USDCé€šè¿‡Circle CCTP V2",
-		systemStatus: "ç³»ç»ŸçŠ¶æ€", faucet: "æ°´é¾™å¤´",
-		sameChain: "å·²é€‰æ‹©ç›¸åŒé“¾", notDeployed: "æœªéƒ¨ç½²",
-		approving: "æŽˆæƒUSDCä¸­...", burning: "é”€æ¯ä¸­", waitingAttest: "ç­‰å¾…è¯æ˜Ž...",
-		minting: "é“¸é€ ä¸­", waitingForward: "ç­‰å¾…Circleè½¬å‘...",
-		bridgeComplete: "æ¡¥æŽ¥å®Œæˆï¼", bridgeFailed: "æ¡¥æŽ¥å¤±è´¥ï¼š",
-		resumeFailed: "æ¢å¤å¤±è´¥ï¼š", connectFirst: "è¯·å…ˆè¿žæŽ¥é’±åŒ…",
-		enterValidAmount: "è¯·è¾“å…¥æœ‰æ•ˆé‡‘é¢", invalidAmount: "é‡‘é¢æ ¼å¼æ— æ•ˆ",
-		amountMustExceed0: "é‡‘é¢å¿…é¡»å¤§äºŽ0", amountExceeds: "é‡‘é¢è¶…è¿‡æ‚¨çš„",
-		cctpUnavailable: "æ­¤è·¯çº¿ä¸å¯ç”¨CCTP",
-		networkMismatch: "æºé“¾å’Œç›®æ ‡é“¾å¿…é¡»åœ¨åŒä¸€ç½‘ç»œï¼ˆæµ‹è¯•ç½‘/ä¸»ç½‘ï¼‰",
-		forwardUnavailable: "è½¬å‘è´¹ç”¨æŠ¥ä»·ä¸å¯ç”¨ â€” å…³é—­è½¬å‘æœåŠ¡æˆ–é‡è¯•",
-		amountMustExceedFee: "é‡‘é¢å¿…é¡»è¶…è¿‡CCTPè´¹ç”¨",
-		switchingTo: "åˆ‡æ¢é’±åŒ…åˆ°", alreadyRelayed: "é“¸é€ å·²è¢«ä¸­ç»§å™¨æäº¤ â€” èµ„é‡‘å·²åœ¨",
-		forwarderStalled: "è½¬å‘å™¨æœªå®Œæˆ â€” æ‰‹åŠ¨é“¸é€ ç»§ç»­â€¦",
-		resumeConfirm: "æ­¤é”€æ¯ä¸ºæ”¶æ¬¾äººåˆ›å»º",
-		notOnChain: "é’±åŒ…ä¸åœ¨", abortMint: " â€” é“¸é€ åœ¨å‘é€å‰ä¸­æ­¢",
-		walletChanged: "é’±åŒ…è´¦æˆ·æˆ–é“¾åœ¨æµç¨‹ä¸­æ›´æ”¹ â€” åœ¨å‘é€å‰ä¸­æ­¢ï¼ˆæœªæäº¤äº¤æ˜“ï¼‰",
-		noWallet: "æœªæ£€æµ‹åˆ°é’±åŒ…ã€‚è¯·å®‰è£…MetaMaskã€‚", connectionRejected: "è¿žæŽ¥è¢«æ‹’ç»ï¼š",
-		anotherBridge: "å¦ä¸€ä¸ªæ¡¥æŽ¥æµç¨‹æ­£åœ¨è¿›è¡Œ",
-		forwardCompleted: "è½¬å‘å®Œæˆ â€” èµ„é‡‘å·²åœ¨",
-		attestationTimeout: "è¯æ˜Žè¶…æ—¶ â€” é”€æ¯å·²æˆåŠŸï¼›å¯ä½¿ç”¨é”€æ¯äº¤æ˜“å“ˆå¸Œé‡è¯•é“¸é€ ",
-		forwardTimeout: "è½¬å‘å®Œæˆè¶…æ—¶ â€” è¯æ˜Žå·²ç­¾åï¼Œå¯æ‰‹åŠ¨é“¸é€ ",
-		forwardTimeoutNoAtt: "è½¬å‘å®Œæˆè¶…æ—¶ â€” è¯æ˜Žå°šæœªç­¾åï¼›Circleå¯èƒ½ä»åœ¨è½¬å‘ï¼Œæˆ–ç¨åŽä»Žæ­¤é¡µé¢æ¢å¤",
-		usdcBridgingUnavailable: "USDCæ¡¥æŽ¥ä¸å¯ç”¨äºŽ",
-		bridgeNotDeployed: "æ¡¥æŽ¥æœªéƒ¨ç½²äºŽ",
-		bridgeToken: "æ¡¥æŽ¥", to: "åˆ°",
-		ethNotAvailable: "ETHä¸å¯ç”¨äºŽ",
-		ethOnlyEvm: "ETHæ¡¥æŽ¥ä»…é€‚ç”¨äºŽEVMé“¾ï¼ˆä¸åŒ…æ‹¬Arcï¼‰",
+		mainnet: "主网", testnet: "测试网", notConnected: "未连接",
+		connectWallet: "连接钱包", crossChainBridge: "跨链桥",
+		amount: "金额", balance: "余额", estGasFee: "预估Gas费（源链）",
+		cctpFee: "CCTP快速转账费（USDC）",
+		forwardingService: "转发服务 — Circle为您提交铸造（额外费用，无需目标链Gas）",
+		unfinishedBridge: "检测到未完成的桥接", resumeMint: "恢复铸造",
+		dismiss: "关闭", burn: "销毁", attestation: "证明", mint: "铸造",
+		enterAmount: "输入金额", cctpContracts: "CCTP V2 合约",
+		txHistory: "交易历史", noTxs: "暂无交易",
+		footerText: "WarpArc桥 · USDC通过Circle CCTP V2",
+		systemStatus: "系统状态", faucet: "水龙头",
+		sameChain: "已选择相同链", notDeployed: "未部署",
+		approving: "授权USDC中...", burning: "销毁中", waitingAttest: "等待证明...",
+		minting: "铸造中", waitingForward: "等待Circle转发...",
+		bridgeComplete: "桥接完成！", bridgeFailed: "桥接失败：",
+		resumeFailed: "恢复失败：", connectFirst: "请先连接钱包",
+		enterValidAmount: "请输入有效金额", invalidAmount: "金额格式无效",
+		amountMustExceed0: "金额必须大于0", amountExceeds: "金额超过您的",
+		cctpUnavailable: "此路线不可用CCTP",
+		networkMismatch: "源链和目标链必须在同一网络（测试网/主网）",
+		forwardUnavailable: "转发费用报价不可用 — 关闭转发服务或重试",
+		amountMustExceedFee: "金额必须超过CCTP费用",
+		switchingTo: "切换钱包到", alreadyRelayed: "铸造已被中继器提交 — 资金已在",
+		forwarderStalled: "转发器未完成 — 手动铸造继续…",
+		resumeConfirm: "此销毁为收款人创建",
+		notOnChain: "钱包不在", abortMint: " — 铸造在发送前中止",
+		walletChanged: "钱包账户或链在流程中更改 — 在发送前中止（未提交交易）",
+		noWallet: "未检测到钱包。请安装MetaMask。", connectionRejected: "连接被拒绝：",
+		anotherBridge: "另一个桥接流程正在进行",
+		forwardCompleted: "转发完成 — 资金已在",
+		attestationTimeout: "证明超时 — 销毁已成功；可使用销毁交易哈希重试铸造",
+		forwardTimeout: "转发完成超时 — 证明已签名，可手动铸造",
+		forwardTimeoutNoAtt: "转发完成超时 — 证明尚未签名；Circle可能仍在转发，或稍后从此页面恢复",
+		usdcBridgingUnavailable: "USDC桥接不可用于",
+		bridgeNotDeployed: "桥接未部署于",
+		bridgeToken: "桥接", to: "到",
+		ethNotAvailable: "ETH不可用于",
+		ethOnlyEvm: "ETH桥接仅适用于EVM链（不包括Arc）",
 		estFee: "预估费用",
 		estOutput: "预估输出",
 		estTime: "预计时间",
@@ -104,91 +104,91 @@ const TRANSLATIONS = {
 		selectProtocol: "选择协议",
 	},
 	hi: {
-		mainnet: "à¤®à¥‡à¤¨à¤¨à¥‡à¤Ÿ", testnet: "à¤Ÿà¥‡à¤¸à¥à¤Ÿà¤¨à¥‡à¤Ÿ", notConnected: "à¤•à¤¨à¥‡à¤•à¥à¤Ÿ à¤¨à¤¹à¥€à¤‚",
-		connectWallet: "à¤µà¥‰à¤²à¥‡à¤Ÿ à¤•à¤¨à¥‡à¤•à¥à¤Ÿ à¤•à¤°à¥‡à¤‚", crossChainBridge: "à¤•à¥à¤°à¥‰à¤¸-à¤šà¥‡à¤¨ à¤¬à¥à¤°à¤¿à¤œ",
-		amount: "à¤°à¤¾à¤¶à¤¿", balance: "à¤¬à¥ˆà¤²à¥‡à¤‚à¤¸", estGasFee: "à¤…à¤¨à¥à¤®à¤¾à¤¨à¤¿à¤¤ à¤—à¥ˆà¤¸ à¤¶à¥à¤²à¥à¤• (à¤¸à¥à¤°à¥‹à¤¤)",
-		cctpFee: "CCTP à¤«à¤¾à¤¸à¥à¤Ÿ-à¤Ÿà¥à¤°à¤¾à¤‚à¤¸à¤«à¤° à¤¶à¥à¤²à¥à¤• (USDC)",
-		forwardingService: "à¤«à¥‰à¤°à¤µà¤°à¥à¤¡à¤¿à¤‚à¤— à¤¸à¤°à¥à¤µà¤¿à¤¸ â€” Circle à¤†à¤ªà¤•à¥‡ à¤²à¤¿à¤ à¤®à¤¿à¤‚à¤Ÿ à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤•à¤°à¤¤à¤¾ à¤¹à¥ˆ (à¤…à¤¤à¤¿à¤°à¤¿à¤•à¥à¤¤ à¤¶à¥à¤²à¥à¤•, à¤—à¤‚à¤¤à¤µà¥à¤¯ à¤—à¥ˆà¤¸ à¤•à¥€ à¤†à¤µà¤¶à¥à¤¯à¤•à¤¤à¤¾ à¤¨à¤¹à¥€à¤‚)",
-		unfinishedBridge: "à¤…à¤ªà¥‚à¤°à¥à¤£ à¤¬à¥à¤°à¤¿à¤œ à¤•à¤¾ à¤ªà¤¤à¤¾ à¤šà¤²à¤¾", resumeMint: "à¤®à¤¿à¤‚à¤Ÿ à¤«à¤¿à¤° à¤¸à¥‡ à¤¶à¥à¤°à¥‚ à¤•à¤°à¥‡à¤‚",
-		dismiss: "à¤–à¤¾à¤°à¤¿à¤œ à¤•à¤°à¥‡à¤‚", burn: "à¤¬à¤°à¥à¤¨", attestation: "à¤…à¤Ÿà¥‡à¤¸à¥à¤Ÿà¥‡à¤¶à¤¨", mint: "à¤®à¤¿à¤‚à¤Ÿ",
-		enterAmount: "à¤°à¤¾à¤¶à¤¿ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚", cctpContracts: "CCTP V2 à¤•à¥‰à¤¨à¥à¤Ÿà¥à¤°à¥ˆà¤•à¥à¤Ÿà¥à¤¸",
-		txHistory: "à¤²à¥‡à¤¨à¤¦à¥‡à¤¨ à¤‡à¤¤à¤¿à¤¹à¤¾à¤¸", noTxs: "à¤…à¤­à¥€ à¤¤à¤• à¤•à¥‹à¤ˆ à¤²à¥‡à¤¨à¤¦à¥‡à¤¨ à¤¨à¤¹à¥€à¤‚",
-		footerText: "WarpArc à¤¬à¥à¤°à¤¿à¤œ Â· USDC Circle CCTP V2 à¤•à¥‡ à¤®à¤¾à¤§à¥à¤¯à¤® à¤¸à¥‡",
-		systemStatus: "à¤¸à¤¿à¤¸à¥à¤Ÿà¤® à¤¸à¥à¤¥à¤¿à¤¤à¤¿", faucet: "à¤«à¥‰à¤¸à¥‡à¤Ÿ",
-		sameChain: "à¤¸à¤®à¤¾à¤¨ à¤šà¥‡à¤¨ à¤šà¤¯à¤¨à¤¿à¤¤", notDeployed: "à¤¤à¥ˆà¤¨à¤¾à¤¤ à¤¨à¤¹à¥€à¤‚",
-		approving: "USDC à¤¸à¥à¤µà¥€à¤•à¥ƒà¤¤ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ...", burning: "à¤¬à¤°à¥à¤¨ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ", waitingAttest: "à¤…à¤Ÿà¥‡à¤¸à¥à¤Ÿà¥‡à¤¶à¤¨ à¤•à¥€ à¤ªà¥à¤°à¤¤à¥€à¤•à¥à¤·à¤¾...",
-		minting: "à¤®à¤¿à¤‚à¤Ÿ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ", waitingForward: "Circle à¤«à¥‰à¤°à¤µà¤°à¥à¤¡ à¤•à¥€ à¤ªà¥à¤°à¤¤à¥€à¤•à¥à¤·à¤¾...",
-		bridgeComplete: "à¤¬à¥à¤°à¤¿à¤œ à¤ªà¥‚à¤°à¥à¤£!", bridgeFailed: "à¤¬à¥à¤°à¤¿à¤œ à¤µà¤¿à¤«à¤²: ",
-		resumeFailed: "à¤«à¤¿à¤° à¤¸à¥‡ à¤¶à¥à¤°à¥‚ à¤•à¤°à¤¨à¤¾ à¤µà¤¿à¤«à¤²: ", connectFirst: "à¤ªà¤¹à¤²à¥‡ à¤…à¤ªà¤¨à¤¾ à¤µà¥‰à¤²à¥‡à¤Ÿ à¤•à¤¨à¥‡à¤•à¥à¤Ÿ à¤•à¤°à¥‡à¤‚",
-		enterValidAmount: "à¤®à¤¾à¤¨à¥à¤¯ à¤°à¤¾à¤¶à¤¿ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚", invalidAmount: "à¤…à¤®à¤¾à¤¨à¥à¤¯ à¤°à¤¾à¤¶à¤¿ à¤ªà¥à¤°à¤¾à¤°à¥‚à¤ª",
-		amountMustExceed0: "à¤°à¤¾à¤¶à¤¿ 0 à¤¸à¥‡ à¤…à¤§à¤¿à¤• à¤¹à¥‹à¤¨à¥€ à¤šà¤¾à¤¹à¤¿à¤", amountExceeds: "à¤°à¤¾à¤¶à¤¿ à¤†à¤ªà¤•à¥‡ à¤¸à¥‡ à¤…à¤§à¤¿à¤• à¤¹à¥ˆ",
-		cctpUnavailable: "à¤‡à¤¸ à¤®à¤¾à¤°à¥à¤— à¤ªà¤° CCTP à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆ",
-		networkMismatch: "à¤¸à¥à¤°à¥‹à¤¤ à¤”à¤° à¤—à¤‚à¤¤à¤µà¥à¤¯ à¤¸à¤®à¤¾à¤¨ à¤¨à¥‡à¤Ÿà¤µà¤°à¥à¤• à¤ªà¤° à¤¹à¥‹à¤¨à¥‡ à¤šà¤¾à¤¹à¤¿à¤ (à¤Ÿà¥‡à¤¸à¥à¤Ÿà¤¨à¥‡à¤Ÿ/à¤®à¥‡à¤¨à¤¨à¥‡à¤Ÿ)",
-		forwardUnavailable: "à¤«à¥‰à¤°à¤µà¤°à¥à¤¡à¤¿à¤‚à¤— à¤¶à¥à¤²à¥à¤• à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ â€” à¤«à¥‰à¤°à¤µà¤°à¥à¤¡à¤¿à¤‚à¤— à¤¸à¤°à¥à¤µà¤¿à¤¸ à¤¬à¤‚à¤¦ à¤•à¤°à¥‡à¤‚ à¤¯à¤¾ à¤ªà¥à¤¨à¤ƒ à¤ªà¥à¤°à¤¯à¤¾à¤¸ à¤•à¤°à¥‡à¤‚",
-		amountMustExceedFee: "à¤°à¤¾à¤¶à¤¿ CCTP à¤¶à¥à¤²à¥à¤• à¤¸à¥‡ à¤…à¤§à¤¿à¤• à¤¹à¥‹à¤¨à¥€ à¤šà¤¾à¤¹à¤¿à¤",
-		switchingTo: "à¤µà¥‰à¤²à¥‡à¤Ÿ à¤¸à¥à¤µà¤¿à¤š à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ", alreadyRelayed: "à¤®à¤¿à¤‚à¤Ÿ à¤ªà¤¹à¤²à¥‡ à¤¹à¥€ à¤°à¤¿à¤²à¥‡à¤¯à¤° à¤¦à¥à¤µà¤¾à¤°à¤¾ à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤•à¤¿à¤¯à¤¾ à¤œà¤¾ à¤šà¥à¤•à¤¾ à¤¹à¥ˆ â€” à¤«à¤‚à¤¡ à¤¹à¥ˆà¤‚",
-		forwarderStalled: "à¤«à¥‰à¤°à¤µà¤°à¥à¤¡à¤° à¤ªà¥‚à¤°à¤¾ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤† â€” à¤®à¥ˆà¤¨à¥à¤…à¤² à¤®à¤¿à¤‚à¤Ÿ à¤œà¤¾à¤°à¥€â€¦",
-		resumeConfirm: "à¤¯à¤¹ à¤¬à¤°à¥à¤¨ à¤ªà¥à¤°à¤¾à¤ªà¥à¤¤à¤•à¤°à¥à¤¤à¤¾ à¤•à¥‡ à¤²à¤¿à¤ à¤¬à¤¨à¤¾à¤¯à¤¾ à¤—à¤¯à¤¾ à¤¥à¤¾",
-		notOnChain: "à¤µà¥‰à¤²à¥‡à¤Ÿ à¤ªà¤° à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆ", abortMint: " â€” à¤­à¥‡à¤œà¤¨à¥‡ à¤¸à¥‡ à¤ªà¤¹à¤²à¥‡ à¤®à¤¿à¤‚à¤Ÿ à¤¨à¤¿à¤°à¤¸à¥à¤¤",
-		walletChanged: "à¤µà¥‰à¤²à¥‡à¤Ÿ à¤–à¤¾à¤¤à¤¾ à¤¯à¤¾ à¤šà¥‡à¤¨ à¤¬à¤¦à¤² à¤—à¤¯à¤¾ â€” à¤­à¥‡à¤œà¤¨à¥‡ à¤¸à¥‡ à¤ªà¤¹à¤²à¥‡ à¤¨à¤¿à¤°à¤¸à¥à¤¤ (à¤•à¥‹à¤ˆ à¤²à¥‡à¤¨à¤¦à¥‡à¤¨ à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤¨à¤¹à¥€à¤‚)",
-		noWallet: "à¤•à¥‹à¤ˆ à¤µà¥‰à¤²à¥‡à¤Ÿ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¤¾à¥¤ MetaMask à¤‡à¤‚à¤¸à¥à¤Ÿà¥‰à¤² à¤•à¤°à¥‡à¤‚à¥¤", connectionRejected: "à¤•à¤¨à¥‡à¤•à¥à¤¶à¤¨ à¤…à¤¸à¥à¤µà¥€à¤•à¥ƒà¤¤: ",
-		anotherBridge: "à¤à¤• à¤”à¤° à¤¬à¥à¤°à¤¿à¤œ à¤ªà¥à¤°à¤•à¥à¤°à¤¿à¤¯à¤¾ à¤šà¤² à¤°à¤¹à¥€ à¤¹à¥ˆ",
-		forwardCompleted: "à¤«à¥‰à¤°à¤µà¤°à¥à¤¡ à¤ªà¥‚à¤°à¥à¤£ â€” à¤«à¤‚à¤¡ à¤¹à¥ˆà¤‚",
-		attestationTimeout: "à¤…à¤Ÿà¥‡à¤¸à¥à¤Ÿà¥‡à¤¶à¤¨ à¤Ÿà¤¾à¤‡à¤®à¤†à¤‰à¤Ÿ â€” à¤¬à¤°à¥à¤¨ à¤¸à¤«à¤²; à¤¬à¤°à¥à¤¨ tx à¤¹à¥ˆà¤¶ à¤¸à¥‡ à¤®à¤¿à¤‚à¤Ÿ à¤ªà¥à¤¨à¤ƒ à¤ªà¥à¤°à¤¯à¤¾à¤¸ à¤•à¤°à¥‡à¤‚",
-		forwardTimeout: "à¤«à¥‰à¤°à¤µà¤°à¥à¤¡ à¤ªà¥‚à¤°à¥à¤£à¤¤à¤¾ à¤Ÿà¤¾à¤‡à¤®à¤†à¤‰à¤Ÿ â€” à¤…à¤Ÿà¥‡à¤¸à¥à¤Ÿà¥‡à¤¶à¤¨ à¤¹à¤¸à¥à¤¤à¤¾à¤•à¥à¤·à¤°à¤¿à¤¤, à¤®à¥ˆà¤¨à¥à¤…à¤² à¤®à¤¿à¤‚à¤Ÿ à¤¸à¤‚à¤­à¤µ",
+		mainnet: "मेननेट", testnet: "टेस्टनेट", notConnected: "कनेक्ट नहीं",
+		connectWallet: "वॉलेट कनेक्ट करें", crossChainBridge: "क्रॉस-चेन ब्रिज",
+		amount: "राशि", balance: "बैलेंस", estGasFee: "अनुमानित गैस शुल्क (स्रोत)",
+		cctpFee: "CCTP फास्ट-ट्रांसफर शुल्क (USDC)",
+		forwardingService: "फॉरवर्डिंग सर्विस — Circle आपके लिए मिंट सबमिट करता है (अतिरिक्त शुल्क, गंतव्य गैस की आवश्यकता नहीं)",
+		unfinishedBridge: "अपूर्ण ब्रिज का पता चला", resumeMint: "मिंट फिर से शुरू करें",
+		dismiss: "खारिज करें", burn: "बर्न", attestation: "अटेस्टेशन", mint: "मिंट",
+		enterAmount: "राशि दर्ज करें", cctpContracts: "CCTP V2 कॉन्ट्रैक्ट्स",
+		txHistory: "लेनदेन इतिहास", noTxs: "अभी तक कोई लेनदेन नहीं",
+		footerText: "WarpArc ब्रिज · USDC Circle CCTP V2 के माध्यम से",
+		systemStatus: "सिस्टम स्थिति", faucet: "फॉसेट",
+		sameChain: "समान चेन चयनित", notDeployed: "तैनात नहीं",
+		approving: "USDC स्वीकृत हो रहा है...", burning: "बर्न हो रहा है", waitingAttest: "अटेस्टेशन की प्रतीक्षा...",
+		minting: "मिंट हो रहा है", waitingForward: "Circle फॉरवर्ड की प्रतीक्षा...",
+		bridgeComplete: "ब्रिज पूर्ण!", bridgeFailed: "ब्रिज विफल: ",
+		resumeFailed: "फिर से शुरू करना विफल: ", connectFirst: "पहले अपना वॉलेट कनेक्ट करें",
+		enterValidAmount: "मान्य राशि दर्ज करें", invalidAmount: "अमान्य राशि प्रारूप",
+		amountMustExceed0: "राशि 0 से अधिक होनी चाहिए", amountExceeds: "राशि आपके से अधिक है",
+		cctpUnavailable: "इस मार्ग पर CCTP उपलब्ध नहीं है",
+		networkMismatch: "स्रोत और गंतव्य समान नेटवर्क पर होने चाहिए (टेस्टनेट/मेननेट)",
+		forwardUnavailable: "फॉरवर्डिंग शुल्क उपलब्ध नहीं — फॉरवर्डिंग सर्विस बंद करें या पुनः प्रयास करें",
+		amountMustExceedFee: "राशि CCTP शुल्क से अधिक होनी चाहिए",
+		switchingTo: "वॉलेट स्विच हो रहा है", alreadyRelayed: "मिंट पहले ही रिलेयर द्वारा सबमिट किया जा चुका है — फंड हैं",
+		forwarderStalled: "फॉरवर्डर पूरा नहीं हुआ — मैनुअल मिंट जारी…",
+		resumeConfirm: "यह बर्न प्राप्तकर्ता के लिए बनाया गया था",
+		notOnChain: "वॉलेट पर नहीं है", abortMint: " — भेजने से पहले मिंट निरस्त",
+		walletChanged: "वॉलेट खाता या चेन बदल गया — भेजने से पहले निरस्त (कोई लेनदेन सबमिट नहीं)",
+		noWallet: "कोई वॉलेट नहीं मिला। MetaMask इंस्टॉल करें।", connectionRejected: "कनेक्शन अस्वीकृत: ",
+		anotherBridge: "एक और ब्रिज प्रक्रिया चल रही है",
+		forwardCompleted: "फॉरवर्ड पूर्ण — फंड हैं",
+		attestationTimeout: "अटेस्टेशन टाइमआउट — बर्न सफल; बर्न tx हैश से मिंट पुनः प्रयास करें",
+		forwardTimeout: "फॉरवर्ड पूर्णता टाइमआउट — अटेस्टेशन हस्ताक्षरित, मैनुअल मिंट संभव",
 		estFee: "अनुमानित शुल्क",
 		estOutput: "अनुमानित आउटपुट",
 		estTime: "अनुमानित समय",
 		relayDesc: "रिले विवरण",
 		route: "मार्ग",
 		selectProtocol: "प्रोटोकॉल चुनें",
-		forwardTimeoutNoAtt: "à¤«à¥‰à¤°à¤µà¤°à¥à¤¡ à¤ªà¥‚à¤°à¥à¤£à¤¤à¤¾ à¤Ÿà¤¾à¤‡à¤®à¤†à¤‰à¤Ÿ â€” à¤…à¤Ÿà¥‡à¤¸à¥à¤Ÿà¥‡à¤¶à¤¨ à¤…à¤­à¥€ à¤¤à¤• à¤¹à¤¸à¥à¤¤à¤¾à¤•à¥à¤·à¤°à¤¿à¤¤ à¤¨à¤¹à¥€à¤‚; Circle à¤…à¤­à¥€ à¤­à¥€ à¤«à¥‰à¤°à¤µà¤°à¥à¤¡ à¤•à¤° à¤¸à¤•à¤¤à¤¾ à¤¹à¥ˆ",
-		usdcBridgingUnavailable: "USDC à¤¬à¥à¤°à¤¿à¤œà¤¿à¤‚à¤— à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆ",
-		bridgeNotDeployed: "à¤¬à¥à¤°à¤¿à¤œ à¤¤à¥ˆà¤¨à¤¾à¤¤ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆ",
-		bridgeToken: "à¤¬à¥à¤°à¤¿à¤œ", to: "à¤ªà¤°",
-		ethNotAvailable: "ETH à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆ",
-		ethOnlyEvm: "ETH à¤¬à¥à¤°à¤¿à¤œà¤¿à¤‚à¤— à¤•à¥‡à¤µà¤² EVM à¤šà¥‡à¤¨ à¤ªà¤° à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¹à¥ˆ (Arc à¤¨à¤¹à¥€à¤‚)",
+		forwardTimeoutNoAtt: "फॉरवर्ड पूर्णता टाइमआउट — अटेस्टेशन अभी तक हस्ताक्षरित नहीं; Circle अभी भी फॉरवर्ड कर सकता है",
+		usdcBridgingUnavailable: "USDC ब्रिजिंग उपलब्ध नहीं है",
+		bridgeNotDeployed: "ब्रिज तैनात नहीं है",
+		bridgeToken: "ब्रिज", to: "पर",
+		ethNotAvailable: "ETH उपलब्ध नहीं है",
+		ethOnlyEvm: "ETH ब्रिजिंग केवल EVM चेन पर उपलब्ध है (Arc नहीं)",
 	},
 	es: {
 		mainnet: "Mainnet", testnet: "Testnet", notConnected: "No conectado",
 		connectWallet: "Conectar billetera", crossChainBridge: "Puente cross-chain",
 		amount: "Cantidad", balance: "Saldo", estGasFee: "Tarifa de gas estimada (origen)",
 		cctpFee: "Tarifa CCTP Fast-Transfer (USDC)",
-		forwardingService: "Servicio de reenvÃ­o â€” Circle envÃ­a el mint por ti (tarifa extra, sin gas de destino)",
+		forwardingService: "Servicio de reenvío — Circle envía el mint por ti (tarifa extra, sin gas de destino)",
 		unfinishedBridge: "Puente incompleto detectado", resumeMint: "Reanudar mint",
-		dismiss: "Descartar", burn: "Quema", attestation: "AttestaciÃ³n", mint: "Mint",
+		dismiss: "Descartar", burn: "Quema", attestation: "Attestación", mint: "Mint",
 		enterAmount: "Ingresar cantidad", cctpContracts: "Contratos CCTP V2",
-		txHistory: "Historial de transacciones", noTxs: "Sin transacciones aÃºn",
-		footerText: "WarpArc Bridge Â· USDC vÃ­a Circle CCTP V2",
+		txHistory: "Historial de transacciones", noTxs: "Sin transacciones aún",
+		footerText: "WarpArc Bridge · USDC vía Circle CCTP V2",
 		systemStatus: "Estado del sistema", faucet: "Faucet",
 		sameChain: "Misma cadena seleccionada", notDeployed: "no desplegado",
-		approving: "Aprobando USDC...", burning: "Quemando", waitingAttest: "Esperando attestaciÃ³n...",
-		minting: "AcuÃ±ando en", waitingForward: "Esperando reenvÃ­o de Circle...",
-		bridgeComplete: "Â¡Puente completado!", bridgeFailed: "Puente fallido: ",
-		resumeFailed: "ReanudaciÃ³n fallida: ", connectFirst: "Conecta tu billetera primero",
-		enterValidAmount: "Ingresa una cantidad vÃ¡lida", invalidAmount: "Formato de cantidad invÃ¡lido",
+		approving: "Aprobando USDC...", burning: "Quemando", waitingAttest: "Esperando attestación...",
+		minting: "Acuñando en", waitingForward: "Esperando reenvío de Circle...",
+		bridgeComplete: "¡Puente completado!", bridgeFailed: "Puente fallido: ",
+		resumeFailed: "Reanudación fallida: ", connectFirst: "Conecta tu billetera primero",
+		enterValidAmount: "Ingresa una cantidad válida", invalidAmount: "Formato de cantidad inválido",
 		amountMustExceed0: "La cantidad debe ser mayor a 0", amountExceeds: "La cantidad excede tu",
 		cctpUnavailable: "CCTP no disponible en esta ruta",
 		networkMismatch: "Origen y destino deben estar en la misma red (testnet/mainnet)",
-		forwardUnavailable: "CotizaciÃ³n de reenvÃ­o no disponible â€” desactiva el servicio o reintenta",
+		forwardUnavailable: "Cotización de reenvío no disponible — desactiva el servicio o reintenta",
 		amountMustExceedFee: "La cantidad debe exceder la tarifa CCTP",
-		switchingTo: "Cambiando billetera a", alreadyRelayed: "El mint ya fue enviado por un relayer â€” fondos en",
-		forwarderStalled: "Reenviador no completÃ³ â€” mint manual continuandoâ€¦",
+		switchingTo: "Cambiando billetera a", alreadyRelayed: "El mint ya fue enviado por un relayer — fondos en",
+		forwarderStalled: "Reenviador no completó — mint manual continuando…",
 		resumeConfirm: "Esta quema fue creada para el destinatario",
-		notOnChain: "Billetera no estÃ¡ en", abortMint: " â€” mint abortado antes de enviar",
+		notOnChain: "Billetera no está en", abortMint: " — mint abortado antes de enviar",
 		estFee: "Tarifa estimada",
 		estOutput: "Salida estimada",
 		estTime: "Tiempo estimado",
 		relayDesc: "Descripción del relé",
 		route: "Ruta",
 		selectProtocol: "Seleccionar protocolo",
-		walletChanged: "Cuenta o cadena cambiÃ³ durante el flujo â€” abortando (sin transacciÃ³n enviada)",
-		noWallet: "Sin billetera detectada. Instala MetaMask.", connectionRejected: "ConexiÃ³n rechazada: ",
+		walletChanged: "Cuenta o cadena cambió durante el flujo — abortando (sin transacción enviada)",
+		noWallet: "Sin billetera detectada. Instala MetaMask.", connectionRejected: "Conexión rechazada: ",
 		anotherBridge: "Otro flujo de puente en progreso",
-		forwardCompleted: "ReenvÃ­o completado â€” fondos en",
-		attestationTimeout: "Timeout de attestaciÃ³n â€” quema exitosa; reintenta mint con el hash",
-		forwardTimeout: "Timeout de reenvÃ­o â€” attestaciÃ³n firmada, mint manual posible",
-		forwardTimeoutNoAtt: "Timeout de reenvÃ­o â€” attestaciÃ³n no firmada aÃºn; Circle puede reenviar aÃºn",
+		forwardCompleted: "Reenvío completado — fondos en",
+		attestationTimeout: "Timeout de attestación — quema exitosa; reintenta mint con el hash",
+		forwardTimeout: "Timeout de reenvío — attestación firmada, mint manual posible",
+		forwardTimeoutNoAtt: "Timeout de reenvío — attestación no firmada aún; Circle puede reenviar aún",
 		usdcBridgingUnavailable: "Puente USDC no disponible en",
 		bridgeNotDeployed: "Puente no desplegado en",
 		bridgeToken: "Puente", to: "a",
@@ -196,145 +196,145 @@ const TRANSLATIONS = {
 		ethOnlyEvm: "Puente ETH solo disponible en cadenas EVM (no Arc)",
 	},
 	fr: {
-		mainnet: "Mainnet", testnet: "Testnet", notConnected: "Non connectÃ©",
+		mainnet: "Mainnet", testnet: "Testnet", notConnected: "Non connecté",
 		connectWallet: "Connecter le portefeuille", crossChainBridge: "Pont cross-chain",
-		amount: "Montant", balance: "Solde", estGasFee: "Frais de gas estimÃ©s (source)",
+		amount: "Montant", balance: "Solde", estGasFee: "Frais de gas estimés (source)",
 		cctpFee: "Frais CCTP Fast-Transfer (USDC)",
-		forwardingService: "Service de transfert â€” Circle soumet le mint pour vous (frais supplÃ©mentaires, pas de gas de destination)",
-		unfinishedBridge: "Pont inachevÃ© dÃ©tectÃ©", resumeMint: "Reprendre le mint",
-		dismiss: "Ignorer", burn: "BrÃ»lage", attestation: "Attestation", mint: "Mint",
+		forwardingService: "Service de transfert — Circle soumet le mint pour vous (frais supplémentaires, pas de gas de destination)",
+		unfinishedBridge: "Pont inachevé détecté", resumeMint: "Reprendre le mint",
+		dismiss: "Ignorer", burn: "Brûlage", attestation: "Attestation", mint: "Mint",
 		enterAmount: "Entrer le montant", cctpContracts: "Contrats CCTP V2",
 		txHistory: "Historique des transactions", noTxs: "Aucune transaction",
-		footerText: "WarpArc Bridge Â· USDC via Circle CCTP V2",
-		systemStatus: "Ã‰tat du systÃ¨me", faucet: "Faucet",
-		sameChain: "MÃªme chaÃ®ne sÃ©lectionnÃ©e", notDeployed: "non dÃ©ployÃ©",
-		approving: "Approbation USDC...", burning: "BrÃ»lage", waitingAttest: "En attente d'attestation...",
+		footerText: "WarpArc Bridge · USDC via Circle CCTP V2",
+		systemStatus: "État du système", faucet: "Faucet",
+		sameChain: "Même chaîne sélectionnée", notDeployed: "non déployé",
+		approving: "Approbation USDC...", burning: "Brûlage", waitingAttest: "En attente d'attestation...",
 		minting: "Frappe sur", waitingForward: "En attente du transfert Circle...",
-		bridgeComplete: "Pont terminÃ© !", bridgeFailed: "Pont Ã©chouÃ© : ",
-		resumeFailed: "Reprise Ã©chouÃ©e : ", connectFirst: "Connectez d'abord votre portefeuille",
+		bridgeComplete: "Pont terminé !", bridgeFailed: "Pont échoué : ",
+		resumeFailed: "Reprise échouée : ", connectFirst: "Connectez d'abord votre portefeuille",
 		enterValidAmount: "Entrez un montant valide", invalidAmount: "Format de montant invalide",
-		amountMustExceed0: "Le montant doit Ãªtre supÃ©rieur Ã  0", amountExceeds: "Le montant dÃ©passe votre",
-		cctpUnavailable: "CCTP non disponible sur cet itinÃ©raire",
-		networkMismatch: "Source et destination doivent Ãªtre sur le mÃªme rÃ©seau (testnet/mainnet)",
+		amountMustExceed0: "Le montant doit être supérieur à 0", amountExceeds: "Le montant dépasse votre",
+		cctpUnavailable: "CCTP non disponible sur cet itinéraire",
+		networkMismatch: "Source et destination doivent être sur le même réseau (testnet/mainnet)",
 		estFee: "Frais estimés",
 		estOutput: "Sortie estimée",
 		estTime: "Temps estimé",
 		relayDesc: "Description du relais",
 		route: "Route",
 		selectProtocol: "Sélectionner le protocole",
-		forwardUnavailable: "Cotisation de transfert indisponible â€” dÃ©sactivez le service ou rÃ©essayez",
-		amountMustExceedFee: "Le montant doit dÃ©passer les frais CCTP",
-		switchingTo: "Changement de portefeuille vers", alreadyRelayed: "Le mint a dÃ©jÃ  Ã©tÃ© soumis par un relayer â€” fonds sur",
-		forwarderStalled: "Transfert non terminÃ© â€” mint manuel en coursâ€¦",
-		resumeConfirm: "Ce brÃ»lage a Ã©tÃ© crÃ©Ã© pour le destinataire",
-		notOnChain: "Portefeuille pas sur", abortMint: " â€” mint annulÃ© avant envoi",
-		walletChanged: "Compte ou chaÃ®ne modifiÃ© pendant le flux â€” annulation (aucune transaction soumise)",
-		noWallet: "Aucun portefeuille dÃ©tectÃ©. Installez MetaMask.", connectionRejected: "Connexion rejetÃ©e : ",
+		forwardUnavailable: "Cotisation de transfert indisponible — désactivez le service ou réessayez",
+		amountMustExceedFee: "Le montant doit dépasser les frais CCTP",
+		switchingTo: "Changement de portefeuille vers", alreadyRelayed: "Le mint a déjà été soumis par un relayer — fonds sur",
+		forwarderStalled: "Transfert non terminé — mint manuel en cours…",
+		resumeConfirm: "Ce brûlage a été créé pour le destinataire",
+		notOnChain: "Portefeuille pas sur", abortMint: " — mint annulé avant envoi",
+		walletChanged: "Compte ou chaîne modifié pendant le flux — annulation (aucune transaction soumise)",
+		noWallet: "Aucun portefeuille détecté. Installez MetaMask.", connectionRejected: "Connexion rejetée : ",
 		anotherBridge: "Un autre flux de pont est en cours",
-		forwardCompleted: "Transfert terminÃ© â€” fonds sur",
-		attestationTimeout: "Timeout d'attestation â€” brÃ»lage rÃ©ussi ; rÃ©essayez le mint avec le hash",
-		forwardTimeout: "Timeout de transfert â€” attestation signÃ©e, mint manuel possible",
-		forwardTimeoutNoAtt: "Timeout de transfert â€” attestation pas encore signÃ©e ; Circle peut encore transfÃ©rer",
+		forwardCompleted: "Transfert terminé — fonds sur",
+		attestationTimeout: "Timeout d'attestation — brûlage réussi ; réessayez le mint avec le hash",
+		forwardTimeout: "Timeout de transfert — attestation signée, mint manuel possible",
+		forwardTimeoutNoAtt: "Timeout de transfert — attestation pas encore signée ; Circle peut encore transférer",
 		usdcBridgingUnavailable: "Pont USDC non disponible sur",
-		bridgeNotDeployed: "Pont non dÃ©ployÃ© sur",
+		bridgeNotDeployed: "Pont non déployé sur",
 		bridgeToken: "Pont", to: "vers",
 		ethNotAvailable: "ETH non disponible sur",
-		ethOnlyEvm: "Pont ETH disponible uniquement sur les chaÃ®nes EVM (pas Arc)",
+		ethOnlyEvm: "Pont ETH disponible uniquement sur les chaînes EVM (pas Arc)",
 	},
 	ar: {
-		mainnet: "Ø§Ù„Ø´Ø¨ÙƒØ© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©", testnet: "Ø´Ø¨ÙƒØ© Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±", notConnected: "ØºÙŠØ± Ù…ØªØµÙ„",
-		connectWallet: "Ø±Ø¨Ø· Ø§Ù„Ù…Ø­ÙØ¸Ø©", crossChainBridge: "Ø¬Ø³Ø± Ø¹Ø¨Ø± Ø§Ù„Ø³Ù„Ø§Ø³Ù„",
-		amount: "Ø§Ù„Ù…Ø¨Ù„Øº", balance: "Ø§Ù„Ø±ØµÙŠØ¯", estGasFee: "Ø±Ø³ÙˆÙ… Ø§Ù„ØºØ§Ø² Ø§Ù„Ù…Ù‚Ø¯Ø±Ø© (Ø§Ù„Ù…ØµØ¯Ø±)",
-		cctpFee: "Ø±Ø³ÙˆÙ… CCTP Ø§Ù„Ø³Ø±ÙŠØ¹Ø© (USDC)",
-		forwardingService: "Ø®Ø¯Ù…Ø© Ø§Ù„ØªØ­ÙˆÙŠÙ„ â€” Circle ÙŠÙ‚Ø¯Ù… Ø§Ù„Ø³Ùƒ Ù„Ùƒ (Ø±Ø³ÙˆÙ… Ø¥Ø¶Ø§ÙÙŠØ©ØŒ Ù„Ø§ Ø­Ø§Ø¬Ø© Ù„ØºØ§Ø² Ø§Ù„ÙˆØ¬Ù‡Ø©)",
-		unfinishedBridge: "ØªÙ… Ø§ÙƒØªØ´Ø§Ù Ø¬Ø³Ø± ØºÙŠØ± Ù…ÙƒØªÙ…Ù„", resumeMint: "Ø§Ø³ØªØ¦Ù†Ø§Ù Ø§Ù„Ø³Ùƒ",
-		dismiss: "ØªØ¬Ø§Ù‡Ù„", burn: "Ø­Ø±Ù‚", attestation: "Ø´Ù‡Ø§Ø¯Ø©", mint: "Ø³Ùƒ",
-		enterAmount: "Ø£Ø¯Ø®Ù„ Ø§Ù„Ù…Ø¨Ù„Øº", cctpContracts: "Ø¹Ù‚ÙˆØ¯ CCTP V2",
-		txHistory: "Ø³Ø¬Ù„ Ø§Ù„Ù…Ø¹Ø§Ù…Ù„Ø§Øª", noTxs: "Ù„Ø§ Ù…Ø¹Ø§Ù…Ù„Ø§Øª Ø¨Ø¹Ø¯",
-		footerText: "Ø¬Ø³Ø± WarpArc Â· USDC Ø¹Ø¨Ø± Circle CCTP V2",
-		systemStatus: "Ø­Ø§Ù„Ø© Ø§Ù„Ù†Ø¸Ø§Ù…", faucet: "Ø§Ù„ØµÙ†Ø¨ÙˆØ±",
-		sameChain: "Ù†ÙØ³ Ø§Ù„Ø³Ù„Ø³Ù„Ø© Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©", notDeployed: "ØºÙŠØ± Ù…ÙÙ†Ø´Ø±",
-		approving: "Ù…ÙˆØ§ÙÙ‚Ø© USDC...", burning: "Ø­Ø±Ù‚", waitingAttest: "Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø´Ù‡Ø§Ø¯Ø©...",
-		minting: "Ø³Ùƒ Ø¹Ù„Ù‰", waitingForward: "Ø§Ù†ØªØ¸Ø§Ø± ØªØ­ÙˆÙŠÙ„ Circle...",
+		mainnet: "الشبكة الرئيسية", testnet: "شبكة الاختبار", notConnected: "غير متصل",
+		connectWallet: "ربط المحفظة", crossChainBridge: "جسر عبر السلاسل",
+		amount: "المبلغ", balance: "الرصيد", estGasFee: "رسوم الغاز المقدرة (المصدر)",
+		cctpFee: "رسوم CCTP السريعة (USDC)",
+		forwardingService: "خدمة التحويل — Circle يقدم السك لك (رسوم إضافية، لا حاجة لغاز الوجهة)",
+		unfinishedBridge: "تم اكتشاف جسر غير مكتمل", resumeMint: "استئناف السك",
+		dismiss: "تجاهل", burn: "حرق", attestation: "شهادة", mint: "سك",
+		enterAmount: "أدخل المبلغ", cctpContracts: "عقود CCTP V2",
+		txHistory: "سجل المعاملات", noTxs: "لا معاملات بعد",
+		footerText: "جسر WarpArc · USDC عبر Circle CCTP V2",
+		systemStatus: "حالة النظام", faucet: "الصنبور",
+		sameChain: "نفس السلسلة المحددة", notDeployed: "غير مُنشر",
+		approving: "موافقة USDC...", burning: "حرق", waitingAttest: "انتظار الشهادة...",
+		minting: "سك على", waitingForward: "انتظار تحويل Circle...",
 		estFee: "الرسوم المقدرة",
 		estOutput: "المخرجات المقدرة",
 		estTime: "الوقت المقدر",
 		relayDesc: "وصف المرحّل",
 		route: "المسار",
 		selectProtocol: "اختيار البروتوكول",
-		bridgeComplete: "Ø§ÙƒØªÙ…Ù„ Ø§Ù„Ø¬Ø³Ø±!", bridgeFailed: "ÙØ´Ù„ Ø§Ù„Ø¬Ø³Ø±: ",
-		resumeFailed: "ÙØ´Ù„ Ø§Ù„Ø§Ø³ØªØ¦Ù†Ø§Ù: ", connectFirst: "Ø§Ø±Ø¨Ø· Ù…Ø­ÙØ¸ØªÙƒ Ø£ÙˆÙ„Ø§Ù‹",
-		enterValidAmount: "Ø£Ø¯Ø®Ù„ Ù…Ø¨Ù„ØºÙ‹Ø§ ØµØ§Ù„Ø­Ù‹Ø§", invalidAmount: "ØªÙ†Ø³ÙŠÙ‚ Ù…Ø¨Ù„Øº ØºÙŠØ± ØµØ§Ù„Ø­",
-		amountMustExceed0: "ÙŠØ¬Ø¨ Ø£Ù† ÙŠÙƒÙˆÙ† Ø§Ù„Ù…Ø¨Ù„Øº Ø£ÙƒØ¨Ø± Ù…Ù† 0", amountExceeds: "Ø§Ù„Ù…Ø¨Ù„Øº ÙŠØªØ¬Ø§ÙˆØ²",
-		cctpUnavailable: "CCTP ØºÙŠØ± Ù…ØªØ§Ø­ Ø¹Ù„Ù‰ Ù‡Ø°Ø§ Ø§Ù„Ù…Ø³Ø§Ø±",
-		networkMismatch: "ÙŠØ¬Ø¨ Ø£Ù† ÙŠÙƒÙˆÙ† Ø§Ù„Ù…ØµØ¯Ø± ÙˆØ§Ù„ÙˆØ¬Ù‡Ø© Ø¹Ù„Ù‰ Ù†ÙØ³ Ø§Ù„Ø´Ø¨ÙƒØ© (Ø§Ø®ØªØ¨Ø§Ø±/Ø±Ø¦ÙŠØ³ÙŠØ©)",
-		forwardUnavailable: "Ø¹Ø±Ø¶ Ø±Ø³ÙˆÙ… Ø§Ù„ØªØ­ÙˆÙŠÙ„ ØºÙŠØ± Ù…ØªØ§Ø­ â€” Ø£ÙˆÙ‚Ù Ø§Ù„Ø®Ø¯Ù…Ø© Ø£Ùˆ Ø£Ø¹Ø¯ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©",
-		amountMustExceedFee: "ÙŠØ¬Ø¨ Ø£Ù† ÙŠØªØ¬Ø§ÙˆØ² Ø§Ù„Ù…Ø¨Ù„Øº Ø±Ø³ÙˆÙ… CCTP",
-		switchingTo: "ØªØ¨Ø¯ÙŠÙ„ Ø§Ù„Ù…Ø­ÙØ¸Ø© Ø¥Ù„Ù‰", alreadyRelayed: "ØªÙ… ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ø³Ùƒ Ø¨Ø§Ù„ÙØ¹Ù„ Ø¨ÙˆØ§Ø³Ø·Ø© Ù…ÙØ±Ø­Ù‘Ù„ â€” Ø§Ù„Ø£Ù…ÙˆØ§Ù„ ÙÙŠ",
-		forwarderStalled: "Ø§Ù„Ù…Ø­ÙˆÙ„ Ù„Ù… ÙŠÙƒØªÙ…Ù„ â€” Ø³Ùƒ ÙŠØ¯ÙˆÙŠ Ù…Ø³ØªÙ…Ø±â€¦",
-		resumeConfirm: "ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ù‡Ø°Ø§ Ø§Ù„Ø­Ø±Ù‚ Ù„Ù„Ù…Ø³ØªÙ„Ù…",
-		notOnChain: "Ø§Ù„Ù…Ø­ÙØ¸Ø© Ù„ÙŠØ³Øª Ø¹Ù„Ù‰", abortMint: " â€” ØªÙ… Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø³Ùƒ Ù‚Ø¨Ù„ Ø§Ù„Ø¥Ø±Ø³Ø§Ù„",
-		walletChanged: "ØªÙ… ØªØºÙŠÙŠØ± Ø§Ù„Ø­Ø³Ø§Ø¨ Ø£Ùˆ Ø§Ù„Ø³Ù„Ø³Ù„Ø© Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„ØªØ¯ÙÙ‚ â€” Ø¥Ù„ØºØ§Ø¡ (Ù„Ù… ÙŠØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ù…Ø¹Ø§Ù…Ù„Ø©)",
-		noWallet: "Ù„Ù… ÙŠØªÙ… Ø§ÙƒØªØ´Ø§Ù Ù…Ø­ÙØ¸Ø©. Ù‚Ù… Ø¨ØªØ«Ø¨ÙŠØª MetaMask.", connectionRejected: "ØªÙ… Ø±ÙØ¶ Ø§Ù„Ø§ØªØµØ§Ù„: ",
-		anotherBridge: "ØªØ¯ÙÙ‚ Ø¬Ø³Ø± Ø¢Ø®Ø± Ù‚ÙŠØ¯ Ø§Ù„ØªÙ†ÙÙŠØ°",
-		forwardCompleted: "Ø§ÙƒØªÙ…Ù„ Ø§Ù„ØªØ­ÙˆÙŠÙ„ â€” Ø§Ù„Ø£Ù…ÙˆØ§Ù„ ÙÙŠ",
-		attestationTimeout: "Ø§Ù†ØªÙ‡Øª Ù…Ù‡Ù„Ø© Ø§Ù„Ø´Ù‡Ø§Ø¯Ø© â€” Ø§Ù„Ø­Ø±Ù‚ Ù†Ø¬Ø­Ø› Ø£Ø¹Ø¯ Ù…Ø­Ø§ÙˆÙ„Ø© Ø§Ù„Ø³Ùƒ Ø¨Ø§Ù„Ù‡Ø§Ø´",
-		forwardTimeout: "Ø§Ù†ØªÙ‡Øª Ù…Ù‡Ù„Ø© Ø§Ù„ØªØ­ÙˆÙŠÙ„ â€” Ø§Ù„Ø´Ù‡Ø§Ø¯Ø© Ù…ÙˆÙ‚Ø¹Ø©ØŒ Ø³Ùƒ ÙŠØ¯ÙˆÙŠ Ù…Ù…ÙƒÙ†",
-		forwardTimeoutNoAtt: "Ø§Ù†ØªÙ‡Øª Ù…Ù‡Ù„Ø© Ø§Ù„ØªØ­ÙˆÙŠÙ„ â€” Ø§Ù„Ø´Ù‡Ø§Ø¯Ø© Ù„Ù… ØªÙÙˆÙ‚Ø¹ Ø¨Ø¹Ø¯Ø› Circle Ù‚Ø¯ ÙŠØ­ÙˆÙ„ Ø¨Ø¹Ø¯",
-		usdcBridgingUnavailable: "Ø¬Ø³Ø± USDC ØºÙŠØ± Ù…ØªØ§Ø­ Ø¹Ù„Ù‰",
-		bridgeNotDeployed: "Ø§Ù„Ø¬Ø³Ø± ØºÙŠØ± Ù…ÙÙ†Ø´Ø± Ø¹Ù„Ù‰",
-		bridgeToken: "Ø¬Ø³Ø±", to: "Ø¥Ù„Ù‰",
-		ethNotAvailable: "ETH ØºÙŠØ± Ù…ØªØ§Ø­ Ø¹Ù„Ù‰",
-		ethOnlyEvm: "Ø¬Ø³Ø± ETH Ù…ØªØ§Ø­ ÙÙ‚Ø· Ø¹Ù„Ù‰ Ø³Ù„Ø§Ø³Ù„ EVM (Ù„ÙŠØ³ Arc)",
+		bridgeComplete: "اكتمل الجسر!", bridgeFailed: "فشل الجسر: ",
+		resumeFailed: "فشل الاستئناف: ", connectFirst: "اربط محفظتك أولاً",
+		enterValidAmount: "أدخل مبلغًا صالحًا", invalidAmount: "تنسيق مبلغ غير صالح",
+		amountMustExceed0: "يجب أن يكون المبلغ أكبر من 0", amountExceeds: "المبلغ يتجاوز",
+		cctpUnavailable: "CCTP غير متاح على هذا المسار",
+		networkMismatch: "يجب أن يكون المصدر والوجهة على نفس الشبكة (اختبار/رئيسية)",
+		forwardUnavailable: "عرض رسوم التحويل غير متاح — أوقف الخدمة أو أعد المحاولة",
+		amountMustExceedFee: "يجب أن يتجاوز المبلغ رسوم CCTP",
+		switchingTo: "تبديل المحفظة إلى", alreadyRelayed: "تم تقديم السك بالفعل بواسطة مُرحّل — الأموال في",
+		forwarderStalled: "المحول لم يكتمل — سك يدوي مستمر…",
+		resumeConfirm: "تم إنشاء هذا الحرق للمستلم",
+		notOnChain: "المحفظة ليست على", abortMint: " — تم إلغاء السك قبل الإرسال",
+		walletChanged: "تم تغيير الحساب أو السلسلة أثناء التدفق — إلغاء (لم يتم إرسال معاملة)",
+		noWallet: "لم يتم اكتشاف محفظة. قم بتثبيت MetaMask.", connectionRejected: "تم رفض الاتصال: ",
+		anotherBridge: "تدفق جسر آخر قيد التنفيذ",
+		forwardCompleted: "اكتمل التحويل — الأموال في",
+		attestationTimeout: "انتهت مهلة الشهادة — الحرق نجح؛ أعد محاولة السك بالهاش",
+		forwardTimeout: "انتهت مهلة التحويل — الشهادة موقعة، سك يدوي ممكن",
+		forwardTimeoutNoAtt: "انتهت مهلة التحويل — الشهادة لم تُوقع بعد؛ Circle قد يحول بعد",
+		usdcBridgingUnavailable: "جسر USDC غير متاح على",
+		bridgeNotDeployed: "الجسر غير مُنشر على",
+		bridgeToken: "جسر", to: "إلى",
+		ethNotAvailable: "ETH غير متاح على",
+		ethOnlyEvm: "جسر ETH متاح فقط على سلاسل EVM (ليس Arc)",
 	},
 	bn: {
-		mainnet: "à¦®à§‡à¦‡à¦¨à¦¨à§‡à¦Ÿ", testnet: "à¦Ÿà§‡à¦¸à§à¦Ÿà¦¨à§‡à¦Ÿ", notConnected: "à¦¸à¦‚à¦¯à§à¦•à§à¦¤ à¦¨à¦¯à¦¼",
-		connectWallet: "à¦“à¦¯à¦¼à¦¾à¦²à§‡à¦Ÿ à¦¸à¦‚à¦¯à§à¦•à§à¦¤ à¦•à¦°à§à¦¨", crossChainBridge: "à¦•à§à¦°à¦¸-à¦šà§‡à¦‡à¦¨ à¦¬à§à¦°à¦¿à¦œ",
-		amount: "à¦ªà¦°à¦¿à¦®à¦¾à¦£", balance: "à¦¬à§à¦¯à¦¾à¦²à§‡à¦¨à§à¦¸", estGasFee: "à¦†à¦¨à§à¦®à¦¾à¦¨à¦¿à¦• à¦—à§à¦¯à¦¾à¦¸ à¦«à¦¿ (à¦‰à§Žà¦¸)",
-		cctpFee: "CCTP à¦«à¦¾à¦¸à§à¦Ÿ-à¦Ÿà§à¦°à¦¾à¦¨à§à¦¸à¦«à¦¾à¦° à¦«à¦¿ (USDC)",
-		forwardingService: "à¦«à¦°à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡à¦¿à¦‚ à¦¸à¦¾à¦°à§à¦­à¦¿à¦¸ â€” Circle à¦†à¦ªà¦¨à¦¾à¦° à¦œà¦¨à§à¦¯ à¦®à¦¿à¦¨à§à¦Ÿ à¦œà¦®à¦¾ à¦¦à§‡à¦¯à¦¼ (à¦…à¦¤à¦¿à¦°à¦¿à¦•à§à¦¤ à¦«à¦¿, à¦—à¦¨à§à¦¤à¦¬à§à¦¯ à¦—à§à¦¯à¦¾à¦¸ à¦ªà§à¦°à¦¯à¦¼à§‹à¦œà¦¨ à¦¨à§‡à¦‡)",
-		unfinishedBridge: "à¦…à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£ à¦¬à§à¦°à¦¿à¦œ à¦¸à¦¨à¦¾à¦•à§à¦¤ à¦¹à¦¯à¦¼à§‡à¦›à§‡", resumeMint: "à¦®à¦¿à¦¨à§à¦Ÿ à¦ªà§à¦¨à¦°à¦¾à¦¯à¦¼ à¦¶à§à¦°à§ à¦•à¦°à§à¦¨",
-		dismiss: "à¦¬à¦¾à¦¤à¦¿à¦²", burn: "à¦¬à¦¾à¦°à§à¦¨", attestation: "à¦…à§à¦¯à¦¾à¦Ÿà§‡à¦¸à§à¦Ÿà§‡à¦¶à¦¨", mint: "à¦®à¦¿à¦¨à§à¦Ÿ",
-		enterAmount: "à¦ªà¦°à¦¿à¦®à¦¾à¦£ à¦²à¦¿à¦–à§à¦¨", cctpContracts: "CCTP V2 à¦•à¦¨à§à¦Ÿà§à¦°à§à¦¯à¦¾à¦•à§à¦Ÿ",
+		mainnet: "মেইননেট", testnet: "টেস্টনেট", notConnected: "সংযুক্ত নয়",
+		connectWallet: "ওয়ালেট সংযুক্ত করুন", crossChainBridge: "ক্রস-চেইন ব্রিজ",
+		amount: "পরিমাণ", balance: "ব্যালেন্স", estGasFee: "আনুমানিক গ্যাস ফি (উৎস)",
+		cctpFee: "CCTP ফাস্ট-ট্রান্সফার ফি (USDC)",
+		forwardingService: "ফরওয়ার্ডিং সার্ভিস — Circle আপনার জন্য মিন্ট জমা দেয় (অতিরিক্ত ফি, গন্তব্য গ্যাস প্রয়োজন নেই)",
+		unfinishedBridge: "অসম্পূর্ণ ব্রিজ সনাক্ত হয়েছে", resumeMint: "মিন্ট পুনরায় শুরু করুন",
+		dismiss: "বাতিল", burn: "বার্ন", attestation: "অ্যাটেস্টেশন", mint: "মিন্ট",
+		enterAmount: "পরিমাণ লিখুন", cctpContracts: "CCTP V2 কন্ট্র্যাক্ট",
 		estFee: "আনুমানিক ফি",
 		estOutput: "আনুমানিক আউটপুট",
 		estTime: "আনুমানিক সময়",
 		relayDesc: "রিলে বিবরণ",
 		route: "রুট",
 		selectProtocol: "প্রোটোকল নির্বাচন করুন",
-		txHistory: "à¦²à§‡à¦¨à¦¦à§‡à¦¨ à¦‡à¦¤à¦¿à¦¹à¦¾à¦¸", noTxs: "à¦à¦–à¦¨à§‹ à¦•à§‹à¦¨à§‹ à¦²à§‡à¦¨à¦¦à§‡à¦¨ à¦¨à§‡à¦‡",
-		footerText: "WarpArc à¦¬à§à¦°à¦¿à¦œ Â· USDC Circle CCTP V2 à¦à¦° à¦®à¦¾à¦§à§à¦¯à¦®à§‡",
-		systemStatus: "à¦¸à¦¿à¦¸à§à¦Ÿà§‡à¦® à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸", faucet: "à¦«à¦¸à§‡à¦Ÿ",
-		sameChain: "à¦à¦•à¦‡ à¦šà§‡à¦‡à¦¨ à¦¨à¦¿à¦°à§à¦¬à¦¾à¦šà¦¿à¦¤", notDeployed: "à¦®à§‹à¦¤à¦¾à¦¯à¦¼à§‡à¦¨ à¦¹à¦¯à¦¼à¦¨à¦¿",
-		approving: "USDC à¦…à¦¨à§à¦®à§‹à¦¦à¦¨ à¦¹à¦šà§à¦›à§‡...", burning: "à¦¬à¦¾à¦°à§à¦¨ à¦¹à¦šà§à¦›à§‡", waitingAttest: "à¦…à§à¦¯à¦¾à¦Ÿà§‡à¦¸à§à¦Ÿà§‡à¦¶à¦¨à§‡à¦° à¦œà¦¨à§à¦¯ à¦…à¦ªà§‡à¦•à§à¦·à¦¾...",
-		minting: "à¦®à¦¿à¦¨à§à¦Ÿ à¦¹à¦šà§à¦›à§‡", waitingForward: "Circle à¦«à¦°à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡à§‡à¦° à¦œà¦¨à§à¦¯ à¦…à¦ªà§‡à¦•à§à¦·à¦¾...",
-		bridgeComplete: "à¦¬à§à¦°à¦¿à¦œ à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£!", bridgeFailed: "à¦¬à§à¦°à¦¿à¦œ à¦¬à§à¦¯à¦°à§à¦¥: ",
-		resumeFailed: "à¦ªà§à¦¨à¦°à¦¾à¦¯à¦¼ à¦¶à§à¦°à§ à¦¬à§à¦¯à¦°à§à¦¥: ", connectFirst: "à¦ªà§à¦°à¦¥à¦®à§‡ à¦†à¦ªà¦¨à¦¾à¦° à¦“à¦¯à¦¼à¦¾à¦²à§‡à¦Ÿ à¦¸à¦‚à¦¯à§à¦•à§à¦¤ à¦•à¦°à§à¦¨",
-		enterValidAmount: "à¦à¦•à¦Ÿà¦¿ à¦¬à§ˆà¦§ à¦ªà¦°à¦¿à¦®à¦¾à¦£ à¦²à¦¿à¦–à§à¦¨", invalidAmount: "à¦…à¦¬à§ˆà¦§ à¦ªà¦°à¦¿à¦®à¦¾à¦£ à¦«à¦°à¦®à§à¦¯à¦¾à¦Ÿ",
-		amountMustExceed0: "à¦ªà¦°à¦¿à¦®à¦¾à¦£ 0 à¦à¦° à¦¬à§‡à¦¶à¦¿ à¦¹à¦¤à§‡ à¦¹à¦¬à§‡", amountExceeds: "à¦ªà¦°à¦¿à¦®à¦¾à¦£ à¦†à¦ªà¦¨à¦¾à¦° à¦šà§‡à¦¯à¦¼à§‡ à¦¬à§‡à¦¶à¦¿",
-		cctpUnavailable: "à¦à¦‡ à¦°à§à¦Ÿà§‡ CCTP à¦‰à¦ªà¦²à¦¬à§à¦§ à¦¨à¦¯à¦¼",
-		networkMismatch: "à¦‰à§Žà¦¸ à¦à¦¬à¦‚ à¦—à¦¨à§à¦¤à¦¬à§à¦¯ à¦à¦•à¦‡ à¦¨à§‡à¦Ÿà¦“à¦¯à¦¼à¦¾à¦°à§à¦•à§‡ à¦¹à¦¤à§‡ à¦¹à¦¬à§‡ (à¦Ÿà§‡à¦¸à§à¦Ÿà¦¨à§‡à¦Ÿ/à¦®à§‡à¦‡à¦¨à¦¨à§‡à¦Ÿ)",
-		forwardUnavailable: "à¦«à¦°à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡à¦¿à¦‚ à¦«à¦¿ à¦•à§‹à¦Ÿ à¦‰à¦ªà¦²à¦¬à§à¦§ à¦¨à¦¯à¦¼ â€” à¦¸à¦¾à¦°à§à¦­à¦¿à¦¸ à¦¬à¦¨à§à¦§ à¦•à¦°à§à¦¨ à¦¬à¦¾ à¦†à¦¬à¦¾à¦° à¦šà§‡à¦·à§à¦Ÿà¦¾ à¦•à¦°à§à¦¨",
-		amountMustExceedFee: "à¦ªà¦°à¦¿à¦®à¦¾à¦£ CCTP à¦«à¦¿ à¦à¦° à¦¬à§‡à¦¶à¦¿ à¦¹à¦¤à§‡ à¦¹à¦¬à§‡",
-		switchingTo: "à¦“à¦¯à¦¼à¦¾à¦²à§‡à¦Ÿ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦¹à¦šà§à¦›à§‡", alreadyRelayed: "à¦®à¦¿à¦¨à§à¦Ÿ à¦‡à¦¤à¦¿à¦®à¦§à§à¦¯à§‡ à¦°à¦¿à¦²à§‡à¦¯à¦¼à¦¾à¦° à¦¦à§à¦¬à¦¾à¦°à¦¾ à¦œà¦®à¦¾ à¦¦à§‡à¦“à¦¯à¦¼à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡ â€” à¦¤à¦¹à¦¬à¦¿à¦²",
-		forwarderStalled: "à¦«à¦°à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡à¦¾à¦° à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£ à¦¹à¦¯à¦¼à¦¨à¦¿ â€” à¦®à§à¦¯à¦¾à¦¨à§à¦¯à¦¼à¦¾à¦² à¦®à¦¿à¦¨à§à¦Ÿ à¦šà¦²à¦›à§‡â€¦",
-		resumeConfirm: "à¦à¦‡ à¦¬à¦¾à¦°à§à¦¨ à¦ªà§à¦°à¦¾à¦ªà¦•à§‡à¦° à¦œà¦¨à§à¦¯ à¦¤à§ˆà¦°à¦¿ à¦•à¦°à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à¦¿à¦²",
-		notOnChain: "à¦“à¦¯à¦¼à¦¾à¦²à§‡à¦Ÿ à¦¨à§‡à¦‡", abortMint: " â€” à¦ªà¦¾à¦ à¦¾à¦¨à§‹à¦° à¦†à¦—à§‡ à¦®à¦¿à¦¨à§à¦Ÿ à¦¬à¦¾à¦¤à¦¿à¦²",
-		walletChanged: "à¦«à§à¦²à§‹à¦° à¦¸à¦®à¦¯à¦¼ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦¬à¦¾ à¦šà§‡à¦‡à¦¨ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¿à¦¤ à¦¹à¦¯à¦¼à§‡à¦›à§‡ â€” à¦¬à¦¾à¦¤à¦¿à¦² (à¦•à§‹à¦¨à§‹ à¦²à§‡à¦¨à¦¦à§‡à¦¨ à¦œà¦®à¦¾ à¦¦à§‡à¦“à¦¯à¦¼à¦¾ à¦¹à¦¯à¦¼à¦¨à¦¿)",
-		noWallet: "à¦•à§‹à¦¨à§‹ à¦“à¦¯à¦¼à¦¾à¦²à§‡à¦Ÿ à¦¸à¦¨à¦¾à¦•à§à¦¤ à¦¹à¦¯à¦¼à¦¨à¦¿à¥¤ MetaMask à¦‡à¦¨à¦¸à§à¦Ÿà¦² à¦•à¦°à§à¦¨à¥¤", connectionRejected: "à¦¸à¦‚à¦¯à§‹à¦— à¦ªà§à¦°à¦¤à§à¦¯à¦¾à¦–à§à¦¯à¦¾à¦¨: ",
-		anotherBridge: "à¦†à¦°à§‡à¦•à¦Ÿà¦¿ à¦¬à§à¦°à¦¿à¦œ à¦«à§à¦²à§‹ à¦šà¦²à¦›à§‡",
-		forwardCompleted: "à¦«à¦°à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£ â€” à¦¤à¦¹à¦¬à¦¿à¦²",
-		attestationTimeout: "à¦…à§à¦¯à¦¾à¦Ÿà§‡à¦¸à§à¦Ÿà§‡à¦¶à¦¨ à¦Ÿà¦¾à¦‡à¦®à¦†à¦‰à¦Ÿ â€” à¦¬à¦¾à¦°à§à¦¨ à¦¸à¦«à¦²; à¦¹à§à¦¯à¦¾à¦¶ à¦¦à¦¿à¦¯à¦¼à§‡ à¦®à¦¿à¦¨à§à¦Ÿ à¦†à¦¬à¦¾à¦° à¦šà§‡à¦·à§à¦Ÿà¦¾ à¦•à¦°à§à¦¨",
-		forwardTimeout: "à¦«à¦°à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£à¦¤à¦¾ à¦Ÿà¦¾à¦‡à¦®à¦†à¦‰à¦Ÿ â€” à¦…à§à¦¯à¦¾à¦Ÿà§‡à¦¸à§à¦Ÿà§‡à¦¶à¦¨ à¦¸à§à¦¬à¦¾à¦•à§à¦·à¦°à¦¿à¦¤, à¦®à§à¦¯à¦¾à¦¨à§à¦¯à¦¼à¦¾à¦² à¦®à¦¿à¦¨à§à¦Ÿ à¦¸à¦®à§à¦­à¦¬",
-		forwardTimeoutNoAtt: "à¦«à¦°à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£à¦¤à¦¾ à¦Ÿà¦¾à¦‡à¦®à¦†à¦‰à¦Ÿ â€” à¦…à§à¦¯à¦¾à¦Ÿà§‡à¦¸à§à¦Ÿà§‡à¦¶à¦¨ à¦à¦–à¦¨à§‹ à¦¸à§à¦¬à¦¾à¦•à§à¦·à¦°à¦¿à¦¤ à¦¹à¦¯à¦¼à¦¨à¦¿; Circle à¦à¦–à¦¨à§‹ à¦«à¦°à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à¦•à¦°à¦¤à§‡ à¦ªà¦¾à¦°à§‡",
-		usdcBridgingUnavailable: "USDC à¦¬à§à¦°à¦¿à¦œà¦¿à¦‚ à¦‰à¦ªà¦²à¦¬à§à¦§ à¦¨à¦¯à¦¼",
-		bridgeNotDeployed: "à¦¬à§à¦°à¦¿à¦œ à¦®à§‹à¦¤à¦¾à¦¯à¦¼à§‡à¦¨ à¦¹à¦¯à¦¼à¦¨à¦¿",
-		bridgeToken: "à¦¬à§à¦°à¦¿à¦œ", to: "à¦¤à§‡",
-		ethNotAvailable: "ETH à¦‰à¦ªà¦²à¦¬à§à¦§ à¦¨à¦¯à¦¼",
-		ethOnlyEvm: "ETH à¦¬à§à¦°à¦¿à¦œà¦¿à¦‚ à¦¶à§à¦§à§à¦®à¦¾à¦¤à§à¦° EVM à¦šà§‡à¦‡à¦¨à§‡ à¦‰à¦ªà¦²à¦¬à§à¦§ (Arc à¦¨à¦¯à¦¼)",
+		txHistory: "লেনদেন ইতিহাস", noTxs: "এখনো কোনো লেনদেন নেই",
+		footerText: "WarpArc ব্রিজ · USDC Circle CCTP V2 এর মাধ্যমে",
+		systemStatus: "সিস্টেম স্ট্যাটাস", faucet: "ফসেট",
+		sameChain: "একই চেইন নির্বাচিত", notDeployed: "মোতায়েন হয়নি",
+		approving: "USDC অনুমোদন হচ্ছে...", burning: "বার্ন হচ্ছে", waitingAttest: "অ্যাটেস্টেশনের জন্য অপেক্ষা...",
+		minting: "মিন্ট হচ্ছে", waitingForward: "Circle ফরওয়ার্ডের জন্য অপেক্ষা...",
+		bridgeComplete: "ব্রিজ সম্পূর্ণ!", bridgeFailed: "ব্রিজ ব্যর্থ: ",
+		resumeFailed: "পুনরায় শুরু ব্যর্থ: ", connectFirst: "প্রথমে আপনার ওয়ালেট সংযুক্ত করুন",
+		enterValidAmount: "একটি বৈধ পরিমাণ লিখুন", invalidAmount: "অবৈধ পরিমাণ ফরম্যাট",
+		amountMustExceed0: "পরিমাণ 0 এর বেশি হতে হবে", amountExceeds: "পরিমাণ আপনার চেয়ে বেশি",
+		cctpUnavailable: "এই রুটে CCTP উপলব্ধ নয়",
+		networkMismatch: "উৎস এবং গন্তব্য একই নেটওয়ার্কে হতে হবে (টেস্টনেট/মেইননেট)",
+		forwardUnavailable: "ফরওয়ার্ডিং ফি কোট উপলব্ধ নয় — সার্ভিস বন্ধ করুন বা আবার চেষ্টা করুন",
+		amountMustExceedFee: "পরিমাণ CCTP ফি এর বেশি হতে হবে",
+		switchingTo: "ওয়ালেট পরিবর্তন হচ্ছে", alreadyRelayed: "মিন্ট ইতিমধ্যে রিলেয়ার দ্বারা জমা দেওয়া হয়েছে — তহবিল",
+		forwarderStalled: "ফরওয়ার্ডার সম্পূর্ণ হয়নি — ম্যানুয়াল মিন্ট চলছে…",
+		resumeConfirm: "এই বার্ন প্রাপকের জন্য তৈরি করা হয়েছিল",
+		notOnChain: "ওয়ালেট নেই", abortMint: " — পাঠানোর আগে মিন্ট বাতিল",
+		walletChanged: "ফ্লোর সময় অ্যাকাউন্ট বা চেইন পরিবর্তিত হয়েছে — বাতিল (কোনো লেনদেন জমা দেওয়া হয়নি)",
+		noWallet: "কোনো ওয়ালেট সনাক্ত হয়নি। MetaMask ইনস্টল করুন।", connectionRejected: "সংযোগ প্রত্যাখ্যান: ",
+		anotherBridge: "আরেকটি ব্রিজ ফ্লো চলছে",
+		forwardCompleted: "ফরওয়ার্ড সম্পূর্ণ — তহবিল",
+		attestationTimeout: "অ্যাটেস্টেশন টাইমআউট — বার্ন সফল; হ্যাশ দিয়ে মিন্ট আবার চেষ্টা করুন",
+		forwardTimeout: "ফরওয়ার্ড সম্পূর্ণতা টাইমআউট — অ্যাটেস্টেশন স্বাক্ষরিত, ম্যানুয়াল মিন্ট সম্ভব",
+		forwardTimeoutNoAtt: "ফরওয়ার্ড সম্পূর্ণতা টাইমআউট — অ্যাটেস্টেশন এখনো স্বাক্ষরিত হয়নি; Circle এখনো ফরওয়ার্ড করতে পারে",
+		usdcBridgingUnavailable: "USDC ব্রিজিং উপলব্ধ নয়",
+		bridgeNotDeployed: "ব্রিজ মোতায়েন হয়নি",
+		bridgeToken: "ব্রিজ", to: "তে",
+		ethNotAvailable: "ETH উপলব্ধ নয়",
+		ethOnlyEvm: "ETH ব্রিজিং শুধুমাত্র EVM চেইনে উপলব্ধ (Arc নয়)",
 	},
 	pt: {
-		mainnet: "Mainnet", testnet: "Testnet", notConnected: "NÃ£o conectado",
+		mainnet: "Mainnet", testnet: "Testnet", notConnected: "Não conectado",
 		connectWallet: "Conectar carteira", crossChainBridge: "Bridge cross-chain",
 		estFee: "Taxa estimada",
 		estOutput: "Saída estimada",
@@ -344,37 +344,37 @@ const TRANSLATIONS = {
 		selectProtocol: "Selecionar protocolo",
 		amount: "Valor", balance: "Saldo", estGasFee: "Taxa de gas estimada (origem)",
 		cctpFee: "Taxa CCTP Fast-Transfer (USDC)",
-		forwardingService: "ServiÃ§o de encaminhamento â€” Circle envia o mint para vocÃª (taxa extra, sem gas de destino)",
+		forwardingService: "Serviço de encaminhamento — Circle envia o mint para você (taxa extra, sem gas de destino)",
 		unfinishedBridge: "Bridge incompleto detectado", resumeMint: "Retomar mint",
-		dismiss: "Dispensar", burn: "Queima", attestation: "AttestaÃ§Ã£o", mint: "Mint",
+		dismiss: "Dispensar", burn: "Queima", attestation: "Attestação", mint: "Mint",
 		enterAmount: "Inserir valor", cctpContracts: "Contratos CCTP V2",
-		txHistory: "HistÃ³rico de transaÃ§Ãµes", noTxs: "Nenhuma transaÃ§Ã£o ainda",
-		footerText: "WarpArc Bridge Â· USDC via Circle CCTP V2",
+		txHistory: "Histórico de transações", noTxs: "Nenhuma transação ainda",
+		footerText: "WarpArc Bridge · USDC via Circle CCTP V2",
 		systemStatus: "Status do sistema", faucet: "Faucet",
-		sameChain: "Mesma cadeia selecionada", notDeployed: "nÃ£o implantado",
+		sameChain: "Mesma cadeia selecionada", notDeployed: "não implantado",
 		approving: "Aprovando USDC...", burning: "Queimando", waitingAttest: "Aguardando attestation...",
 		minting: "Cunhando em", waitingForward: "Aguardando encaminhamento Circle...",
 		bridgeComplete: "Bridge completo!", bridgeFailed: "Bridge falhou: ",
 		resumeFailed: "Retomada falhou: ", connectFirst: "Conecte sua carteira primeiro",
-		enterValidAmount: "Insira um valor vÃ¡lido", invalidAmount: "Formato de valor invÃ¡lido",
+		enterValidAmount: "Insira um valor válido", invalidAmount: "Formato de valor inválido",
 		amountMustExceed0: "O valor deve ser maior que 0", amountExceeds: "O valor excede seu",
-		cctpUnavailable: "CCTP nÃ£o disponÃ­vel nesta rota",
+		cctpUnavailable: "CCTP não disponível nesta rota",
 		networkMismatch: "Origem e destino devem estar na mesma rede (testnet/mainnet)",
-		forwardUnavailable: "CotaÃ§Ã£o de encaminhamento indisponÃ­vel â€” desative o serviÃ§o ou tente novamente",
+		forwardUnavailable: "Cotação de encaminhamento indisponível — desative o serviço ou tente novamente",
 		amountMustExceedFee: "O valor deve exceder a taxa CCTP",
-		switchingTo: "Alternando carteira para", alreadyRelayed: "O mint jÃ¡ foi enviado por um relayer â€” fundos em",
-		forwarderStalled: "Encaminhador nÃ£o completou â€” mint manual continuandoâ€¦",
-		resumeConfirm: "Esta queima foi criada para o destinatÃ¡rio",
-		notOnChain: "Carteira nÃ£o estÃ¡ em", abortMint: " â€” mint abortado antes de enviar",
-		walletChanged: "Conta ou cadeia alterada durante o fluxo â€” abortando (nenhuma transaÃ§Ã£o enviada)",
-		noWallet: "Nenhuma carteira detectada. Instale MetaMask.", connectionRejected: "ConexÃ£o rejeitada: ",
+		switchingTo: "Alternando carteira para", alreadyRelayed: "O mint já foi enviado por um relayer — fundos em",
+		forwarderStalled: "Encaminhador não completou — mint manual continuando…",
+		resumeConfirm: "Esta queima foi criada para o destinatário",
+		notOnChain: "Carteira não está em", abortMint: " — mint abortado antes de enviar",
+		walletChanged: "Conta ou cadeia alterada durante o fluxo — abortando (nenhuma transação enviada)",
+		noWallet: "Nenhuma carteira detectada. Instale MetaMask.", connectionRejected: "Conexão rejeitada: ",
 		anotherBridge: "Outro fluxo de bridge em andamento",
-		forwardCompleted: "Encaminhamento completo â€” fundos em",
-		attestationTimeout: "Timeout de attestation â€” queima bem-sucedida; tente mint com o hash",
-		forwardTimeout: "Timeout de encaminhamento â€” attestation assinada, mint manual possÃ­vel",
-		forwardTimeoutNoAtt: "Timeout de encaminhamento â€” attestation ainda nÃ£o assinada; Circle pode ainda encaminhar",
-		usdcBridgingUnavailable: "Bridge USDC indisponÃ­vel em",
-		bridgeNotDeployed: "Bridge nÃ£o implantado em",
+		forwardCompleted: "Encaminhamento completo — fundos em",
+		attestationTimeout: "Timeout de attestation — queima bem-sucedida; tente mint com o hash",
+		forwardTimeout: "Timeout de encaminhamento — attestation assinada, mint manual possível",
+		forwardTimeoutNoAtt: "Timeout de encaminhamento — attestation ainda não assinada; Circle pode ainda encaminhar",
+		usdcBridgingUnavailable: "Bridge USDC indisponível em",
+		bridgeNotDeployed: "Bridge não implantado em",
 		bridgeToken: "Bridge", to: "para",
 		estFee: "Оценка комиссии",
 		estOutput: "Оценка вывода",
@@ -382,108 +382,108 @@ const TRANSLATIONS = {
 		relayDesc: "Описание реле",
 		route: "Маршрут",
 		selectProtocol: "Выбрать протокол",
-		ethNotAvailable: "ETH indisponÃ­vel em",
-		ethOnlyEvm: "Bridge ETH disponÃ­vel apenas em cadeias EVM (nÃ£o Arc)",
+		ethNotAvailable: "ETH indisponível em",
+		ethOnlyEvm: "Bridge ETH disponível apenas em cadeias EVM (não Arc)",
 	},
 	ru: {
-		mainnet: "ÐœÐµÐ¹Ð½Ð½ÐµÑ‚", testnet: "Ð¢ÐµÑÑ‚Ð½ÐµÑ‚", notConnected: "ÐÐµ Ð¿Ð¾Ð´ÐºÐ»ÑŽÑ‡ÐµÐ½Ð¾",
-		connectWallet: "ÐŸÐ¾Ð´ÐºÐ»ÑŽÑ‡Ð¸Ñ‚ÑŒ ÐºÐ¾ÑˆÐµÐ»Ñ‘Ðº", crossChainBridge: "ÐšÑ€Ð¾ÑÑ-Ñ‡ÐµÐ¹Ð½ Ð¼Ð¾ÑÑ‚",
-		amount: "Ð¡ÑƒÐ¼Ð¼Ð°", balance: "Ð‘Ð°Ð»Ð°Ð½Ñ", estGasFee: "ÐžÑ†ÐµÐ½ÐºÐ° ÐºÐ¾Ð¼Ð¸ÑÑÐ¸Ð¸ Ð³Ð°Ð·Ð° (Ð¸ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº)",
-		cctpFee: "ÐšÐ¾Ð¼Ð¸ÑÑÐ¸Ñ CCTP Fast-Transfer (USDC)",
-		forwardingService: "Ð¡ÐµÑ€Ð²Ð¸Ñ Ð¿ÐµÑ€ÐµÑÑ‹Ð»ÐºÐ¸ â€” Circle Ð¾Ñ‚Ð¿Ñ€Ð°Ð²Ð¸Ñ‚ Ð¼Ð¸Ð½Ñ‚ Ð·Ð° Ð²Ð°Ñ (Ð´Ð¾Ð¿. ÐºÐ¾Ð¼Ð¸ÑÑÐ¸Ñ, Ð³Ð°Ð· Ð½Ð°Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ Ð½Ðµ Ð½ÑƒÐ¶ÐµÐ½)",
-		unfinishedBridge: "ÐžÐ±Ð½Ð°Ñ€ÑƒÐ¶ÐµÐ½ Ð½ÐµÐ·Ð°Ð²ÐµÑ€ÑˆÑ‘Ð½Ð½Ñ‹Ð¹ Ð¼Ð¾ÑÑ‚", resumeMint: "Ð’Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ Ð¼Ð¸Ð½Ñ‚",
-		dismiss: "Ð—Ð°ÐºÑ€Ñ‹Ñ‚ÑŒ", burn: "Ð¡Ð¶Ð¸Ð³Ð°Ð½Ð¸Ðµ", attestation: "ÐÑ‚Ñ‚ÐµÑÑ‚Ð°Ñ†Ð¸Ñ", mint: "ÐœÐ¸Ð½Ñ‚",
-		enterAmount: "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ ÑÑƒÐ¼Ð¼Ñƒ", cctpContracts: "ÐšÐ¾Ð½Ñ‚Ñ€Ð°ÐºÑ‚Ñ‹ CCTP V2",
-		txHistory: "Ð˜ÑÑ‚Ð¾Ñ€Ð¸Ñ Ñ‚Ñ€Ð°Ð½Ð·Ð°ÐºÑ†Ð¸Ð¹", noTxs: "Ð¢Ñ€Ð°Ð½Ð·Ð°ÐºÑ†Ð¸Ð¹ Ð¿Ð¾ÐºÐ° Ð½ÐµÑ‚",
-		footerText: "WarpArc Bridge Â· USDC Ñ‡ÐµÑ€ÐµÐ· Circle CCTP V2",
-		systemStatus: "Ð¡Ñ‚Ð°Ñ‚ÑƒÑ ÑÐ¸ÑÑ‚ÐµÐ¼Ñ‹", faucet: "ÐšÑ€Ð°Ð½",
-		sameChain: "Ð’Ñ‹Ð±Ñ€Ð°Ð½Ð° Ñ‚Ð° Ð¶Ðµ ÑÐµÑ‚ÑŒ", notDeployed: "Ð½Ðµ Ñ€Ð°Ð·Ð²Ñ‘Ñ€Ð½ÑƒÑ‚",
-		approving: "ÐžÐ´Ð¾Ð±Ñ€ÐµÐ½Ð¸Ðµ USDC...", burning: "Ð¡Ð¶Ð¸Ð³Ð°Ð½Ð¸Ðµ", waitingAttest: "ÐžÐ¶Ð¸Ð´Ð°Ð½Ð¸Ðµ Ð°Ñ‚Ñ‚ÐµÑÑ‚Ð°Ñ†Ð¸Ð¸...",
-		minting: "ÐœÐ¸Ð½Ñ‚ Ð½Ð°", waitingForward: "ÐžÐ¶Ð¸Ð´Ð°Ð½Ð¸Ðµ Ð¿ÐµÑ€ÐµÑÑ‹Ð»ÐºÐ¸ Circle...",
-		bridgeComplete: "ÐœÐ¾ÑÑ‚ Ð·Ð°Ð²ÐµÑ€ÑˆÑ‘Ð½!", bridgeFailed: "ÐœÐ¾ÑÑ‚ Ð½Ðµ ÑƒÐ´Ð°Ð»ÑÑ: ",
-		resumeFailed: "Ð’Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ðµ Ð½Ðµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ: ", connectFirst: "Ð¡Ð½Ð°Ñ‡Ð°Ð»Ð° Ð¿Ð¾Ð´ÐºÐ»ÑŽÑ‡Ð¸Ñ‚Ðµ ÐºÐ¾ÑˆÐµÐ»Ñ‘Ðº",
-		enterValidAmount: "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ð´Ð¾Ð¿ÑƒÑÑ‚Ð¸Ð¼ÑƒÑŽ ÑÑƒÐ¼Ð¼Ñƒ", invalidAmount: "ÐÐµÐ²ÐµÑ€Ð½Ñ‹Ð¹ Ñ„Ð¾Ñ€Ð¼Ð°Ñ‚ ÑÑƒÐ¼Ð¼Ñ‹",
-		amountMustExceed0: "Ð¡ÑƒÐ¼Ð¼Ð° Ð´Ð¾Ð»Ð¶Ð½Ð° Ð±Ñ‹Ñ‚ÑŒ Ð±Ð¾Ð»ÑŒÑˆÐµ 0", amountExceeds: "Ð¡ÑƒÐ¼Ð¼Ð° Ð¿Ñ€ÐµÐ²Ñ‹ÑˆÐ°ÐµÑ‚ Ð²Ð°Ñˆ",
-		cctpUnavailable: "CCTP Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½ Ð½Ð° ÑÑ‚Ð¾Ð¼ Ð¼Ð°Ñ€ÑˆÑ€ÑƒÑ‚Ðµ",
-		networkMismatch: "Ð˜ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Ð¸ Ð½Ð°Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ Ð´Ð¾Ð»Ð¶Ð½Ñ‹ Ð±Ñ‹Ñ‚ÑŒ Ð² Ð¾Ð´Ð½Ð¾Ð¹ ÑÐµÑ‚Ð¸ (Ñ‚ÐµÑÑ‚Ð½ÐµÑ‚/Ð¼ÐµÐ¹Ð½Ð½ÐµÑ‚)",
-		forwardUnavailable: "ÐšÐ¾Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ° Ð¿ÐµÑ€ÐµÑÑ‹Ð»ÐºÐ¸ Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ð° â€” Ð¾Ñ‚ÐºÐ»ÑŽÑ‡Ð¸Ñ‚Ðµ ÑÐµÑ€Ð²Ð¸Ñ Ð¸Ð»Ð¸ Ð¿Ð¾Ð²Ñ‚Ð¾Ñ€Ð¸Ñ‚Ðµ",
-		amountMustExceedFee: "Ð¡ÑƒÐ¼Ð¼Ð° Ð´Ð¾Ð»Ð¶Ð½Ð° Ð¿Ñ€ÐµÐ²Ñ‹ÑˆÐ°Ñ‚ÑŒ ÐºÐ¾Ð¼Ð¸ÑÑÐ¸ÑŽ CCTP",
-		switchingTo: "ÐŸÐµÑ€ÐµÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ðµ ÐºÐ¾ÑˆÐµÐ»ÑŒÐºÐ° Ð½Ð°", alreadyRelayed: "ÐœÐ¸Ð½Ñ‚ ÑƒÐ¶Ðµ Ð¾Ñ‚Ð¿Ñ€Ð°Ð²Ð»ÐµÐ½ Ñ€ÐµÐ»ÐµÐµÑ€Ð¾Ð¼ â€” ÑÑ€ÐµÐ´ÑÑ‚Ð²Ð° Ð½Ð°",
-		forwarderStalled: "ÐŸÐµÑ€ÐµÑÑ‹Ð»ÐºÐ° Ð½Ðµ Ð·Ð°Ð²ÐµÑ€ÑˆÐµÐ½Ð° â€” Ñ€ÑƒÑ‡Ð½Ð¾Ð¹ Ð¼Ð¸Ð½Ñ‚ Ð¿Ñ€Ð¾Ð´Ð¾Ð»Ð¶Ð°ÐµÑ‚ÑÑâ€¦",
-		resumeConfirm: "Ð­Ñ‚Ð¾ ÑÐ¶Ð¸Ð³Ð°Ð½Ð¸Ðµ Ð±Ñ‹Ð»Ð¾ ÑÐ¾Ð·Ð´Ð°Ð½Ð¾ Ð´Ð»Ñ Ð¿Ð¾Ð»ÑƒÑ‡Ð°Ñ‚ÐµÐ»Ñ",
-		notOnChain: "ÐšÐ¾ÑˆÐµÐ»Ñ‘Ðº Ð½Ðµ Ð½Ð°", abortMint: " â€” Ð¼Ð¸Ð½Ñ‚ Ð¾Ñ‚Ð¼ÐµÐ½Ñ‘Ð½ Ð¿ÐµÑ€ÐµÐ´ Ð¾Ñ‚Ð¿Ñ€Ð°Ð²ÐºÐ¾Ð¹",
-		walletChanged: "ÐÐºÐºÐ°ÑƒÐ½Ñ‚ Ð¸Ð»Ð¸ ÑÐµÑ‚ÑŒ Ð¸Ð·Ð¼ÐµÐ½Ð¸Ð»Ð¸ÑÑŒ Ð²Ð¾ Ð²Ñ€ÐµÐ¼Ñ Ð¿Ñ€Ð¾Ñ†ÐµÑÑÐ° â€” Ð¾Ñ‚Ð¼ÐµÐ½Ð° (Ñ‚Ñ€Ð°Ð½Ð·Ð°ÐºÑ†Ð¸Ñ Ð½Ðµ Ð¾Ñ‚Ð¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð°)",
-		noWallet: "ÐšÐ¾ÑˆÐµÐ»Ñ‘Ðº Ð½Ðµ Ð¾Ð±Ð½Ð°Ñ€ÑƒÐ¶ÐµÐ½. Ð£ÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚Ðµ MetaMask.", connectionRejected: "ÐŸÐ¾Ð´ÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ðµ Ð¾Ñ‚ÐºÐ»Ð¾Ð½ÐµÐ½Ð¾: ",
-		anotherBridge: "Ð”Ñ€ÑƒÐ³Ð¾Ð¹ Ð¿Ñ€Ð¾Ñ†ÐµÑÑ Ð¼Ð¾ÑÑ‚Ð° Ð²Ñ‹Ð¿Ð¾Ð»Ð½ÑÐµÑ‚ÑÑ",
-		forwardCompleted: "ÐŸÐµÑ€ÐµÑÑ‹Ð»ÐºÐ° Ð·Ð°Ð²ÐµÑ€ÑˆÐµÐ½Ð° â€” ÑÑ€ÐµÐ´ÑÑ‚Ð²Ð° Ð½Ð°",
+		mainnet: "Мейннет", testnet: "Тестнет", notConnected: "Не подключено",
+		connectWallet: "Подключить кошелёк", crossChainBridge: "Кросс-чейн мост",
+		amount: "Сумма", balance: "Баланс", estGasFee: "Оценка комиссии газа (источник)",
+		cctpFee: "Комиссия CCTP Fast-Transfer (USDC)",
+		forwardingService: "Сервис пересылки — Circle отправит минт за вас (доп. комиссия, газ назначения не нужен)",
+		unfinishedBridge: "Обнаружен незавершённый мост", resumeMint: "Возобновить минт",
+		dismiss: "Закрыть", burn: "Сжигание", attestation: "Аттестация", mint: "Минт",
+		enterAmount: "Введите сумму", cctpContracts: "Контракты CCTP V2",
+		txHistory: "История транзакций", noTxs: "Транзакций пока нет",
+		footerText: "WarpArc Bridge · USDC через Circle CCTP V2",
+		systemStatus: "Статус системы", faucet: "Кран",
+		sameChain: "Выбрана та же сеть", notDeployed: "не развёрнут",
+		approving: "Одобрение USDC...", burning: "Сжигание", waitingAttest: "Ожидание аттестации...",
+		minting: "Минт на", waitingForward: "Ожидание пересылки Circle...",
+		bridgeComplete: "Мост завершён!", bridgeFailed: "Мост не удался: ",
+		resumeFailed: "Возобновление не удалось: ", connectFirst: "Сначала подключите кошелёк",
+		enterValidAmount: "Введите допустимую сумму", invalidAmount: "Неверный формат суммы",
+		amountMustExceed0: "Сумма должна быть больше 0", amountExceeds: "Сумма превышает ваш",
+		cctpUnavailable: "CCTP недоступен на этом маршруте",
+		networkMismatch: "Источник и назначение должны быть в одной сети (тестнет/мейннет)",
+		forwardUnavailable: "Котировка пересылки недоступна — отключите сервис или повторите",
+		amountMustExceedFee: "Сумма должна превышать комиссию CCTP",
+		switchingTo: "Переключение кошелька на", alreadyRelayed: "Минт уже отправлен релеером — средства на",
+		forwarderStalled: "Пересылка не завершена — ручной минт продолжается…",
+		resumeConfirm: "Это сжигание было создано для получателя",
+		notOnChain: "Кошелёк не на", abortMint: " — минт отменён перед отправкой",
+		walletChanged: "Аккаунт или сеть изменились во время процесса — отмена (транзакция не отправлена)",
+		noWallet: "Кошелёк не обнаружен. Установите MetaMask.", connectionRejected: "Подключение отклонено: ",
+		anotherBridge: "Другой процесс моста выполняется",
+		forwardCompleted: "Пересылка завершена — средства на",
 		estFee: "推定手数料",
 		estOutput: "推定出力",
 		estTime: "推定時間",
 		relayDesc: "リレーの説明",
 		route: "ルート",
 		selectProtocol: "プロトコルを選択",
-		attestationTimeout: "Ð¢Ð°Ð¹Ð¼Ð°ÑƒÑ‚ Ð°Ñ‚Ñ‚ÐµÑÑ‚Ð°Ñ†Ð¸Ð¸ â€” ÑÐ¶Ð¸Ð³Ð°Ð½Ð¸Ðµ ÑƒÑÐ¿ÐµÑˆÐ½Ð¾; Ð¿Ð¾Ð²Ñ‚Ð¾Ñ€Ð¸Ñ‚Ðµ Ð¼Ð¸Ð½Ñ‚ Ñ Ñ…ÐµÑˆÐµÐ¼",
-		forwardTimeout: "Ð¢Ð°Ð¹Ð¼Ð°ÑƒÑ‚ Ð¿ÐµÑ€ÐµÑÑ‹Ð»ÐºÐ¸ â€” Ð°Ñ‚Ñ‚ÐµÑÑ‚Ð°Ñ†Ð¸Ñ Ð¿Ð¾Ð´Ð¿Ð¸ÑÐ°Ð½Ð°, Ñ€ÑƒÑ‡Ð½Ð¾Ð¹ Ð¼Ð¸Ð½Ñ‚ Ð²Ð¾Ð·Ð¼Ð¾Ð¶ÐµÐ½",
-		forwardTimeoutNoAtt: "Ð¢Ð°Ð¹Ð¼Ð°ÑƒÑ‚ Ð¿ÐµÑ€ÐµÑÑ‹Ð»ÐºÐ¸ â€” Ð°Ñ‚Ñ‚ÐµÑÑ‚Ð°Ñ†Ð¸Ñ ÐµÑ‰Ñ‘ Ð½Ðµ Ð¿Ð¾Ð´Ð¿Ð¸ÑÐ°Ð½Ð°; Circle Ð¼Ð¾Ð¶ÐµÑ‚ ÐµÑ‰Ñ‘ Ð¿ÐµÑ€ÐµÑÐ»Ð°Ñ‚ÑŒ",
-		usdcBridgingUnavailable: "ÐœÐ¾ÑÑ‚ USDC Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½ Ð½Ð°",
-		bridgeNotDeployed: "ÐœÐ¾ÑÑ‚ Ð½Ðµ Ñ€Ð°Ð·Ð²Ñ‘Ñ€Ð½ÑƒÑ‚ Ð½Ð°",
-		bridgeToken: "ÐœÐ¾ÑÑ‚", to: "Ð½Ð°",
-		ethNotAvailable: "ETH Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½ Ð½Ð°",
-		ethOnlyEvm: "ÐœÐ¾ÑÑ‚ ETH Ð´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð½Ð° EVM-Ñ†ÐµÐ¿ÑÑ… (Ð½Ðµ Arc)",
+		attestationTimeout: "Таймаут аттестации — сжигание успешно; повторите минт с хешем",
+		forwardTimeout: "Таймаут пересылки — аттестация подписана, ручной минт возможен",
+		forwardTimeoutNoAtt: "Таймаут пересылки — аттестация ещё не подписана; Circle может ещё переслать",
+		usdcBridgingUnavailable: "Мост USDC недоступен на",
+		bridgeNotDeployed: "Мост не развёрнут на",
+		bridgeToken: "Мост", to: "на",
+		ethNotAvailable: "ETH недоступен на",
+		ethOnlyEvm: "Мост ETH доступен только на EVM-цепях (не Arc)",
 	},
 	ja: {
-		mainnet: "ãƒ¡ã‚¤ãƒ³ãƒãƒƒãƒˆ", testnet: "ãƒ†ã‚¹ãƒˆãƒãƒƒãƒˆ", notConnected: "æœªæŽ¥ç¶š",
-		connectWallet: "ã‚¦ã‚©ãƒ¬ãƒƒãƒˆæŽ¥ç¶š", crossChainBridge: "ã‚¯ãƒ­ã‚¹ãƒã‚§ãƒ¼ãƒ³ãƒ–ãƒªãƒƒã‚¸",
-		amount: "é‡‘é¡", balance: "æ®‹é«˜", estGasFee: "æŽ¨å®šã‚¬ã‚¹ä»£ï¼ˆé€ä¿¡å…ƒï¼‰",
-		cctpFee: "CCTPé«˜é€Ÿè»¢é€æ‰‹æ•°æ–™ï¼ˆUSDCï¼‰",
-		forwardingService: "ãƒ•ã‚©ãƒ¯ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã‚µãƒ¼ãƒ“ã‚¹ â€” CircleãŒãƒŸãƒ³ãƒˆã‚’é€ä¿¡ï¼ˆè¿½åŠ æ‰‹æ•°æ–™ã€å®›å…ˆã‚¬ã‚¹ä¸è¦ï¼‰",
-		unfinishedBridge: "æœªå®Œäº†ã®ãƒ–ãƒªãƒƒã‚¸ã‚’æ¤œå‡º", resumeMint: "ãƒŸãƒ³ãƒˆå†é–‹",
-		dismiss: "é–‰ã˜ã‚‹", burn: "ãƒãƒ¼ãƒ³", attestation: "ã‚¢ãƒ†ã‚¹ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³", mint: "ãƒŸãƒ³ãƒˆ",
-		enterAmount: "é‡‘é¡ã‚’å…¥åŠ›", cctpContracts: "CCTP V2ã‚³ãƒ³ãƒˆãƒ©ã‚¯ãƒˆ",
-		txHistory: "å–å¼•å±¥æ­´", noTxs: "å–å¼•ãªã—",
-		footerText: "WarpArcãƒ–ãƒªãƒƒã‚¸ Â· USDCï¼ˆCircle CCTP V2çµŒç”±ï¼‰",
-		systemStatus: "ã‚·ã‚¹ãƒ†ãƒ ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹", faucet: "ãƒ•ã‚©ãƒ¼ã‚»ãƒƒãƒˆ",
-		sameChain: "åŒã˜ãƒã‚§ãƒ¼ãƒ³ãŒé¸æŠžã•ã‚Œã¦ã„ã¾ã™", notDeployed: "æœªãƒ‡ãƒ—ãƒ­ã‚¤",
-		approving: "USDCæ‰¿èªä¸­...", burning: "ãƒãƒ¼ãƒ³ä¸­", waitingAttest: "ã‚¢ãƒ†ã‚¹ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³å¾…ã¡...",
-		minting: "ãƒŸãƒ³ãƒˆä¸­", waitingForward: "Circleãƒ•ã‚©ãƒ¯ãƒ¼ãƒ‰å¾…ã¡...",
-		bridgeComplete: "ãƒ–ãƒªãƒƒã‚¸å®Œäº†ï¼", bridgeFailed: "ãƒ–ãƒªãƒƒã‚¸å¤±æ•—: ",
-		resumeFailed: "å†é–‹å¤±æ•—: ", connectFirst: "å…ˆã«ã‚¦ã‚©ãƒ¬ãƒƒãƒˆã‚’æŽ¥ç¶šã—ã¦ãã ã•ã„",
-		enterValidAmount: "æœ‰åŠ¹ãªé‡‘é¡ã‚’å…¥åŠ›", invalidAmount: "ç„¡åŠ¹ãªé‡‘é¡å½¢å¼",
-		amountMustExceed0: "é‡‘é¡ã¯0ã‚ˆã‚Šå¤§ãã„å¿…è¦ãŒã‚ã‚Šã¾ã™", amountExceeds: "é‡‘é¡ãŒæ®‹é«˜ã‚’è¶…ãˆã¦ã„ã¾ã™",
-		cctpUnavailable: "ã“ã®ãƒ«ãƒ¼ãƒˆã§CCTPã¯åˆ©ç”¨ã§ãã¾ã›ã‚“",
-		networkMismatch: "é€ä¿¡å…ƒã¨å®›å…ˆã¯åŒã˜ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ã§ã‚ã‚‹å¿…è¦ãŒã‚ã‚Šã¾ã™ï¼ˆãƒ†ã‚¹ãƒˆãƒãƒƒãƒˆ/ãƒ¡ã‚¤ãƒ³ãƒãƒƒãƒˆï¼‰",
-		forwardUnavailable: "ãƒ•ã‚©ãƒ¯ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°æ‰‹æ•°æ–™ã®è¦‹ç©ã‚‚ã‚Šä¸å¯ â€” ã‚µãƒ¼ãƒ“ã‚¹ã‚’ã‚ªãƒ•ã«ã™ã‚‹ã‹å†è©¦è¡Œ",
-		amountMustExceedFee: "é‡‘é¡ã¯CCTPæ‰‹æ•°æ–™ã‚’è¶…ãˆã‚‹å¿…è¦ãŒã‚ã‚Šã¾ã™",
-		switchingTo: "ã‚¦ã‚©ãƒ¬ãƒƒãƒˆåˆ‡ã‚Šæ›¿ãˆä¸­", alreadyRelayed: "ãƒŸãƒ³ãƒˆã¯ãƒªãƒ¬ã‚¤ãƒ¤ãƒ¼ã«ã‚ˆã‚Šé€ä¿¡æ¸ˆã¿ â€” è³‡é‡‘ã¯",
-		forwarderStalled: "ãƒ•ã‚©ãƒ¯ãƒ¼ãƒ€ãƒ¼æœªå®Œäº† â€” æ‰‹å‹•ãƒŸãƒ³ãƒˆç¶šè¡Œâ€¦",
-		resumeConfirm: "ã“ã®ãƒãƒ¼ãƒ³ã¯å—å–äººå‘ã‘ã«ä½œæˆã•ã‚Œã¾ã—ãŸ",
-		notOnChain: "ã‚¦ã‚©ãƒ¬ãƒƒãƒˆãŒä¸Šã«ã‚ã‚Šã¾ã›ã‚“", abortMint: " â€” é€ä¿¡å‰ã«ãƒŸãƒ³ãƒˆä¸­æ­¢",
-		walletChanged: "ãƒ•ãƒ­ãƒ¼ä¸­ã«ã‚¢ã‚«ã‚¦ãƒ³ãƒˆã¾ãŸã¯ãƒã‚§ãƒ¼ãƒ³ãŒå¤‰æ›´ â€” ä¸­æ­¢ï¼ˆãƒˆãƒ©ãƒ³ã‚¶ã‚¯ã‚·ãƒ§ãƒ³æœªé€ä¿¡ï¼‰",
-		noWallet: "ã‚¦ã‚©ãƒ¬ãƒƒãƒˆãŒæ¤œå‡ºã•ã‚Œã¾ã›ã‚“ã€‚MetaMaskã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¦ãã ã•ã„ã€‚", connectionRejected: "æŽ¥ç¶šæ‹’å¦: ",
-		anotherBridge: "åˆ¥ã®ãƒ–ãƒªãƒƒã‚¸ãƒ•ãƒ­ãƒ¼ãŒé€²è¡Œä¸­",
-		forwardCompleted: "ãƒ•ã‚©ãƒ¯ãƒ¼ãƒ‰å®Œäº† â€” è³‡é‡‘ã¯",
-		attestationTimeout: "ã‚¢ãƒ†ã‚¹ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆ â€” ãƒãƒ¼ãƒ³æˆåŠŸï¼›ãƒãƒƒã‚·ãƒ¥ã§ãƒŸãƒ³ãƒˆå†è©¦è¡Œå¯èƒ½",
-		forwardTimeout: "ãƒ•ã‚©ãƒ¯ãƒ¼ãƒ‰å®Œäº†ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆ â€” ã‚¢ãƒ†ã‚¹ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³ç½²åæ¸ˆã¿ã€æ‰‹å‹•ãƒŸãƒ³ãƒˆå¯èƒ½",
-		forwardTimeoutNoAtt: "ãƒ•ã‚©ãƒ¯ãƒ¼ãƒ‰å®Œäº†ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆ â€” ã‚¢ãƒ†ã‚¹ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³æœªç½²åï¼›CircleãŒãƒ•ã‚©ãƒ¯ãƒ¼ãƒ‰ã™ã‚‹å¯èƒ½æ€§ã‚ã‚Š",
-		usdcBridgingUnavailable: "USDCãƒ–ãƒªãƒƒã‚¸ã¯åˆ©ç”¨ã§ãã¾ã›ã‚“",
-		bridgeNotDeployed: "ãƒ–ãƒªãƒƒã‚¸æœªãƒ‡ãƒ—ãƒ­ã‚¤",
-		bridgeToken: "ãƒ–ãƒªãƒƒã‚¸", to: "ã¸",
-		ethNotAvailable: "ETHã¯åˆ©ç”¨ã§ãã¾ã›ã‚“",
-		ethOnlyEvm: "ETHãƒ–ãƒªãƒƒã‚¸ã¯EVMãƒã‚§ãƒ¼ãƒ³ã§ã®ã¿åˆ©ç”¨å¯èƒ½ï¼ˆArcã¯ä¸å¯ï¼‰",
+		mainnet: "メインネット", testnet: "テストネット", notConnected: "未接続",
+		connectWallet: "ウォレット接続", crossChainBridge: "クロスチェーンブリッジ",
+		amount: "金額", balance: "残高", estGasFee: "推定ガス代（送信元）",
+		cctpFee: "CCTP高速転送手数料（USDC）",
+		forwardingService: "フォワーディングサービス — Circleがミントを送信（追加手数料、宛先ガス不要）",
+		unfinishedBridge: "未完了のブリッジを検出", resumeMint: "ミント再開",
+		dismiss: "閉じる", burn: "バーン", attestation: "アテステーション", mint: "ミント",
+		enterAmount: "金額を入力", cctpContracts: "CCTP V2コントラクト",
+		txHistory: "取引履歴", noTxs: "取引なし",
+		footerText: "WarpArcブリッジ · USDC（Circle CCTP V2経由）",
+		systemStatus: "システムステータス", faucet: "フォーセット",
+		sameChain: "同じチェーンが選択されています", notDeployed: "未デプロイ",
+		approving: "USDC承認中...", burning: "バーン中", waitingAttest: "アテステーション待ち...",
+		minting: "ミント中", waitingForward: "Circleフォワード待ち...",
+		bridgeComplete: "ブリッジ完了！", bridgeFailed: "ブリッジ失敗: ",
+		resumeFailed: "再開失敗: ", connectFirst: "先にウォレットを接続してください",
+		enterValidAmount: "有効な金額を入力", invalidAmount: "無効な金額形式",
+		amountMustExceed0: "金額は0より大きい必要があります", amountExceeds: "金額が残高を超えています",
+		cctpUnavailable: "このルートでCCTPは利用できません",
+		networkMismatch: "送信元と宛先は同じネットワークである必要があります（テストネット/メインネット）",
+		forwardUnavailable: "フォワーディング手数料の見積もり不可 — サービスをオフにするか再試行",
+		amountMustExceedFee: "金額はCCTP手数料を超える必要があります",
+		switchingTo: "ウォレット切り替え中", alreadyRelayed: "ミントはリレイヤーにより送信済み — 資金は",
+		forwarderStalled: "フォワーダー未完了 — 手動ミント続行…",
+		resumeConfirm: "このバーンは受取人向けに作成されました",
+		notOnChain: "ウォレットが上にありません", abortMint: " — 送信前にミント中止",
+		walletChanged: "フロー中にアカウントまたはチェーンが変更 — 中止（トランザクション未送信）",
+		noWallet: "ウォレットが検出されません。MetaMaskをインストールしてください。", connectionRejected: "接続拒否: ",
+		anotherBridge: "別のブリッジフローが進行中",
+		forwardCompleted: "フォワード完了 — 資金は",
+		attestationTimeout: "アテステーションタイムアウト — バーン成功；ハッシュでミント再試行可能",
+		forwardTimeout: "フォワード完了タイムアウト — アテステーション署名済み、手動ミント可能",
+		forwardTimeoutNoAtt: "フォワード完了タイムアウト — アテステーション未署名；Circleがフォワードする可能性あり",
+		usdcBridgingUnavailable: "USDCブリッジは利用できません",
+		bridgeNotDeployed: "ブリッジ未デプロイ",
+		bridgeToken: "ブリッジ", to: "へ",
+		ethNotAvailable: "ETHは利用できません",
+		ethOnlyEvm: "ETHブリッジはEVMチェーンでのみ利用可能（Arcは不可）",
 	},
 };
 
 const LANG_META = {
 	en: { flag: "EN", label: "English" },
-	zh: { flag: "ZH", label: "ä¸­æ–‡" },
-	hi: { flag: "HI", label: "à¤¹à¤¿à¤¨à¥à¤¦à¥€" },
-	es: { flag: "ES", label: "EspaÃ±ol" },
-	fr: { flag: "FR", label: "FranÃ§ais" },
-	ar: { flag: "AR", label: "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©" },
-	bn: { flag: "BN", label: "à¦¬à¦¾à¦‚à¦²à¦¾" },
-	pt: { flag: "PT", label: "PortuguÃªs" },
-	ru: { flag: "RU", label: "Ð ÑƒÑÑÐºÐ¸Ð¹" },
-	ja: { flag: "JA", label: "æ—¥æœ¬èªž" },
+	zh: { flag: "ZH", label: "中文" },
+	hi: { flag: "HI", label: "हिन्दी" },
+	es: { flag: "ES", label: "Español" },
+	fr: { flag: "FR", label: "Français" },
+	ar: { flag: "AR", label: "العربية" },
+	bn: { flag: "BN", label: "বাংলা" },
+	pt: { flag: "PT", label: "Português" },
+	ru: { flag: "RU", label: "Русский" },
+	ja: { flag: "JA", label: "日本語" },
 };
 
 let currentLang = "en";
@@ -539,7 +539,7 @@ function initLanguage() {
 
 const HISTORY_KEY = "warparc:txHistory";
 const PENDING_KEY = "warparc:pendingCctp";
-// Saved wallet pick â€” {type:"injected",rdns,label} | {type:"walletconnect"} â€”
+// Saved wallet pick — {type:"injected",rdns,label} | {type:"walletconnect"} —
 // so a reload can reconnect silently (see autoReconnect).
 const WALLET_PREF_KEY = "warparc:walletPref";
 // rdns wallets.js registers for the legacy injected fallback. Built by
@@ -554,7 +554,7 @@ const state = {
 	lastFromBalanceRaw: null,
 	isConnecting: false,
 	isBridging: false,
-	// Default to Testnet â€” Arc is testnet-only until public mainnet (Sep 16, 2026)
+	// Default to Testnet — Arc is testnet-only until public mainnet (Sep 16, 2026)
 	testnetMode: true,
 	txHistory: [],
 	// Active connection: { eip1193, type:"injected"|"walletconnect", label }.
@@ -577,7 +577,7 @@ const toast = (msg, type = "info") => {
 	setTimeout(() => t.remove(), 4000);
 };
 
-const shortAddr = (a) => a.slice(0, 6) + "â€¦" + a.slice(-4);
+const shortAddr = (a) => a.slice(0, 6) + "…" + a.slice(-4);
 
 // --- Protocol Selector (Relay / Li.Fi / CCTP) --------------------------------
 
@@ -586,18 +586,18 @@ const PROTOCOL_KEY = "warparc:protocol";
 const PROTOCOLS = {
 	relay: {
 		name: "Relay",
-		icon: "âš¡",
+		icon: "⚡",
 		fee: "0%",
 		speed: "<3s",
 		chains: "85+",
-		desc: "Fastest cross-chain bridge. Intent-based, p50 &lt;3s fill time. 0% fee for ETHâ†’ETH. USDC also supported.",
+		desc: "Fastest cross-chain bridge. Intent-based, p50 &lt;3s fill time. 0% fee for ETH→ETH. USDC also supported.",
 		apiBase: "https://api.relay.link",
 		testnetApiBase: "https://api.testnets.relay.link",
 		supportedTokens: ["ETH", "USDC"],
 	},
 	lifi: {
 		name: "Li.Fi",
-		icon: "ðŸ”—",
+		icon: "🔗",
 		fee: "0.25%",
 		speed: "~30s",
 		chains: "60+",
@@ -607,16 +607,16 @@ const PROTOCOLS = {
 	},
 	cctp: {
 		name: "CCTP V2",
-		icon: "ðŸ”µ",
+		icon: "🔵",
 		fee: "~$0.10",
 		speed: "~15min",
-		chains: "5",
+		chains: "10+", // 10 enabled mainnet chains with CCTP V2 contracts in config.js
 		desc: "Circle's native USDC bridge. Burn-and-mint, no wrapped tokens. Canonical route for Arc only.",
 		supportedTokens: ["USDC"],
 	},
 	across: {
 		name: "Across",
-		icon: "â›“ï¸",
+		icon: "⛓️",
 		fee: "~0.05%",
 		speed: "~2s",
 		chains: "24+",
@@ -626,16 +626,19 @@ const PROTOCOLS = {
 	},
 	stargateV2: {
 		name: "Stargate V2",
-		icon: "âš¡",
+		icon: "⚡",
 		fee: "~0.06%",
 		speed: "~2min",
 		chains: "15+",
 		desc: "LayerZero-based unified liquidity. Native ETH via Router contract.",
 		supportedTokens: ["ETH"],
+		// Fail-closed (frontend audit 2026-08): unverified router address/ABI in
+		// config.js — see CONFIG.ethBridge.stargateV2.disabled for re-enable path.
+		disabled: !!(CONFIG.ethBridge && CONFIG.ethBridge.stargateV2 && CONFIG.ethBridge.stargateV2.disabled),
 	},
 	socket: {
 		name: "Socket/Bungee",
-		icon: "ðŸ”Œ",
+		icon: "🔌",
 		fee: "~0.2%",
 		speed: "~1min",
 		chains: "30+",
@@ -652,7 +655,8 @@ function getSelectedProtocol() {
 }
 
 function setProtocol(proto) {
-	if (!PROTOCOLS[proto]) return;
+	// Fail-closed: disabled protocols can never be selected (clicks or restore).
+	if (!PROTOCOLS[proto] || PROTOCOLS[proto].disabled) return;
 	selectedProtocol = proto;
 	try { localStorage.setItem(PROTOCOL_KEY, proto); } catch {}
 	updateProtocolUI();
@@ -663,9 +667,15 @@ function setProtocol(proto) {
 function initProtocol() {
 	try {
 		const saved = localStorage.getItem(PROTOCOL_KEY);
-		if (saved && PROTOCOLS[saved]) selectedProtocol = saved;
+		// A saved-but-now-disabled protocol must not be restored (fail-closed).
+		if (saved && PROTOCOLS[saved] && !PROTOCOLS[saved].disabled) selectedProtocol = saved;
 	} catch {}
 	updateProtocolUI();
+}
+
+function isProtocolEnabled(key) {
+	const p = PROTOCOLS[key];
+	return !!(p && !p.disabled);
 }
 
 function updateProtocolUI() {
@@ -687,6 +697,18 @@ function updateProtocolUI() {
 	if (cctpRow) {
 		// CCTP only for USDC + ARC routes
 		cctpRow.style.display = (token === "USDC" && isArcRoute) ? "grid" : "none";
+	}
+
+	// Fail-closed: hide protocols disabled in config/PROTOCOLS (Stargate V2 —
+	// unverified integration, see CONFIG.ethBridge.stargateV2).
+	document.querySelectorAll(".protocol-row[data-protocol]").forEach((row) => {
+		const key = row.getAttribute("data-protocol");
+		if (!isProtocolEnabled(key)) row.style.display = "none";
+	});
+
+	// Recover if a stale/disabled selection somehow persisted.
+	if (selectedProtocol && !isProtocolEnabled(selectedProtocol)) {
+		selectedProtocol = "relay";
 	}
 
 	// Auto-select CCTP for ARC routes, or switch away from CCTP for non-ARC
@@ -898,13 +920,21 @@ async function acrossExecute(quote) {
 
 // --- Stargate V2 Integration --------------------------------------------------
 
-const STARGATE_ROUTER_ADDRESS = CONFIG.ethBridge?.stargateRouterAddress || "0x150f4E4bD86B9b3655702eFEfB78c8b1D9b5d6c0";
+// DISABLED (audit 2026-08): the address lives only in
+// CONFIG.ethBridge.stargateV2.routerAddressUnverified and is never used for
+// quotes/execution while stargateV2.disabled is true. No hardcoded fallback —
+// an unverified address must not silently activate.
+const STARGATE_ROUTER_ADDRESS = (CONFIG.ethBridge && CONFIG.ethBridge.stargateV2 && !CONFIG.ethBridge.stargateV2.disabled)
+	? CONFIG.ethBridge.stargateV2.routerAddressUnverified || null
+	: null;
 const STARGATE_ROUTER_MIN_ABI = [
 	"function swapETH(uint16 _dstChainId, address payable _refundAddress, bytes calldata _toAddress, uint256 _amountLD, uint256 _minAmountLD, uint256 _dstGasForCall) external payable returns (uint256, uint256)",
 	"function quoteSendFee(uint16 _dstChainId, uint256 _amount) external view returns (uint256 nativeFee, uint256 zroFee)"
 ];
 
 async function stargateQuote(fromChain, toChain, amount, token) {
+	// Fail-closed (audit 2026-08): unverified router address/ABI — see config.js.
+	if (!isProtocolEnabled("stargateV2")) return null;
 	if (token !== "ETH") return null;
 	try {
 		const provider = getReadProvider(fromChain.key);
@@ -1001,12 +1031,12 @@ async function fetchProtocolQuote(fromKey, toKey, amountWei, token) {
 	const proto = getSelectedProtocol();
 	const isArc = fromKey === "arc" || fromKey === "arcMainnet" || toKey === "arc" || toKey === "arcMainnet";
 
-	// CCTP uses existing flow â€” no external quote needed (only for Arc routes)
+	// CCTP uses existing flow — no external quote needed (only for Arc routes)
 	if (proto === "cctp" || (token === "USDC" && isArc)) {
 		return { protocol: "cctp", output: null, feePercent: "~0.003%", estTimeSec: 900 };
 	}
 
-	// USDC on non-Arc EVMâ†”EVM routes: use external protocol quotes
+	// USDC on non-Arc EVM↔EVM routes: use external protocol quotes
 	if (token === "USDC" && !isArc) {
 		// Route to the selected protocol for USDC quote
 		if (proto === "relay") return await relayQuote(fromChain, toChain, amountWei, token);
@@ -1029,6 +1059,8 @@ async function fetchProtocolQuote(fromKey, toKey, amountWei, token) {
 	}
 
 	if (proto === "stargateV2") {
+		// Fail-closed: disabled protocol never quotes (audit 2026-08).
+		if (!isProtocolEnabled("stargateV2")) return null;
 		return await stargateQuote(fromChain, toChain, amountWei, token);
 	}
 
@@ -1046,10 +1078,10 @@ function updateQuoteDisplay(quote) {
 	const routeEl = el("est-route");
 
 	if (!quote) {
-		if (outEl) outEl.textContent = "â€”";
-		if (feeEl) feeEl.textContent = "â€”";
-		if (timeEl) timeEl.textContent = "â€”";
-		if (routeEl) routeEl.textContent = "â€”";
+		if (outEl) outEl.textContent = "—";
+		if (feeEl) feeEl.textContent = "—";
+		if (timeEl) timeEl.textContent = "—";
+		if (routeEl) routeEl.textContent = "—";
 		return;
 	}
 
@@ -1060,7 +1092,7 @@ function updateQuoteDisplay(quote) {
 	if (outEl) {
 		outEl.textContent = quote.output
 			? truncateUnits(quote.output, decimals, 4) + " " + symbol
-			: "â€”";
+			: "—";
 	}
 	if (feeEl) feeEl.textContent = quote.feePercent || "—";
 	if (timeEl) {
@@ -1068,7 +1100,7 @@ function updateQuoteDisplay(quote) {
 		if (sec < 60) timeEl.textContent = `${sec}s`;
 		else timeEl.textContent = `~${Math.round(sec / 60)}min`;
 	}
-	if (routeEl) routeEl.textContent = quote.tool || quote.protocol || "â€”";
+	if (routeEl) routeEl.textContent = quote.tool || quote.protocol || "—";
 }
 
 // --- persistence (localStorage) ----------------------------------------------
@@ -1076,7 +1108,7 @@ function updateQuoteDisplay(quote) {
 function saveTxHistory() {
 	try {
 		localStorage.setItem(HISTORY_KEY, JSON.stringify(state.txHistory.slice(-50)));
-	} catch { /* storage full/blocked â€” history stays in-memory only */ }
+	} catch { /* storage full/blocked — history stays in-memory only */ }
 }
 
 function loadTxHistory() {
@@ -1089,7 +1121,7 @@ function loadTxHistory() {
 				(typeof e.hash === "string" || e.hash == null)
 			);
 		}
-	} catch { /* corrupt payload â€” start fresh */ }
+	} catch { /* corrupt payload — start fresh */ }
 }
 
 // One interrupted CCTP transfer may be resumed after a reload: the burn already
@@ -1102,7 +1134,7 @@ function savePendingCctp(p) {
 function loadPendingCctp() {
 	try {
 		const p = JSON.parse(localStorage.getItem(PENDING_KEY) || "null");
-		// recipient is optional but must be a string when present â€” a non-string
+		// recipient is optional but must be a string when present — a non-string
 		// from a hand-corrupted payload would throw inside shortAddr/showPendingBanner
 		// and abort the rest of page init.
 		if (p && p.burnHash && p.fromKey && p.toKey && CONFIG.chains[p.fromKey] && CONFIG.chains[p.toKey] &&
@@ -1126,9 +1158,9 @@ function showPendingBanner() {
 	banner.style.display = "block";
 	const text = banner.querySelector(".pending-text");
 	if (text) {
-		text.textContent = `Unfinished bridge: ${p.amount} USDC burned on ${CONFIG.chains[p.fromKey].shortName} â†’ ${CONFIG.chains[p.toKey].shortName}` +
+		text.textContent = `Unfinished bridge: ${p.amount} USDC burned on ${CONFIG.chains[p.fromKey].shortName} → ${CONFIG.chains[p.toKey].shortName}` +
 			(p.forward ? " (waiting for Circle forward)" : " (mint not yet submitted)") +
-			(p.recipient ? ` Â· penerima ${shortAddr(p.recipient)}` : "");
+			(p.recipient ? ` · penerima ${shortAddr(p.recipient)}` : "");
 	}
 }
 
@@ -1229,7 +1261,7 @@ async function switchChain(chainId) {
 	}
 }
 
-// Re-create provider/signer after a wallet chain switch â€” ethers caches the
+// Re-create provider/signer after a wallet chain switch — ethers caches the
 // network on the BrowserProvider instance, so a stale signer would send the
 // mint transaction to the wrong chain.
 async function refreshProvider() {
@@ -1270,7 +1302,7 @@ function renderWalletChainPicker() {
 
 // User picked a network in the navbar select. A successful switchChain also
 // fires the provider's chainChanged event (_chainChanged re-runs
-// refreshProvider/onAccountChange) â€” the double refresh is safe because
+// refreshProvider/onAccountChange) — the double refresh is safe because
 // bindWalletEvents never accumulates listeners on an already-bound provider.
 async function onWalletChainChange() {
 	const sel = el("wallet-chain");
@@ -1329,7 +1361,7 @@ async function disconnectWallet() {
 	state._eventsBound = false;
 	try { localStorage.removeItem(WALLET_PREF_KEY); } catch { }
 	onAccountChange();
-	// WalletConnect sessions outlive the page â€” terminate the server-side
+	// WalletConnect sessions outlive the page — terminate the server-side
 	// pairing too, after the local reset (never blocking the UI on it).
 	if (previous && previous.type === "walletconnect" &&
 		previous.eip1193 && typeof previous.eip1193.disconnect === "function") {
@@ -1393,7 +1425,7 @@ function isForwardEnabled() {
 }
 
 // Read-only provider for the SELECTED source chain. Balances and gas estimates
-// must reflect what the user picked in the UI â€” not whatever chain the wallet
+// must reflect what the user picked in the UI — not whatever chain the wallet
 // happens to be connected to. Falls back to the chain's public RPC (all hosts
 // are allow-listed in the CSP) when the wallet sits elsewhere.
 const readProviders = {};
@@ -1408,7 +1440,7 @@ function getReadProvider(chainKey) {
 }
 
 // Overlapping balance reads (fast token/chain flips) can resolve out of
-// order â€” only the latest invocation may write the balance display.
+// order — only the latest invocation may write the balance display.
 let balSeq = 0;
 
 async function loadBalances() {
@@ -1424,7 +1456,7 @@ async function loadBalances() {
 	try {
 		if (token === "USDC") {
 			// Always the 6-dec ERC-20 view (on Arc it is the same asset as native
-			// gas â€” one balance, two views; never sum or convert between them).
+			// gas — one balance, two views; never sum or convert between them).
 			const addr = CONFIG.tokens.USDC.addresses[fromKey];
 			if (addr && addr !== "0x0000000000000000000000000000000000000000") {
 				const contract = new ethers.Contract(addr, ERC20_ABI, provider);
@@ -1437,7 +1469,7 @@ async function loadBalances() {
 				el("from-balance").textContent = "N/A";
 			}
 		} else if (token === "ETH") {
-			// Native ETH balance (18 decimals) â€” not available on Arc (USDC is gas)
+			// Native ETH balance (18 decimals) — not available on Arc (USDC is gas)
 			const chain = CONFIG.chains[fromKey];
 			if (chain && chain.nativeCurrency && chain.nativeCurrency.symbol === "ETH") {
 				const bal = await provider.getBalance(state.account);
@@ -1460,7 +1492,7 @@ async function loadBalances() {
 }
 
 // Truncates (never rounds up) to `places` fractional digits via string
-// manipulation â€” Number() would lose precision on huge balances and toFixed()
+// manipulation — Number() would lose precision on huge balances and toFixed()
 // rounds half-up, which let MAX submit more than the actual balance.
 function truncateUnits(value, decimals, places) {
 	try {
@@ -1489,8 +1521,8 @@ function updateContractInfo() {
 	const toChain = CONFIG.chains[toKey];
 	el("from-chain-name").textContent = fromChain.shortName;
 	el("to-chain-name").textContent = toChain.shortName;
-	el("from-domain").textContent = fromChain.cctpDomain != null ? fromChain.cctpDomain : "â€”";
-	el("to-domain").textContent = toChain.cctpDomain != null ? toChain.cctpDomain : "â€”";
+	el("from-domain").textContent = fromChain.cctpDomain != null ? fromChain.cctpDomain : "—";
+	el("to-domain").textContent = toChain.cctpDomain != null ? toChain.cctpDomain : "—";
 	el("from-cid").textContent = fromChain.chainId;
 	el("to-cid").textContent = toChain.chainId;
 }
@@ -1550,8 +1582,8 @@ async function copyAddr(addr) {
 // GET /v2/burn/USDC/fees/{src}/{dst}[?forward=true] (verified live 2026-08-22):
 //   [{"finalityThreshold":1000,"minimumFee":1},
 //    {"finalityThreshold":1000,"minimumFee":1,"forwardFee":{"low":18076,"med":18497,"high":19625}}]
-// Manual mode: maxFee = 10Ã— the fast minimum (floor 500 = official quickstart
-// value) so the burn doesn't revert if the fee ticks up before landing â€”
+// Manual mode: maxFee = 10× the fast minimum (floor 500 = official quickstart
+// value) so the burn doesn't revert if the fee ticks up before landing —
 // feeExecuted at destination is capped by maxFee.
 // Forwarding mode REQUIRES a live quote: its fee is orders of magnitude above
 // the manual minimum, so no hardcoded fallback is ever used (returns null).
@@ -1563,8 +1595,8 @@ async function quoteBurnFee(fromChain, toChain, forward, amountSubunits = 0n) {
 			const data = await res.json();
 			const q = extractFastQuote(data);
 			if (q) {
-				// Protocol component scales with the burn amount â€” canonical quickstart
-				// Step 4 math: protocolFee = amount Ã— minimumFee Ã— 100 / 1e6
+				// Protocol component scales with the burn amount — canonical quickstart
+				// Step 4 math: protocolFee = amount × minimumFee × 100 / 1e6
 				// (developers.circle.com/cctp/quickstarts/transfer-usdc-ethereum-to-arc).
 				const protocolFee = (amountSubunits * BigInt(Math.round(Number(q.minimumFee) * 100))) / 1_000_000n;
 				if (forward) {
@@ -1590,7 +1622,7 @@ function extractFastQuote(data) {
 	const fast = list.find(e => e && Number(e.finalityThreshold) === 1000);
 	if (!fast || fast.minimumFee == null) return null;
 	try {
-		// minimumFee can be float (e.g. 1.3) â€” round to integer for BigInt
+		// minimumFee can be float (e.g. 1.3) — round to integer for BigInt
 		const minimumFee = BigInt(Math.round(Number(fast.minimumFee)));
 		let forwardFee = null;
 		if (fast.forwardFee && fast.forwardFee.high != null) {
@@ -1606,7 +1638,7 @@ function extractFastQuote(data) {
 	}
 }
 
-// Overlapping estimates (fast typing, chain flips) can resolve out of order â€”
+// Overlapping estimates (fast typing, chain flips) can resolve out of order —
 // only the latest invocation may write to the fee display.
 let estSeq = 0;
 
@@ -1675,7 +1707,7 @@ async function estimateGas() {
 			return;
 		}
 
-		// ETH â€” fetch protocol quote for accurate estimate
+		// ETH — fetch protocol quote for accurate estimate
 		if (token === "ETH") {
 			const proto = getSelectedProtocol();
 			const amountWei = el("amount").value.trim()
@@ -1721,7 +1753,7 @@ async function estimateGas() {
 }
 
 // ---------------------------------------------------------------------------
-// Bridging â€” USDC via CCTP V2, ETH via external protocols
+// Bridging — USDC via CCTP V2, ETH via external protocols
 // ---------------------------------------------------------------------------
 
 async function bridge() {
@@ -1750,7 +1782,7 @@ async function bridge() {
 			return;
 		}
 		if (parsedAmount === 0n) { toast("Amount must be greater than 0", "error"); return; }
-		// lastFromBalanceRaw tracks the SELECTED source chain â€” reject before the
+		// lastFromBalanceRaw tracks the SELECTED source chain — reject before the
 		// approve can succeed and strand the user at a reverting burn.
 		if (state.lastFromBalanceRaw != null && parsedAmount > state.lastFromBalanceRaw) {
 			toast("Amount exceeds your " + token + " balance on " + CONFIG.chains[fromKey].shortName, "error");
@@ -1761,13 +1793,13 @@ async function bridge() {
 		const isArcRoute = fromKey === "arc" || fromKey === "arcMainnet" || toKey === "arc" || toKey === "arcMainnet";
 
 		// Routing logic:
-		// - USDC + ARC route â†’ CCTP (Circle's native bridge for Arc)
-		// - USDC + non-ARC route â†’ Relay/Li.Fi (external protocols)
-		// - ETH â†’ always Relay/Li.Fi (CCTP doesn't support ETH)
+		// - USDC + ARC route → CCTP (Circle's native bridge for Arc)
+		// - USDC + non-ARC route → Relay/Li.Fi (external protocols)
+		// - ETH → always Relay/Li.Fi (CCTP doesn't support ETH)
 		if (token === "USDC" && isArcRoute) {
 			await bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey);
 		} else if (token === "USDC" && !isArcRoute) {
-			// USDC between non-ARC chains â†’ use external protocol
+			// USDC between non-ARC chains → use external protocol
 			if (proto === "relay") await bridgeViaRelay(amount, parsedAmount, fromKey, toKey);
 			else if (proto === "lifi") await bridgeViaLiFi(amount, parsedAmount, fromKey, toKey);
 			else if (proto === "across") await bridgeViaAcross(amount, parsedAmount, fromKey, toKey);
@@ -1775,7 +1807,7 @@ async function bridge() {
 			else if (proto === "socket") await bridgeViabungee(amount, parsedAmount, fromKey, toKey);
 			else await bridgeViaRelay(amount, parsedAmount, fromKey, toKey); // default fallback
 		} else if (token === "ETH") {
-			// ETH â†’ always use external protocol (CCTP doesn't support ETH)
+			// ETH → always use external protocol (CCTP doesn't support ETH)
 			if (proto === "relay") await bridgeViaRelay(amount, parsedAmount, fromKey, toKey);
 			else if (proto === "lifi") await bridgeViaLiFi(amount, parsedAmount, fromKey, toKey);
 			else if (proto === "across") await bridgeViaAcross(amount, parsedAmount, fromKey, toKey);
@@ -1792,42 +1824,10 @@ async function bridge() {
 
 // Circle CCTP V2 burn-and-mint. forward=true routes through Circle's
 // Forwarding Service (depositForBurnWithHook + "cctp-forward" hook) so the
-// destination mint is submitted by Circle â€” essential when the recipient has
+// destination mint is submitted by Circle — essential when the recipient has
 // no gas on the destination (USDC is gas on Arc).
 // Reference quickstart: https://developers.circle.com/cctp/quickstarts/transfer-usdc-ethereum-to-arc
 async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey) {
-// USDC bridge between two non-Arc EVM chains â€” uses backend-configured protocols
-// (LiFi â†’ Relay â†’ Across â†’ Stargate â†’ Socket) since CCTP is only for Arc routes.
-async function bridgeUSDCViaProtocols(amount, parsedAmount, fromKey, toKey) {
-	const fromChain = CONFIG.chains[fromKey];
-	const toChain = CONFIG.chains[toKey];
-
-	if (fromChain.network !== toChain.network) {
-		toast(t("networkMismatch"), "error");
-		return;
-	}
-
-	const protocols = [
-		{ name: "Li.Fi",      fn: bridgeViaLiFi },
-		{ name: "Relay",      fn: bridgeViaRelay },
-		{ name: "Across",     fn: bridgeViaAcross },
-	];
-	const apiKeyAcross = CONFIG.ethBridge?.apiKeys?.across || "";
-	const filtered = protocols.filter(p => {
-		if (p.name === "Across" && !apiKeyAcross) return false;
-		return true;
-	});
-
-	for (const proto of filtered) {
-		try {
-			await proto.fn(amount, parsedAmount, fromKey, toKey);
-			return; // success
-		} catch (e) {
-			console.warn(`[USDC Bridge] ${proto.name} failed: ${e.message}. Next...`);
-		}
-	}
-	// All failed â€” the last bridgeViaXxx already showed its error toast
-}
 	const fromChain = CONFIG.chains[fromKey];
 	const toChain = CONFIG.chains[toKey];
 	const usdcAddr = CONFIG.tokens.USDC.addresses[fromKey];
@@ -1843,16 +1843,16 @@ async function bridgeUSDCViaProtocols(amount, parsedAmount, fromKey, toKey) {
 	}
 
 	const arcOverrides = (key) => key === "arc"
-		// Arc: type-2 tx, maxFeePerGas â‰¥ 20 Gwei floor, priority tip 0 is accepted
+		// Arc: type-2 tx, maxFeePerGas ≥ 20 Gwei floor, priority tip 0 is accepted
 		? { maxFeePerGas: ethers.parseUnits("30", "gwei"), maxPriorityFeePerGas: 0n }
 		: {};
 
 	const quote = await quoteBurnFee(fromChain, toChain, forward, parsedAmount);
 	if (!quote) {
-		toast("Forwarding fee quote unavailable â€” turn off Forwarding Service or retry", "error");
+		toast("Forwarding fee quote unavailable — turn off Forwarding Service or retry", "error");
 		return;
 	}
-	// The executed fee is deducted from the transferred amount â€” an amount at or
+	// The executed fee is deducted from the transferred amount — an amount at or
 	// below the fee would burn everything (or revert).
 	const feeTotal = quote.minimumFee + (quote.forwardFee || 0n);
 	if (parsedAmount <= feeTotal) {
@@ -1863,7 +1863,7 @@ async function bridgeUSDCViaProtocols(amount, parsedAmount, fromKey, toKey) {
 	const burnTxId = "burn-" + Date.now();
 	const btn = el("bridge-btn");
 	setFlowsBusy(true);
-	let subTxId = null; // fwd-/att- sub-entry â€” must not stay "pending" on abort
+	let subTxId = null; // fwd-/att- sub-entry — must not stay "pending" on abort
 
 	// Initialize CCTP step tracker
 	resetStepper();
@@ -1879,10 +1879,10 @@ async function bridgeUSDCViaProtocols(amount, parsedAmount, fromKey, toKey) {
 		}
 		const expectedAccount = state.account;
 		// A wallet account/chain switch mid-flow would send from the wrong key
-		// or chain â€” abort before any transaction is submitted.
+		// or chain — abort before any transaction is submitted.
 		const assertWalletStable = () => {
 			if (state.account !== expectedAccount || state.chainId !== fromChain.chainId) {
-				throw new Error("Wallet account or chain changed mid-flow â€” aborting before send (no transaction was submitted)");
+				throw new Error("Wallet account or chain changed mid-flow — aborting before send (no transaction was submitted)");
 			}
 		};
 
@@ -1905,7 +1905,7 @@ async function bridgeUSDCViaProtocols(amount, parsedAmount, fromKey, toKey) {
 		addTxEntry(burnTxId, `Burn ${amount} USDC on ${fromChain.shortName}`, "pending", fromKey);
 		const messenger = new ethers.Contract(messengerAddr, TOKEN_MESSENGER_V2_ABI, state.signer);
 		const mintRecipient = ethers.zeroPadValue(state.account, 32);
-		// destinationCaller = zero bytes32 â†’ any address may submit receiveMessage.
+		// destinationCaller = zero bytes32 → any address may submit receiveMessage.
 		// Forward path burns totalAmount = amount + maxFee (quickstart Step 3.2/3.3)
 		// so the recipient receives the nominal amount after Circle's fee deduction;
 		// the direct-mint path burns the plain amount exactly like the quickstart.
@@ -1927,7 +1927,7 @@ async function bridgeUSDCViaProtocols(amount, parsedAmount, fromKey, toKey) {
 		if (burnReceipt.status !== 1) throw new Error("Burn transaction failed");
 		updateTxEntry(burnTxId, "success", burnTx.hash);
 
-		// Stepper: burn done â†’ attestation/forward active
+		// Stepper: burn done → attestation/forward active
 		updateStepper("burn", "done");
 		updateStepperLine("burn", "done");
 		updateStepper("attest", "active");
@@ -1953,14 +1953,14 @@ async function bridgeUSDCViaProtocols(amount, parsedAmount, fromKey, toKey) {
 				forwardHash = await pollForwardCompletion(CONFIG.iris[fromChain.network], fromChain.cctpDomain, burnTx.hash);
 			} catch (e) {
 				if (e.name !== "ForwardTimeoutWithAttestation") throw e;
-				// Forwarder stalled but the attestation is signed â€” mint manually
+				// Forwarder stalled but the attestation is signed — mint manually
 				// (fwd- is done; the fallback mint gets its own entry).
 				updateTxEntry(fwdTxId, "failed", "");
 				await manualMintFallback(toChain, toKey, e.att, amount);
 				return;
 			}
 			updateTxEntry(fwdTxId, "success", forwardHash);
-			toast(`Bridge complete! ${amount} USDC â†’ ${toChain.shortName} (forwarded by Circle)`, "success");
+			toast(`Bridge complete! ${amount} USDC → ${toChain.shortName} (forwarded by Circle)`, "success");
 			clearPendingCctp();
 			loadBalances();
 			// Stepper: all done
@@ -1968,7 +1968,7 @@ async function bridgeUSDCViaProtocols(amount, parsedAmount, fromKey, toKey) {
 			updateStepperLine("attest", "done");
 			updateStepper("mint", "done");
 		} else {
-			// 4b. Wait for Circle to sign the attestation (fast â‰ˆ seconds)
+			// 4b. Wait for Circle to sign the attestation (fast ≈ seconds)
 			btn.textContent = "Waiting for attestation...";
 			const attTxId = "att-" + Date.now();
 			subTxId = attTxId;
@@ -1976,7 +1976,7 @@ async function bridgeUSDCViaProtocols(amount, parsedAmount, fromKey, toKey) {
 			const att = await pollAttestation(CONFIG.iris[fromChain.network], fromChain.cctpDomain, burnTx.hash);
 			updateTxEntry(attTxId, "success", burnTx.hash);
 
-			// Stepper: attestation done â†’ mint active
+			// Stepper: attestation done → mint active
 			updateStepper("attest", "done");
 			updateStepperLine("attest", "done");
 			updateStepper("mint", "active");
@@ -1989,7 +1989,7 @@ async function bridgeUSDCViaProtocols(amount, parsedAmount, fromKey, toKey) {
 			onAccountChange();
 			// Defensive: the wallet must sit on the destination before receiveMessage.
 			if (state.chainId !== toChain.chainId) {
-				throw new Error("Wallet chain changed mid-flow â€” aborting before mint (no transaction was submitted)");
+				throw new Error("Wallet chain changed mid-flow — aborting before mint (no transaction was submitted)");
 			}
 
 			const mintTxId = "mint-" + Date.now();
@@ -2013,7 +2013,7 @@ async function bridgeUSDCViaProtocols(amount, parsedAmount, fromKey, toKey) {
 }
 
 // receiveMessage on the destination MessageTransmitterV2. Tolerates the case
-// where a relayer already processed the nonce â€” then the funds HAVE arrived,
+// where a relayer already processed the nonce — then the funds HAVE arrived,
 // which is a success, not an error.
 async function submitMint(toChain, att, mintTxId, toKey, amount) {
 	const transmitter = new ethers.Contract(toChain.cctp.messageTransmitterV2, MESSAGE_TRANSMITTER_V2_ABI, state.signer);
@@ -2026,7 +2026,7 @@ async function submitMint(toChain, att, mintTxId, toKey, amount) {
 		const mintReceipt = await mintTx.wait();
 		if (mintReceipt.status === 1) {
 			updateTxEntry(mintTxId, "success", mintTx.hash);
-			toast(`Bridge complete! ${amount} USDC â†’ ${toChain.shortName}`, "success");
+			toast(`Bridge complete! ${amount} USDC → ${toChain.shortName}`, "success");
 			clearPendingCctp();
 			updateStepper("mint", "done");
 		} else {
@@ -2038,11 +2038,11 @@ async function submitMint(toChain, att, mintTxId, toKey, amount) {
 		const msg = String(e.reason || e.shortMessage || e.message || "");
 		if (/already|replay|used/i.test(msg)) {
 			updateTxEntry(mintTxId, "success", "");
-			toast("Mint was already submitted by a relayer â€” funds are on " + toChain.shortName, "success");
+			toast("Mint was already submitted by a relayer — funds are on " + toChain.shortName, "success");
 			clearPendingCctp();
 			updateStepper("mint", "done");
 		} else {
-			// Rejected/reverted mint: the burn is safe on-chain â€” KEEP the pending
+			// Rejected/reverted mint: the burn is safe on-chain — KEEP the pending
 			// record so the resume banner survives for a retry.
 			updateTxEntry(mintTxId, "failed", "");
 			updateStepper("mint", "failed");
@@ -2053,18 +2053,18 @@ async function submitMint(toChain, att, mintTxId, toKey, amount) {
 	}
 }
 
-// Forwarder stalled but Iris already signed the attestation â€” anyone may
+// Forwarder stalled but Iris already signed the attestation — anyone may
 // submit receiveMessage (destinationCaller = zero), so finish the mint by
 // hand. submitMint clears the pending record on success, keeps it on failure.
 async function manualMintFallback(toChain, toKey, att, amount, labelSuffix = " (manual fallback)") {
-	toast("Forwarder belum selesai â€” melanjutkan dengan mint manualâ€¦", "info");
+	toast("Forwarder belum selesai — melanjutkan dengan mint manual…", "info");
 	await switchChain(toChain.chainId);
 	await refreshProvider();
 	onAccountChange();
 	// Same defense as the other pre-mint paths: a silently-ignored chain switch
-	// would send the mint to the wrong network (wasted gas â€” USDC on Arc).
+	// would send the mint to the wrong network (wasted gas — USDC on Arc).
 	if (state.chainId !== toChain.chainId) {
-		throw new Error(`Wallet is not on ${toChain.name} â€” mint aborted before send`);
+		throw new Error(`Wallet is not on ${toChain.name} — mint aborted before send`);
 	}
 	const mintTxId = "mint-" + Date.now();
 	addTxEntry(mintTxId, `Mint ${amount} USDC on ${toChain.shortName}${labelSuffix}`, "pending", toKey);
@@ -2106,11 +2106,11 @@ async function resumePendingCctp() {
 				return;
 			}
 			updateTxEntry(resumeId, "success", forwardHash);
-			toast("Forward completed â€” funds are on " + toChain.shortName, "success");
+			toast("Forward completed — funds are on " + toChain.shortName, "success");
 			clearPendingCctp();
 		} else {
 			// The mint always pays the ORIGINAL recipient; a different connected
-			// account only pays the gas â€” make that explicit before proceeding.
+			// account only pays the gas — make that explicit before proceeding.
 			if (p.recipient && state.account && p.recipient.toLowerCase() !== state.account.toLowerCase() &&
 				!window.confirm("Burn ini dibuat untuk penerima " + shortAddr(p.recipient) + ", BUKAN akun yang tersambung sekarang. Mint manual akan mengirim dana ke penerima asli (gas dibayar akun sekarang). Lanjutkan?")) {
 				return;
@@ -2126,7 +2126,7 @@ async function resumePendingCctp() {
 			// Chain-only assertion: the account may differ from the burner (the
 			// confirm above already covers that case).
 			if (state.chainId !== toChain.chainId) {
-				throw new Error("Wallet chain changed mid-flow â€” aborting before mint (no transaction was submitted)");
+				throw new Error("Wallet chain changed mid-flow — aborting before mint (no transaction was submitted)");
 			}
 			const mintTxId = "mint-" + Date.now();
 			addTxEntry(mintTxId, `Mint ${p.amount} USDC on ${toChain.shortName} (resumed)`, "pending", p.toKey);
@@ -2155,7 +2155,7 @@ async function pollForwardCompletion(irisBase, srcDomain, txHash, timeoutMs = 60
 				const data = await res.json();
 				return (data && data.messages && data.messages[0]) || null;
 			}
-		} catch { /* transient network error â€” keep polling */ }
+		} catch { /* transient network error — keep polling */ }
 		return null;
 	};
 	const deadline = Date.now() + timeoutMs;
@@ -2167,15 +2167,15 @@ async function pollForwardCompletion(irisBase, srcDomain, txHash, timeoutMs = 60
 		await sleep(5000);
 	}
 	// Timeout: a signed attestation still lets the caller mint manually
-	// (destinationCaller = zero) â€” surface it instead of dead-ending.
+	// (destinationCaller = zero) — surface it instead of dead-ending.
 	const msg = await fetchMsg();
 	if (msg && msg.status === "complete" && msg.message && msg.attestation) {
-		const e = new Error("Forward completion timeout â€” attestation signed, manual mint possible");
+		const e = new Error("Forward completion timeout — attestation signed, manual mint possible");
 		e.name = "ForwardTimeoutWithAttestation";
 		e.att = msg;
 		throw e;
 	}
-	throw new Error("Forward completion timeout â€” attestation not signed yet; Circle may still forward it, or resume later from this page");
+	throw new Error("Forward completion timeout — attestation not signed yet; Circle may still forward it, or resume later from this page");
 }
 
 // Poll Iris until the burn message is signed. 404 = not observed yet; 5s
@@ -2193,14 +2193,14 @@ async function pollAttestation(irisBase, srcDomain, txHash, timeoutMs = 600000) 
 					return msg;
 				}
 			}
-		} catch { /* transient network error â€” keep polling */ }
+		} catch { /* transient network error — keep polling */ }
 		await sleep(5000);
 	}
-	throw new Error("Attestation timeout â€” the burn succeeded; mint can be retried with the burn tx hash");
+	throw new Error("Attestation timeout — the burn succeeded; mint can be retried with the burn tx hash");
 }
 
-// ETH native bridge â€” multi-protocol fallback router.
-// Tries protocols in order: Li.Fi â†’ Relay â†’ Across (if API key) â†’ Stargate V2 â†’ Socket/Bungee.
+// ETH native bridge — multi-protocol fallback router.
+// Tries protocols in order: Li.Fi → Relay → Across (if API key) → Stargate V2 → Socket/Bungee.
 // Each bridgeViaXxx manages its own UI, tx entries, and errors. If one throws, the next is tried.
 async function bridgeETHNative(amount, parsedAmount, fromKey, toKey) {
 	const fromChain = CONFIG.chains[fromKey];
@@ -2221,23 +2221,25 @@ async function bridgeETHNative(amount, parsedAmount, fromKey, toKey) {
 	];
 	const apiKeyAcross = CONFIG.ethBridge?.apiKeys?.across || "";
 	if (apiKeyAcross) protocols.push({ name: "Across", fn: bridgeViaAcross });
+	// Fail-closed: Stargate V2 only joins the fallback chain when enabled
+	// (disabled while its router address/ABI are unverified — audit 2026-08).
+	if (isProtocolEnabled("stargateV2")) protocols.push({ name: "Stargate V2", fn: bridgeViaStargate });
 	protocols.push(
-		{ name: "Stargate V2",  fn: bridgeViaStargate },
 		{ name: "Socket/Bungee",fn: bridgeViabungee }
 	);
 
 	for (const proto of protocols) {
 		try {
 			await proto.fn(amount, parsedAmount, fromKey, toKey);
-			return; // success â€” stop here
+			return; // success — stop here
 		} catch (e) {
 			console.warn(`[ETH Bridge] ${proto.name} failed: ${e.message}. Next...`);
 		}
 	}
-	// All failed â€” the last bridgeViaXxx already showed its error toast
+	// All failed — the last bridgeViaXxx already showed its error toast
 }
 
-// Relay protocol bridge â€” intent-based, fastest fills (<3s p50)
+// Relay protocol bridge — intent-based, fastest fills (<3s p50)
 async function bridgeViaRelay(amount, parsedAmount, fromKey, toKey) {
 	const fromChain = CONFIG.chains[fromKey];
 	const toChain = CONFIG.chains[toKey];
@@ -2261,7 +2263,7 @@ async function bridgeViaRelay(amount, parsedAmount, fromKey, toKey) {
 
 		const token = getSelectedToken();
 		btn.textContent = "Getting Relay quote...";
-		addTxEntry(txId, `Bridge ${amount} ${token} â†’ ${toChain.shortName} (Relay)`, "pending", fromKey);
+		addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName} (Relay)`, "pending", fromKey);
 
 		// Get quote from Relay API
 		const quote = await relayQuote(fromChain, toChain, parsedAmount, token);
@@ -2286,7 +2288,7 @@ async function bridgeViaRelay(amount, parsedAmount, fromKey, toKey) {
 		updateBridgeBtn();
 	}
 }
-// Across Protocol bridge â€” fastest fills (~2s). Requires API key.
+// Across Protocol bridge — fastest fills (~2s). Requires API key.
 async function bridgeViaAcross(amount, parsedAmount, fromKey, toKey) {
 	const fromChain = CONFIG.chains[fromKey];
 	const toChain = CONFIG.chains[toKey];
@@ -2308,7 +2310,7 @@ async function bridgeViaAcross(amount, parsedAmount, fromKey, toKey) {
 
 		const token = getSelectedToken();
 		btn.textContent = "Getting Across quote...";
-		addTxEntry(txId, `Bridge ${amount} ${token} â†’ ${toChain.shortName} (Across)`, "pending", fromKey);
+		addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName} (Across)`, "pending", fromKey);
 
 		const quote = await acrossQuote(fromChain, toChain, parsedAmount, token);
 		if (!quote || !quote.swapTx) {
@@ -2333,8 +2335,14 @@ async function bridgeViaAcross(amount, parsedAmount, fromKey, toKey) {
 	}
 }
 
-// Stargate V2 bridge â€” LayerZero-based, direct contract interaction.
+// Stargate V2 bridge — LayerZero-based, direct contract interaction.
+// DISABLED (fail-closed) via CONFIG.ethBridge.stargateV2.disabled while the
+// router address/ABI are unverified (frontend audit 2026-08). The guard below
+// fires before any UI state or transaction side effects.
 async function bridgeViaStargate(amount, parsedAmount, fromKey, toKey) {
+	if (!isProtocolEnabled("stargateV2")) {
+		throw new Error("Stargate V2 is disabled (unverified integration)");
+	}
 	const fromChain = CONFIG.chains[fromKey];
 	const toChain = CONFIG.chains[toKey];
 
@@ -2379,7 +2387,7 @@ async function bridgeViaStargate(amount, parsedAmount, fromKey, toKey) {
 	}
 }
 
-// Socket/Bungee bridge â€” cross-chain routing engine.
+// Socket/Bungee bridge — cross-chain routing engine.
 async function bridgeViabungee(amount, parsedAmount, fromKey, toKey) {
 	const fromChain = CONFIG.chains[fromKey];
 	const toChain = CONFIG.chains[toKey];
@@ -2425,7 +2433,7 @@ async function bridgeViabungee(amount, parsedAmount, fromKey, toKey) {
 	}
 }
 
-// Li.Fi protocol bridge â€” aggregator routing through 20+ bridges
+// Li.Fi protocol bridge — aggregator routing through 20+ bridges
 async function bridgeViaLiFi(amount, parsedAmount, fromKey, toKey) {
 	const fromChain = CONFIG.chains[fromKey];
 	const toChain = CONFIG.chains[toKey];
@@ -2449,7 +2457,7 @@ async function bridgeViaLiFi(amount, parsedAmount, fromKey, toKey) {
 
 		const token = getSelectedToken();
 		btn.textContent = "Getting Li.Fi quote...";
-		addTxEntry(txId, `Bridge ${amount} ${token} â†’ ${toChain.shortName} (Li.Fi)`, "pending", fromKey);
+		addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName} (Li.Fi)`, "pending", fromKey);
 
 		// Get quote from Li.Fi API
 		const quote = await lifiQuote(fromChain, toChain, parsedAmount, token);
@@ -2476,7 +2484,7 @@ async function bridgeViaLiFi(amount, parsedAmount, fromKey, toKey) {
 }
 
 // Both action buttons go quiet while any bridge/resume flow runs; only the
-// disabled state is touched â€” labels stay owned by updateBridgeBtn/the flow.
+// disabled state is touched — labels stay owned by updateBridgeBtn/the flow.
 function setFlowsBusy(busy) {
 	const b = el("bridge-btn");
 	if (b) b.disabled = busy;
@@ -2496,7 +2504,7 @@ function updateBridgeBtn() {
 	if (fromKey === toKey) { btn.textContent = t("sameChain"); btn.disabled = true; return; }
 
 	if (token === "USDC") {
-		// Arc â†’ requires CCTP V2; EVM non-Arc â†’ just needs USDC token address (protocols handle the bridge)
+		// Arc → requires CCTP V2; EVM non-Arc → just needs USDC token address (protocols handle the bridge)
 		const isArc = fromKey === "arc" || fromKey === "arcMainnet" || toKey === "arc" || toKey === "arcMainnet";
 		if (isArc) {
 			if (!CONFIG.tokens.USDC.addresses[fromKey] || !CONFIG.chains[fromKey].cctp) {
@@ -2533,10 +2541,10 @@ function updateBridgeBtn() {
 	btn.disabled = false;
 }
 
-// A chain is bridgeable in the UI. For USDC: if Arc â†’ requires CCTP V2 contracts;
-// if EVM non-Arc â†’ only needs a USDC token address (bridged via LiFi/etc. backend).
+// A chain is bridgeable in the UI. For USDC: if Arc → requires CCTP V2 contracts;
+// if EVM non-Arc → only needs a USDC token address (bridged via LiFi/etc. backend).
 // For ETH (cross-chain bridging via LiFi/Across/Stargate/Relay/Socket) we only
-// need the chain to support ETH as native currency â€” no CCTP needed.
+// need the chain to support ETH as native currency — no CCTP needed.
 function isBridgeableChain(chainKey, token) {
 	const c = CONFIG.chains[chainKey];
 	if (!c || c.disabled) return false;
@@ -2546,12 +2554,12 @@ function isBridgeableChain(chainKey, token) {
 		return c.nativeCurrency && c.nativeCurrency.symbol === "ETH";
 	}
 	if (token === "USDC") {
-		// Arc â†’ only via CCTP (must have CCTP contracts)
+		// Arc → only via CCTP (must have CCTP contracts)
 		if (chainKey === "arc" || chainKey === "arcMainnet") {
 			return !!(c.cctpDomain != null && c.cctp && c.cctp.tokenMessengerV2);
 		}
-		// EVM non-Arc â†’ bridge via configured protocols (LiFi/Relay/etc.),
-		// just need a USDC token address â€” no CCTP required here
+		// EVM non-Arc → bridge via configured protocols (LiFi/Relay/etc.),
+		// just need a USDC token address — no CCTP required here
 		return !!CONFIG.tokens.USDC.addresses[chainKey];
 	}
 	// ABT bridging: requires Circle CCTP V2 contracts on the route
@@ -2728,11 +2736,11 @@ function resetStepper() {
 
 // ---------------------------------------------------------------------------
 // Wallet picker modal + WalletConnect (EIP-6963 rows are rendered by
-// openWalletModal from window.WalletRegistry.discovered â€” see wallets.js).
+// openWalletModal from window.WalletRegistry.discovered — see wallets.js).
 // ---------------------------------------------------------------------------
 
 // Neutral glyph for wallets that announce no icon (EIP-6963 icon is optional).
-// Inline data URI keeps the strict CSP happy â€” no extra img-src host needed.
+// Inline data URI keeps the strict CSP happy — no extra img-src host needed.
 const GENERIC_WALLET_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='7' width='26' height='18' rx='3' fill='%232775CA'/%3E%3Crect x='18' y='14' width='11' height='7' rx='2' fill='%231E5FA8'/%3E%3Ccircle cx='23.5' cy='17.5' r='1.4' fill='%23FFFFFF'/%3E%3C/svg%3E";
 
 // Memoized EthereumProvider init; the live instance is also cached on window
@@ -2740,7 +2748,7 @@ const GENERIC_WALLET_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 let wcInitPromise = null;
 
 async function initWalletConnect() {
-	// Read at CALL time â€” projectId may be filled into config.js between loads.
+	// Read at CALL time — projectId may be filled into config.js between loads.
 	const wcConfig = CONFIG.walletconnect || {};
 	if (!wcConfig.projectId || wcConfig.projectId === "TBD") throw { code: "NO_PROJECT" };
 	if (window.__wcProvider) return window.__wcProvider;
@@ -2819,7 +2827,7 @@ function modalFocusables() {
 }
 
 function openWalletModal() {
-	// Rows render at OPEN time â€” discovery results and CONFIG may differ per load.
+	// Rows render at OPEN time — discovery results and CONFIG may differ per load.
 	const installed = el("wallet-list-installed");
 	installed.innerHTML = "";
 	const entries = window.WalletRegistry ? window.WalletRegistry.discovered : [];
@@ -2917,7 +2925,7 @@ async function onWalletConnectRow() {
 		return;
 	}
 	await connectWith(p, "WalletConnect", "walletconnect");
-	// Success closed the modal; a rejection leaves it up â€” reset either way.
+	// Success closed the modal; a rejection leaves it up — reset either way.
 	renderWcRowState();
 }
 
@@ -2936,7 +2944,7 @@ async function connectWith(eip1193, label, type, opts = {}) {
 		state.signer = await state.provider.getSigner();
 		state.account = accounts[0];
 		state.chainId = Number(await eip1193.request({ method: "eth_chainId" }));
-		// Persist the pick for silent reloads â€” rdns preferred, display name as
+		// Persist the pick for silent reloads — rdns preferred, display name as
 		// fallback when no EIP-6963 entry carries it.
 		const match = (window.WalletRegistry ? window.WalletRegistry.discovered : [])
 			.find(e => e.info.name === label);
@@ -2959,7 +2967,7 @@ async function connectWith(eip1193, label, type, opts = {}) {
 }
 
 // Wire accountsChanged/chainChanged for the ACTIVE provider. Rebinding for a
-// different provider always detaches the previous handlers first â€” switching
+// different provider always detaches the previous handlers first — switching
 // wallets (or reconnecting after a disconnect) never accumulates listeners.
 function bindWalletEvents(p) {
 	if (state._eventsBound && state._boundProvider === p) return;
@@ -2969,7 +2977,7 @@ function bindWalletEvents(p) {
 	}
 	state._accountsChanged = async (accounts) => {
 		if (!Array.isArray(accounts)) return;
-		// Stale event from an already-disconnected provider â€” ignore quietly.
+		// Stale event from an already-disconnected provider — ignore quietly.
 		if (!state.wallet) return;
 		if (accounts.length === 0) {
 			disconnectWallet();
@@ -3040,8 +3048,8 @@ document.addEventListener("DOMContentLoaded", () => {
 	el("token-select").addEventListener("change", onTokenChange);
 	el("amount").addEventListener("input", onAmountChange);
 
-	// Bound in JS (not inline onclick) so the strict CSP in vercel.json â€”
-	// script-src 'self' + cdnjs, no 'unsafe-inline' â€” cannot block them.
+	// Bound in JS (not inline onclick) so the strict CSP in vercel.json —
+	// script-src 'self' + cdnjs, no 'unsafe-inline' — cannot block them.
 	el("connect-btn").addEventListener("click", openWalletModal);
 	el("wallet-modal-close").addEventListener("click", closeWalletModal);
 	el("wallet-modal").addEventListener("click", (e) => {
@@ -3088,7 +3096,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	if (dismissBtn) {
 		dismissBtn.addEventListener("click", () => {
 			const p = loadPendingCctp();
-			// Forwarded transfers complete on their own â€” dismiss clears the
+			// Forwarded transfers complete on their own — dismiss clears the
 			// state. Manual ones stay resumable; dismiss only hides the banner.
 			if (p && p.forward) clearPendingCctp();
 			else el("pending-resume").style.display = "none";
@@ -3150,7 +3158,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	onTokenChange();
 	updateBridgeBtn();
 
-	// Start in disconnected state â€” card shows form but muted
+	// Start in disconnected state — card shows form but muted
 	const card = document.querySelector(".bridge-card");
 	if (card && !state.account) card.classList.add("disconnected");
 });

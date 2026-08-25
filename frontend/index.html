@@ -223,7 +223,10 @@
 				</span>
 				<span class="protocol-fee">~$0.10</span>
 				<span class="protocol-speed">~15min</span>
-				<span class="protocol-chains">5</span>
+				<!-- 10 = enabled mainnet chains with CCTP V2 contracts in js/config.js
+					(ethereum, base, arbitrum, optimism, polygon, bsc, avalanche,
+					linea, scroll, blast) — was a stale "5" -->
+				<span class="protocol-chains">10+</span>
 			</button>
 <button class="protocol-row" data-protocol="across" id="proto-across" role="radio" aria-checked="false">
 				<span class="protocol-name">
@@ -234,7 +237,11 @@
 				<span class="protocol-speed">~2s</span>
 				<span class="protocol-chains">24+</span>
 			</button>
-			<button class="protocol-row" data-protocol="stargateV2" id="proto-stargate" role="radio" aria-checked="false">
+			<!-- Fail-closed (frontend audit 2026-08): Stargate V2 hidden while its
+				router address/ABI are unverified — see CONFIG.ethBridge.stargateV2
+				in js/config.js for the re-enable path (flip disabled:false AND
+				remove hidden here). Row kept so re-enabling is one flag. -->
+			<button class="protocol-row" data-protocol="stargateV2" id="proto-stargate" role="radio" aria-checked="false" hidden>
 				<span class="protocol-name">
 					<span class="protocol-icon">⚡</span>
 					Stargate V2

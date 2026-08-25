@@ -376,11 +376,12 @@ async function runTimeoutTests() {
 	const keepAlive = setTimeout(() => {}, 10_000);
 	try {
 		ok((await withTimeout(Promise.resolve(7), 1000, "fast")) === 7, "withTimeout meneruskan nilai resolve");
-		await assert.rejects(
-			() => withTimeout(new Promise(() => {}), 20, "hung upstream"),
-			(e) => /hung upstream timeout \(20ms\)/.test(e.message),
-			"withTimeout: promise menggantung → error deadline berlabel"
-		);
+		try {
+			await withTimeout(new Promise(() => {}), 20, "hung upstream");
+			ok(false, "withTimeout: promise menggantung harusnya melempar error");
+		} catch (e) {
+			ok(/hung upstream timeout \(20ms\)/.test(e.message), "withTimeout: promise menggantung → error deadline berlabel");
+		}
 
 		const hangingFetch = (url, init) =>
 			new Promise((_, reject) => {
@@ -391,11 +392,12 @@ async function runTimeoutTests() {
 				});
 			});
 		const iris = createIrisClient({ baseUrl: "http://iris.stub", fetchImpl: hangingFetch, timeoutMs: 20 });
-		await assert.rejects(
-			() => iris.getMessage(6, PURITY_TX),
-			(e) => /timed out after 20ms/.test(e.message),
-			"klien Iris: fetch menggantung dibatalkan pada timeoutMs"
-		);
+		try {
+			await iris.getMessage(6, PURITY_TX);
+			ok(false, "klien Iris: fetch menggantung harusnya dibatalkan");
+		} catch (e) {
+			ok(/timed out after 20ms/.test(e.message), "klien Iris: fetch menggantung dibatalkan pada timeoutMs");
+		}
 
 		// Perilaku lama tetap utk pemanggil tanpa timeoutMs (default 15s > smoke).
 		const quickIris = createIrisClient({
