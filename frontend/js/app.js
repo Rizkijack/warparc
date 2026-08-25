@@ -35,6 +35,14 @@ const TRANSLATIONS = {
 		switchingTo: "Switching wallet to", alreadyRelayed: "Mint was already submitted by a relayer — funds are on",
 		switchRejected: "Wallet switch rejected — cannot bridge from ",
 		cctpFallbackNotice: "Bridge Adapter not deployed on this pair yet — using CCTP burn-and-mint",
+		bridgeUnexpected: "Bridge failed unexpectedly: ",
+		bridging: "Bridging ",
+		unknownNetwork: "Unknown network (",
+		switchedToChain: "Switched to ",
+		switchFailed: "Switch failed: ",
+		unsupportedChain: "Unsupported",
+		noContracts: "No contracts",
+		estimating: "Estimating...",
 		forwarderStalled: "Forwarder belum selesai — melanjutkan dengan mint manual…",
 		resumeConfirm: "Burn ini dibuat untuk penerima",
 		notOnChain: "Wallet is not on", abortMint: " — mint aborted before send",
@@ -77,6 +85,13 @@ const TRANSLATIONS = {
 		switchingTo: "切换钱包到", alreadyRelayed: "铸造已被中继器提交 — 资金已在",
 		switchRejected: "钱包切换被拒绝 — 无法从以下网络桥接 ",
 		cctpFallbackNotice: "桥接适配器尚未部署于该组合 — 改用 CCTP 销毁并铸造",
+		bridging: "桥接中 ",
+		unknownNetwork: "未知网络 (",
+		switchedToChain: "已切换至 ",
+		switchFailed: "切换失败: ",
+		unsupportedChain: "不支持",
+		noContracts: "无可用合约",
+		estimating: "估算中...",
 		forwarderStalled: "转发器未完成 — 手动铸造继续…",
 		resumeConfirm: "此销毁为收款人创建",
 		notOnChain: "钱包不在", abortMint: " — 铸造在发送前中止",
@@ -119,6 +134,13 @@ const TRANSLATIONS = {
 		switchingTo: "वॉलेट स्विच हो रहा है", alreadyRelayed: "मिंट पहले ही रिलेयर द्वारा सबमिट किया जा चुका है — फंड हैं",
 		switchRejected: "वॉलेट स्विच अस्वीकृत — इस नेटवर्क से ब्रिज नहीं कर सकते ",
 		cctpFallbackNotice: "ब्रिज एडाप्टर इस जोड़ी पर अभी डिप्लॉय नहीं है — CCTP बर्न-एंड-मिंट उपयोग हो रहा है",
+		bridging: "ब्रिजिंग ",
+		unknownNetwork: "अज्ञात नेटवर्क (",
+		switchedToChain: "इस पर स्विच किया गया ",
+		switchFailed: "स्विच विफल: ",
+		unsupportedChain: "असमर्थित",
+		noContracts: "कोई अनुबंध नहीं",
+		estimating: "अनुमान लगा रहा...",
 		forwarderStalled: "फॉरवर्डर पूरा नहीं हुआ — मैनुअल मिंट जारी…",
 		resumeConfirm: "यह बर्न प्राप्तकर्ता के लिए बनाया गया था",
 		notOnChain: "वॉलेट पर नहीं है", abortMint: " — भेजने से पहले मिंट निरस्त",
@@ -161,6 +183,13 @@ const TRANSLATIONS = {
 		switchingTo: "Cambiando billetera a", alreadyRelayed: "El mint ya fue enviado por un relayer — fondos en",
 		switchRejected: "Cambio de red rechazado — no se puede puentear desde ",
 		cctpFallbackNotice: "El adaptador aún no está desplegado en este par — usando CCTP burn-and-mint",
+		bridging: "Puente ",
+		unknownNetwork: "Red desconocida (",
+		switchedToChain: "Cambiado a ",
+		switchFailed: "Error al cambiar: ",
+		unsupportedChain: "No soportada",
+		noContracts: "Sin contratos",
+		estimating: "Estimando...",
 		forwarderStalled: "Reenviador no completó — mint manual continuando…",
 		resumeConfirm: "Esta quema fue creada para el destinatario",
 		notOnChain: "Billetera no está en", abortMint: " — mint abortado antes de enviar",
@@ -203,6 +232,13 @@ const TRANSLATIONS = {
 		switchingTo: "Changement de portefeuille vers", alreadyRelayed: "Le mint a déjà été soumis par un relayer — fonds sur",
 		switchRejected: "Changement de réseau refusé — pont impossible depuis ",
 		cctpFallbackNotice: "L'adaptateur n'est pas encore déployé sur cette paire — utilisation du CCTP burn-and-mint",
+		bridging: "Pontage ",
+		unknownNetwork: "Réseau inconnu (",
+		switchedToChain: "Basculé vers ",
+		switchFailed: "Échec du changement : ",
+		unsupportedChain: "Non pris en charge",
+		noContracts: "Aucun contrat",
+		estimating: "Estimation...",
 		forwarderStalled: "Transfert non terminé — mint manuel en cours…",
 		resumeConfirm: "Ce brûlage a été créé pour le destinataire",
 		notOnChain: "Portefeuille pas sur", abortMint: " — mint annulé avant envoi",
@@ -245,6 +281,13 @@ const TRANSLATIONS = {
 		switchingTo: "تبديل المحفظة إلى", alreadyRelayed: "تم تقديم السك بالفعل بواسطة مُرحّل — الأموال في",
 		switchRejected: "تم رفض تبديل الشبكة — لا يمكن الجسر من ",
 		cctpFallbackNotice: "لم يتم نشر الجسر لهذا الزوج بعد — يتم استخدام CCTP burn-and-mint",
+		bridging: "جسر ",
+		unknownNetwork: "شبكة غير معروفة (",
+		switchedToChain: "تم التبديل إلى ",
+		switchFailed: "فشل التبديل: ",
+		unsupportedChain: "غير مدعوم",
+		noContracts: "لا عقود",
+		estimating: "جارٍ التقدير...",
 		forwarderStalled: "المحول لم يكتمل — سك يدوي مستمر…",
 		resumeConfirm: "تم إنشاء هذا الحرق للمستلم",
 		notOnChain: "المحفظة ليست على", abortMint: " — تم إلغاء السك قبل الإرسال",
@@ -287,6 +330,13 @@ const TRANSLATIONS = {
 		switchingTo: "ওয়ালেট পরিবর্তন হচ্ছে", alreadyRelayed: "মিন্ট ইতিমধ্যে রিলেয়ার দ্বারা জমা দেওয়া হয়েছে — তহবিল",
 		switchRejected: "ওয়ালেট সুইচ প্রত্যাখ্যাত — এই নেটওয়ার্ক থেকে ব্রিজ করা যাবে না ",
 		cctpFallbackNotice: "এই জোড়ায় ব্রিজ অ্যাডাপ্টার এখনো ডিপ্লয় হয়নি — CCTP বার্ন-অ্যান্ড-মিন্ট ব্যবহৃত হচ্ছে",
+		bridging: "ব্রিজিং ",
+		unknownNetwork: "অজানা নেটওয়ার্ক (",
+		switchedToChain: "এতে স্যুইচ করা হয়েছে ",
+		switchFailed: "স্যুইচ ব্যর্থ: ",
+		unsupportedChain: "সমর্থিত নয়",
+		noContracts: "কোনো চুক্তি নেই",
+		estimating: "আনুমান করা হচ্ছে...",
 		forwarderStalled: "ফরওয়ার্ডার সম্পূর্ণ হয়নি — ম্যানুয়াল মিন্ট চলছে…",
 		resumeConfirm: "এই বার্ন প্রাপকের জন্য তৈরি করা হয়েছিল",
 		notOnChain: "ওয়ালেট নেই", abortMint: " — পাঠানোর আগে মিন্ট বাতিল",
@@ -329,6 +379,13 @@ const TRANSLATIONS = {
 		switchingTo: "Alternando carteira para", alreadyRelayed: "O mint já foi enviado por um relayer — fundos em",
 		switchRejected: "Troca de rede rejeitada — não é possível fazer bridge de ",
 		cctpFallbackNotice: "O adaptador ainda não está implantado neste par — usando CCTP burn-and-mint",
+		bridging: "Fazendo ponte ",
+		unknownNetwork: "Rede desconhecida (",
+		switchedToChain: "Alternado para ",
+		switchFailed: "Falha ao alternar: ",
+		unsupportedChain: "Não suportada",
+		noContracts: "Sem contratos",
+		estimating: "Estimando...",
 		forwarderStalled: "Encaminhador não completou — mint manual continuando…",
 		resumeConfirm: "Esta queima foi criada para o destinatário",
 		notOnChain: "Carteira não está em", abortMint: " — mint abortado antes de enviar",
@@ -371,6 +428,13 @@ const TRANSLATIONS = {
 		switchingTo: "Переключение кошелька на", alreadyRelayed: "Минт уже отправлен релеером — средства на",
 		switchRejected: "Переключение сети отклонено — невозможен мост из ",
 		cctpFallbackNotice: "Адаптер ещё не развёрнут для этой пары — используется CCTP burn-and-mint",
+		bridging: "Мост ",
+		unknownNetwork: "Неизвестная сеть (",
+		switchedToChain: "Переключено на ",
+		switchFailed: "Ошибка переключения: ",
+		unsupportedChain: "Не поддерживается",
+		noContracts: "Нет контрактов",
+		estimating: "Оценка...",
 		forwarderStalled: "Пересылка не завершена — ручной минт продолжается…",
 		resumeConfirm: "Это сжигание было создано для получателя",
 		notOnChain: "Кошелёк не на", abortMint: " — минт отменён перед отправкой",
@@ -413,6 +477,13 @@ const TRANSLATIONS = {
 		switchingTo: "ウォレット切り替え中", alreadyRelayed: "ミントはリレイヤーにより送信済み — 資金は",
 		switchRejected: "ウォレット切替が拒否されました — 次のネットワークからブリッジできません ",
 		cctpFallbackNotice: "このペアにブリッジアダプタは未デプロイのため — CCTPバーン＆ミントを使用します",
+		bridging: "ブリッジ中 ",
+		unknownNetwork: "未知ネットワーク (",
+		switchedToChain: "切り替えました：",
+		switchFailed: "切り替え失敗：",
+		unsupportedChain: "未対応",
+		noContracts: "コントラクトなし",
+		estimating: "推定中...",
 		forwarderStalled: "フォワーダー未完了 — 手動ミント続行…",
 		resumeConfirm: "このバーンは受取人向けに作成されました",
 		notOnChain: "ウォレットが上にありません", abortMint: " — 送信前にミント中止",
@@ -738,7 +809,7 @@ function renderWalletChainPicker() {
 		const opt = document.createElement("option");
 		opt.disabled = true;
 		opt.value = "unknown";
-		opt.textContent = `Unknown network (${state.chainId ?? "?"})`;
+		opt.textContent = `${t("unknownNetwork")}${state.chainId ?? "?"})`;
 		sel.appendChild(opt);
 	}
 	keys.forEach(k => {
@@ -765,9 +836,9 @@ async function onWalletChainChange() {
 	try {
 		await switchChain(id);
 		await refreshProvider();
-		toast(`Switched to ${CONFIG.chains[getChainKey(id)]?.shortName || ("chain " + id)}`, "success");
+		toast(`${t("switchedToChain")}${CONFIG.chains[getChainKey(id)]?.shortName || ("chain " + id)}`, "success");
 	} catch (e) {
-		toast("Switch failed: " + (e.message || e.code), "error");
+		toast(t("switchFailed") + (e.message || e.code), "error");
 	} finally {
 		sel.disabled = false;
 		renderWalletChainPicker();
@@ -837,7 +908,7 @@ function onAccountChange() {
 			badge.innerHTML = `<span class="dot"></span> ${chain.shortName}`;
 			badge.style.display = "flex";
 		} else {
-			badge.innerHTML = `<span style="background:var(--red);width:6px;height:6px;border-radius:50%;display:inline-block"></span> Unsupported`;
+			badge.innerHTML = `<span style="background:var(--red);width:6px;height:6px;border-radius:50%;display:inline-block"></span> ${t("unsupportedChain")}`;
 			badge.style.display = "flex";
 		}
 
@@ -1034,7 +1105,7 @@ function renderContractList(chainKey) {
 	if (entries.length === 0) {
 		const none = document.createElement("div");
 		none.className = "contract-item";
-		none.textContent = "No contracts";
+		none.textContent = t("noContracts");
 		container.appendChild(none);
 		return container;
 	}
@@ -1132,6 +1203,10 @@ function extractFastQuote(data) {
 // Overlapping estimates (fast typing, chain flips) can resolve out of order —
 // only the latest invocation may write to the fee display.
 let estSeq = 0;
+// Amount keystrokes re-quote far faster than RPCs can answer — the input path
+// (onAmountChange) debounces its estimateGas call on the trailing edge;
+// chain/token/toggle/preset paths keep calling estimateGas() directly.
+let estDebounceTimer = null;
 
 async function estimateGas() {
 	const fromKey = el("from-chain").value;
@@ -1144,8 +1219,8 @@ async function estimateGas() {
 	const isStale = () => seq !== estSeq;
 	const elEst = el("gas-fee");
 	const elFeeUsdc = el("gas-fee-usdc");
-	elEst.textContent = "Estimating...";
-	if (elFeeUsdc) elFeeUsdc.textContent = "Estimating...";
+	elEst.textContent = t("estimating");
+	if (elFeeUsdc) elFeeUsdc.textContent = t("estimating");
 
 	try {
 		const token = getSelectedToken();
@@ -1264,16 +1339,16 @@ async function bridge() {
 		const token = getSelectedToken();
 		const tokenDecimals = token === "USDC" ? 6 : 18;
 
-		if (!amount) { toast("Enter a valid amount", "error"); return; }
+		if (!amount) { toast(t("enterValidAmount"), "error"); return; }
 
 		let parsedAmount;
 		try {
 			parsedAmount = ethers.parseUnits(amount, tokenDecimals);
 		} catch {
-			toast("Invalid amount format", "error");
+			toast(t("invalidAmount"), "error");
 			return;
 		}
-		if (parsedAmount === 0n) { toast("Amount must be greater than 0", "error"); return; }
+		if (parsedAmount === 0n) { toast(t("amountMustExceed0"), "error"); return; }
 		// Pre-flight: wallet must sit on the UI-selected source chain before
 		// any further check or transaction (auto-switch on mismatch).
 		const walletChainBefore = state.chainId;
@@ -1286,7 +1361,7 @@ async function bridge() {
 		// lastFromBalanceRaw tracks the SELECTED source chain — reject before the
 		// approve can succeed and strand the user at a reverting burn.
 		if (state.lastFromBalanceRaw != null && parsedAmount > state.lastFromBalanceRaw) {
-			toast("Amount exceeds your " + token + " balance on " + CONFIG.chains[fromKey].shortName, "error");
+			toast(t("amountExceeds") + " " + token + " balance on " + CONFIG.chains[fromKey].shortName, "error");
 			return;
 		}
 
@@ -1303,6 +1378,8 @@ async function bridge() {
 		} else {
 			await bridgeLegacyOFT(amount, parsedAmount, fromKey, toKey, token);
 		}
+	} catch (e) {
+		toast(t("bridgeUnexpected") + ((e && e.message) || e), "error");
 	} finally {
 		state.isBridging = false;
 		setFlowsBusy(false);
@@ -1322,11 +1399,11 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, useForwar
 	const forward = isForwardEnabled() && useForwardHook !== false;
 
 	if (!usdcAddr || !fromChain.cctp || !toChain.cctp) {
-		toast("CCTP not available on this route", "error");
+		toast(t("cctpUnavailable"), "error");
 		return;
 	}
 	if (fromChain.network !== toChain.network) {
-		toast("Source and destination must be on the same network (testnet/mainnet)", "error");
+		toast(t("networkMismatch"), "error");
 		return;
 	}
 
@@ -1337,14 +1414,14 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, useForwar
 
 	const quote = await quoteBurnFee(fromChain, toChain, forward, parsedAmount);
 	if (!quote) {
-		toast("Forwarding fee quote unavailable — turn off Forwarding Service or retry", "error");
+		toast(t("forwardUnavailable"), "error");
 		return;
 	}
 	// The executed fee is deducted from the transferred amount — an amount at or
 	// below the fee would burn everything (or revert).
 	const feeTotal = quote.minimumFee + (quote.forwardFee || 0n);
 	if (parsedAmount <= feeTotal) {
-		toast("Amount must exceed the CCTP fee (" + truncateUnits(feeTotal, 6, 4) + " USDC)", "error");
+		toast(t("amountMustExceedFee") + " (" + truncateUnits(feeTotal, 6, 4) + " USDC)", "error");
 		return;
 	}
 
@@ -1375,8 +1452,8 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, useForwar
 		const allowance = await usdc.allowance(state.account, messengerAddr);
 		if (allowance < parsedAmount + quote.maxFee) {
 			assertWalletStable();
-			btn.textContent = "Approving USDC...";
-			toast("Approving USDC for TokenMessengerV2...", "info");
+			btn.textContent = t("approving");
+			toast(t("approving"), "info");
 			const approveTx = await usdc.approve(messengerAddr, parsedAmount + quote.maxFee, arcOverrides(fromKey));
 			await approveTx.wait();
 			toast("USDC approved", "success");
@@ -1384,7 +1461,7 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, useForwar
 
 		// 3. Burn on the source chain
 		assertWalletStable();
-		btn.textContent = `Burning ${amount} USDC...`;
+		btn.textContent = `${t("burning")} ${amount} USDC...`;
 		addTxEntry(burnTxId, `Burn ${amount} USDC on ${fromChain.shortName}`, "pending", fromKey);
 		const messenger = new ethers.Contract(messengerAddr, TOKEN_MESSENGER_V2_ABI, state.signer);
 		const mintRecipient = ethers.zeroPadValue(state.account, 32);
@@ -1427,7 +1504,7 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, useForwar
 
 		if (forward) {
 			// 4a. Circle's relayer submits the mint; we only wait for its tx hash
-			btn.textContent = "Waiting for Circle forward...";
+			btn.textContent = t("waitingForward");
 			const fwdTxId = "fwd-" + Date.now();
 			subTxId = fwdTxId;
 			addTxEntry(fwdTxId, `Forward mint on ${toChain.shortName} (Circle)`, "pending", toKey);
@@ -1452,7 +1529,7 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, useForwar
 			updateStepper("mint", "done");
 		} else {
 			// 4b. Wait for Circle to sign the attestation (fast ≈ seconds)
-			btn.textContent = "Waiting for attestation...";
+			btn.textContent = t("waitingAttest");
 			const attTxId = "att-" + Date.now();
 			subTxId = attTxId;
 			addTxEntry(attTxId, "Circle attestation (fast)", "pending", fromKey);
@@ -1465,7 +1542,7 @@ async function bridgeUSDCViaCCTP(amount, parsedAmount, fromKey, toKey, useForwar
 			updateStepper("mint", "active");
 
 			// 5. Mint on the destination chain
-			btn.textContent = `Minting on ${toChain.shortName}...`;
+			btn.textContent = `${t("minting")} ${toChain.shortName}...`;
 			toast(`Switching wallet to ${toChain.name} to mint...`, "info");
 			await switchChain(toChain.chainId);
 			await refreshProvider();
@@ -1557,11 +1634,11 @@ async function manualMintFallback(toChain, toKey, att, amount, labelSuffix = " (
 // Resume an interrupted transfer after a reload: the burn hash is enough to
 // redo either the attestation+mint (manual) or the forward-completion wait.
 async function resumePendingCctp() {
-	if (state.isBridging) { toast("Another bridge flow is in progress", "error"); return; }
+	if (state.isBridging) { toast(t("anotherBridge"), "error"); return; }
 	const p = loadPendingCctp();
 	if (!p) return;
 	if (!state.signer || !state.account) {
-		toast("Connect your wallet first, then resume", "error");
+		toast(t("connectFirst") + ", then resume", "error");
 		return;
 	}
 	const fromChain = CONFIG.chains[p.fromKey];
@@ -1598,7 +1675,7 @@ async function resumePendingCctp() {
 				!window.confirm("Burn ini dibuat untuk penerima " + shortAddr(p.recipient) + ", BUKAN akun yang tersambung sekarang. Mint manual akan mengirim dana ke penerima asli (gas dibayar akun sekarang). Lanjutkan?")) {
 				return;
 			}
-			btn.textContent = "Waiting for attestation...";
+			btn.textContent = t("waitingAttest");
 			const att = await pollAttestation(CONFIG.iris[fromChain.network], fromChain.cctpDomain, p.burnHash);
 			if (state.chainId !== toChain.chainId) {
 				toast(`Switching wallet to ${toChain.name} to mint...`, "info");
@@ -1696,7 +1773,7 @@ async function bridgeLegacyOFT(amount, parsedAmount, fromKey, toKey, token) {
 	const txId = "tx-" + Date.now();
 	const btn = el("bridge-btn");
 	setFlowsBusy(true);
-	btn.textContent = `Bridging ${amount} ${token}...`;
+	btn.textContent = `${t("bridging")}${amount} ${token}...`;
 
 	addTxEntry(txId, `Bridge ${amount} ${token} → ${toChain.shortName}`, "pending", fromKey);
 
@@ -1947,7 +2024,8 @@ function onChainChange() {
 
 function onAmountChange() {
 	updateBridgeBtn();
-	estimateGas();
+	clearTimeout(estDebounceTimer);
+	estDebounceTimer = setTimeout(estimateGas, 400);
 }
 
 function onTokenChange() {
@@ -2245,7 +2323,7 @@ async function onWalletConnectRow() {
 			await p.connect();
 		}
 	} catch (e) {
-		toast("Connection rejected", "error");
+		toast(t("connectionRejected").replace(/: $/, ""), "error");
 		renderWcRowState();
 		return;
 	}
@@ -2284,7 +2362,7 @@ async function connectWith(eip1193, label, type, opts = {}) {
 		closeWalletModal();
 	renderWalletChainPicker();
 	} catch (e) {
-		toast("Connection rejected: " + e.message, "error");
+		toast(t("connectionRejected") + e.message, "error");
 		updateConnectBtn("Connect Wallet");
 	} finally {
 		state.isConnecting = false;
@@ -2315,9 +2393,14 @@ function bindWalletEvents(p) {
 	};
 	state._chainChanged = async (chainId) => {
 		state.chainId = Number(chainId);
-		await refreshProvider();
-		renderWalletChainPicker();
-		onAccountChange();
+		try {
+			await refreshProvider();
+			renderWalletChainPicker();
+			onAccountChange();
+		} catch (e) {
+			// A failing refresh must never surface as an unhandled rejection.
+			console.error("chainChanged handler failed:", e);
+		}
 	};
 	p.on("accountsChanged", state._accountsChanged);
 	p.on("chainChanged", state._chainChanged);
