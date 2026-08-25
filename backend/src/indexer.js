@@ -244,6 +244,23 @@ function runIndexer({ chains, store, log = console, pollMs = 5000, useWs = true 
 	const sockets = [];
 	const wakeups = new Map(pollers.map((p) => [p.key, () => {}]));
 	let stopped = false;
+	const debounceTimers = new Map();
+	function debounce(fn, ms) {
+		let t = null;
+		return () => {
+			if (t) {
+				clearTimeout(t);
+				debounceTimers.delete(t);
+			}
+			t = setTimeout(() => {
+				debounceTimers.delete(t);
+				t = null;
+				fn();
+			}, ms);
+			debounceTimers.set(t, t);
+			if (t.unref) t.unref();
+		};
+	}
 
 	async function pollAll() {
 		for (const p of pollers) {
@@ -312,6 +329,8 @@ function runIndexer({ chains, store, log = console, pollMs = 5000, useWs = true 
 	function stop() {
 		stopped = true;
 		clearInterval(timer);
+		for (const t of debounceTimers.values()) clearTimeout(t);
+		debounceTimers.clear();
 		for (const ws of sockets) {
 			try {
 				ws.close();
@@ -337,7 +356,11 @@ function debounce(fn, ms) {
 	let t = null;
 	return () => {
 		if (t) clearTimeout(t);
-		t = setTimeout(fn, ms);
+		t = setTimeout(() => {
+			t = null;
+			fn();
+		}, ms);
+		if (t.unref) t.unref();
 	};
 }
 

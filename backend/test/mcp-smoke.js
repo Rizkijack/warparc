@@ -455,12 +455,168 @@ async function runSpawnE2E() {
 	fs.rmSync(dir, { recursive: true, force: true });
 }
 
+async function runAuditFixTests() {
+	console.log("[mcp-smoke] audit fixes 2026-08-25 (redact, id:null, frame limit, jobs limit, jsonrpc)");
+	const { redactRpcUrl, extractIdOrNull, MAX_FRAME_BYTES } = require("../src/mcp-server");
+	// 1. redacted rpcUrl — warparc_config must not leak private key URLs
+	{
+		const dir = fs.mkdtempSync(path.join(os.tmpdir(), "warparc-mcp-redact-"));
+		const SECRET_INFURA = "abcd1234567890abcd1234567890abcd12345678";
+		const SECRET_APIKEY = "supersecretapikey12345";
+		const rawInfura = `https://mainnet.infura.io/v3/${SECRET_INFURA}`;
+		const rawApikey = `https://example.com/rpc?apikey=${SECRET_APIKEY}&other=1`;
+		const rawHexQuery = `https://example.com/rpc?token=${SECRET_INFURA}`;
+		ok(redactRpcUrl(rawInfura) !== rawInfura && !redactRpcUrl(rawInfura).includes(SECRET_INFURA), "redactRpcUrl: /v3/<SECRET> replaced with *** / origin");
+		ok(redactRpcUrl(rawApikey).includes("***") && !redactRpcUrl(rawApikey).includes(SECRET_APIKEY), "redactRpcUrl: ?apikey=SECRET redacted");
+		ok(!redactRpcUrl(rawHexQuery).includes(SECRET_INFURA), "redactRpcUrl: long hex token in query redacted");
+		const backendCfg = {
+			network: "testnet",
+			dataDir: dir,
+			server: { host: "127.0.0.1", port: 0 },
+			cfg: {
+				iris: { testnet: "stub" },
+				chains: {
+					arc: { name: "Arc Testnet", chainId: 5042002, cctpDomain: 26, rpcUrl: rawInfura },
+					baseSepolia: { name: "Base Sepolia", chainId: 84532, cctpDomain: 6, rpcUrl: rawApikey }
+				}
+			}
+		};
+		const store = new Store({ dir });
+		const mcp = createMcpServer({ backendCfg, store, relayer: null, iris: null, indexerChains: [{ key: "arc" }], log: silentLog() });
+		const r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 101, method: "tools/call", params: { name: "warparc_config", arguments: {} } })));
+		ok(!r.result.isError, "warparc_config with secret URLs → still ok");
+		const chains = JSON.parse(r.result.content[0].text).chains;
+		const arcRpc = chains.find((c) => c.key === "arc").rpcUrl;
+		const baseRpc = chains.find((c) => c.key === "baseSepolia").rpcUrl;
+		ok(!arcRpc.includes(SECRET_INFURA) && !baseRpc.includes(SECRET_APIKEY), "warparc_config chains[].rpcUrl does not contain raw secret (redacted)");
+		ok(arcRpc.includes("***") || arcRpc === "https://mainnet.infura.io", "warparc_config redaction preserves origin, replaces token with *** or origin");
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+	// 2. id:null must get response (not treated as notification)
+	{
+		const { mcp } = makeServer();
+		const r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: null, method: "ping" })));
+		ok(r.jsonrpc === "2.0" && r.id === null && r.result !== undefined, "id:null treated as request — returns response with id:null (JSON-RPC 2.0)");
+		const notif = await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", method: "ping" }));
+		ok(notif === null, "notification (no id member) still returns null");
+		const r2 = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: null, method: "tools/list" })));
+		ok(r2.id === null && r2.result && r2.result.tools, "id:null tools/list returns id:null");
+	}
+	// 3. frame too large (stdio limit 64*1024)
+	{
+		const { mcp } = makeServer();
+		const largePayload = "x".repeat(70 * 1024);
+		const hugeLine = JSON.stringify({ jsonrpc: "2.0", id: 999, method: "ping", params: { data: largePayload } });
+		ok(hugeLine.length > MAX_FRAME_BYTES, "huge frame exceeds MAX_FRAME_BYTES");
+		const r = JSON.parse(await mcp.handleFrame(hugeLine));
+		ok(r.error && r.error.code === -32700 && /Frame too large/i.test(r.error.message), "frame too large via handleFrame → -32700 Frame too large");
+		ok(r.id === 999, "frame too large preserves id via extractIdOrNull");
+		const notJsonHuge = "{" + "a".repeat(70 * 1024);
+		const r2 = JSON.parse(await mcp.handleFrame(notJsonHuge));
+		ok(r2.error && r2.error.code === -32700, "non-JSON huge frame → Frame too large (not Parse error)");
+		const small = JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" });
+		const r3 = JSON.parse(await mcp.handleFrame(small));
+		ok(!r3.error && r3.result !== undefined, "small frame under limit still succeeds");
+		ok(extractIdOrNull(JSON.stringify({ jsonrpc: "2.0", id: 42, method: "ping" })) === 42, "extractIdOrNull extracts id");
+		ok(extractIdOrNull(JSON.stringify({ jsonrpc: "2.0", method: "ping" })) === null, "extractIdOrNull missing id → null");
+		ok(extractIdOrNull("not json") === null, "extractIdOrNull invalid JSON → null");
+	}
+	// 4. warparc_jobs limit (like warparc_events)
+	{
+		const dir = fs.mkdtempSync(path.join(os.tmpdir(), "warparc-mcp-jobs-"));
+		const store = new Store({ dir });
+		const backendCfg = { network: "testnet", dataDir: dir, server: { host: "127.0.0.1", port: 0 }, cfg: { iris: { testnet: "stub" }, chains: { arc: { name: "Arc", chainId: 1, cctpDomain: 26, rpcUrl: "stub" } } } };
+		const jobsMap = {};
+		for (let i = 0; i < 150; i++) {
+			const tx = "0x" + i.toString(16).padStart(64, "0");
+			jobsMap[tx] = { txHash: tx, status: i % 2 === 0 ? "queued" : "ready" };
+		}
+		const relayer = { stats: () => ({ mode: "watch-only" }), getJobs: () => jobsMap, enqueue: () => ({}), validateBurnTx: async () => {} };
+		const mcp = createMcpServer({ backendCfg, store, relayer, iris: null, indexerChains: [{ key: "arc" }], log: silentLog() });
+		let r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "warparc_jobs", arguments: {} } })));
+		let out = JSON.parse(r.result.content[0].text);
+		ok(out.jobs.length === 100 && out.limit === 100, "warparc_jobs default limit 100 (backwards compatible when omitted)");
+		ok(out.total === 150, "warparc_jobs total reflects unbounded count");
+		r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "warparc_jobs", arguments: { limit: 10 } } })));
+		out = JSON.parse(r.result.content[0].text);
+		ok(out.jobs.length === 10 && out.limit === 10, "warparc_jobs limit 10 → 10 jobs");
+		r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "warparc_jobs", arguments: { limit: 500 } } })));
+		out = JSON.parse(r.result.content[0].text);
+		ok(out.jobs.length === 100 && out.limit === 100, "warparc_jobs limit 500 capped to 100");
+		r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "warparc_jobs", arguments: { limit: 0 } } })));
+		out = JSON.parse(r.result.content[0].text);
+		ok(out.limit === 100 && out.jobs.length === 100, "warparc_jobs limit 0 → default 100");
+		r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 5, method: "tools/call", params: { name: "warparc_jobs", arguments: { status: "queued", limit: 5 } } })));
+		out = JSON.parse(r.result.content[0].text);
+		ok(out.jobs.length === 5 && out.jobs.every((j) => j.status === "queued"), "warparc_jobs status filter + limit");
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+	// 5. jsonrpc:"2.0" validation
+	{
+		const { mcp } = makeServer();
+		let r = JSON.parse(await mcp.handleFrame(JSON.stringify({ id: 1, method: "ping" })));
+		ok(r.error && r.error.code === -32600 && /jsonrpc/.test(r.error.message) && r.id === 1, "missing jsonrpc → -32600 Invalid Request");
+		r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "1.0", id: 5, method: "ping" })));
+		ok(r.error && r.error.code === -32600 && /jsonrpc must be 2\.0/.test(r.error.message) && r.id === 5, "jsonrpc != 2.0 → -32600 Invalid Request");
+		r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: null, method: "ping" })));
+		ok(!r.error && r.id === null, "valid jsonrpc 2.0 with id:null still succeeds");
+		r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: null, id: 2, method: "ping" })));
+		ok(r.error && r.error.code === -32600, "jsonrpc null → -32600");
+		r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "1.0", method: "ping" })));
+		ok(r.error && r.error.code === -32600 && r.id === null, "bad jsonrpc on notification frame → error with id:null");
+	}
+	// 6. E2E spawn frame too large (stdio guard)
+	{
+		console.log("  [audit] E2E stdio frame-too-large");
+		const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), "warparc-mcp-e2e-large-"));
+		const child = spawn(process.execPath, [path.join(__dirname, "..", "src", "mcp-server.js")], {
+			cwd: path.join(__dirname, "..", ".."),
+			env: { ...process.env, BACKEND_DATA_DIR: dir2, BACKEND_NETWORK: "testnet" },
+			stdio: ["pipe", "pipe", "pipe"]
+		});
+		let out = "";
+		child.stdout.setEncoding("utf8");
+		child.stdout.on("data", (c) => (out += c));
+		const waitForFrame = (check, timeoutMs = 5000) =>
+			new Promise((resolve, reject) => {
+				const t0 = Date.now();
+				const timer = setInterval(() => {
+					const lines = out.split("\n").filter((l) => l.trim() !== "");
+					for (const l of lines) {
+						try {
+							const j = JSON.parse(l);
+							if (check(j)) {
+								clearInterval(timer);
+								resolve(j);
+								return;
+							}
+						} catch (_) {}
+					}
+					if (Date.now() - t0 > timeoutMs) {
+						clearInterval(timer);
+						reject(new Error("timeout waiting for frame"));
+					}
+				}, 25);
+			});
+		child.stdin.write(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "audit", version: "0" } } }) + "\n");
+		await waitForFrame((j) => j.id === 1);
+		const huge = JSON.stringify({ jsonrpc: "2.0", id: 12345, method: "ping", params: { x: "a".repeat(70 * 1024) } });
+		child.stdin.write(huge + "\n");
+		const errFrame = await waitForFrame((j) => j.id === 12345);
+		ok(errFrame.error && errFrame.error.code === -32700 && /Frame too large/.test(errFrame.error.message), "E2E stdio: huge line → -32700 Frame too large via line handler guard");
+		child.stdin.end();
+		await new Promise((r) => child.on("exit", r));
+		fs.rmSync(dir2, { recursive: true, force: true });
+	}
+}
+
 async function main() {
 	await runUnitTests();
 	await runGateTests();
 	await runStdoutPurityTest();
 	await runTimeoutTests();
 	await runSpawnE2E();
+	await runAuditFixTests();
 	console.log(`\n[mcp-smoke] ${passed} assertions passed`);
 }
 

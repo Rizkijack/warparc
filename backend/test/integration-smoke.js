@@ -92,6 +92,7 @@ async function main() {
 		const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "warparc-itest-"));
 		process.env.BACKEND_DATA_DIR = dataDir;
 		const backendCfg = loadBackendConfig();
+		backendCfg.server.port = PORT;
 		const frontend = loadFrontendConfig();
 		const indexerChains = getIndexerChains(backendCfg);
 		const relayerChains = getRelayerChains(backendCfg);
@@ -111,7 +112,8 @@ async function main() {
 		// CSP matching: a host-source without path covers the whole origin; one
 		// WITH a path (e.g. …/rpc/v1) covers exactly that path — compare full URLs.
 		const vercel = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "..", "vercel.json"), "utf8"));
-		const csp = vercel.headers[0].headers.find((h) => h.key === "Content-Security-Policy").value;
+		const csp = vercel.headers?.[0]?.headers?.find((h) => h.key === "Content-Security-Policy")?.value ?? null;
+		assert.ok(csp, "CSP header missing in vercel.json");
 		const cspTokens = /connect-src ([^;]+)/.exec(csp)[1].split(/\s+/);
 		const urls = new Set();
 		for (const c of Object.values(frontend.chains)) {
@@ -150,7 +152,9 @@ async function main() {
 		let sawFresh = null;
 		for (let i = 0; i < 60 && !sawFresh; i++) {
 			await sleep(2000);
-			const { body } = await api("GET", "/events?limit=5");
+			const { status, body } = await api("GET", "/events?limit=5");
+			assert.equal(status, 200, `GET /events?limit=5 expected 200 but got ${status} body=${JSON.stringify(body)}`);
+			if (!body || !Array.isArray(body.events)) throw new Error(`API GET /events?limit=5 returned ${status} body=${JSON.stringify(body)}`);
 			sawFresh = body.events.find((e) => e.block >= tHead - 2) || null;
 		}
 		assert.ok(sawFresh, `no event at/after block ${tHead - 2} within 120s — indexer not syncing`);
@@ -180,7 +184,10 @@ async function main() {
 
 		// --- Phase 4: dual-emitter pairing --------------------------------------
 		console.log("\n[phase 4] dual-emitter pairing (never double-count)");
-		const sample = (await api("GET", "/events?limit=300")).body.events;
+		const sampleRes = await api("GET", "/events?limit=300");
+		assert.equal(sampleRes.status, 200, `GET /events?limit=300 expected 200 but got ${sampleRes.status} body=${JSON.stringify(sampleRes.body)}`);
+		const sample = sampleRes.body?.events;
+		assert.ok(Array.isArray(sample), `GET /events?limit=300 expected events array but got ${JSON.stringify(sampleRes.body)}`);
 		const erc20 = sample.find((e) => e.kind === "erc20" && Number(e.amount6) >= 1_000_000);
 		if (erc20) {
 			const mirror = sample.find((e) => e.kind === "system" && e.txHash === erc20.txHash);
@@ -202,7 +209,15 @@ async function main() {
 			}
 		]);
 		assert.ok(Array.isArray(burnLogs) && burnLogs.length > 0, "no MessageSent found on Arc in the last 200 blocks");
-		const burnTx = burnLogs[burnLogs.length - 1].transactionHash; // newest
+		// Filter for CCTP V2 only — relayer correctly rejects V1 (version 1) per cctp.js verify
+		let burnTx = null;
+		for (let i = burnLogs.length - 1; i >= 0; i--) {
+			const d = (burnLogs[i].data || "").toLowerCase();
+			if (d.startsWith("0x00000002")) { burnTx = burnLogs[i].transactionHash; break; }
+		}
+		if (!burnTx) {
+			console.log("  (no V2 MessageSent in last 200 blocks — skipping /relay lifecycle, only V1 present)");
+		} else {
 		const tPost = Date.now();
 		const post = await api("POST", "/relay", { srcChain: "arc", burnTxHash: burnTx });
 		ok(post.status === 202 && post.body.job && post.body.job.status === "queued", `POST /relay accepted real burn ${burnTx.slice(0, 18)}… → queued`);
@@ -225,6 +240,7 @@ async function main() {
 		const status = (await api("GET", `/status?srcChain=arc&txHash=${burnTx}`)).body;
 		ok(status.job && status.job.txHash === burnTx, "/status finds the job");
 		ok(status.iris && status.iris.status === "complete", "/status agrees with live Iris (status complete)");
+		}
 	} finally {
 		// --- cleanup (guards: a phase-0 failure skips boot entirely) -----------
 		try {

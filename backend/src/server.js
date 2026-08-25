@@ -35,6 +35,14 @@ function checkRelayRateLimit(ip) {
 	return entry.count <= RELAY_RATE_LIMIT_MAX;
 }
 
+// Periodic prune to avoid unbounded Map growth (e.g. many distinct IPs / spoofed).
+setInterval(() => {
+	const now = Date.now();
+	for (const [ip, ent] of relayRateLimit) {
+		if (now > ent.resetAt + 60_000) relayRateLimit.delete(ip);
+	}
+}, 60_000).unref();
+
 // Token bucket for the /status Iris lookup: the relayer round-robins its Iris
 // polling to stay under the global 40 req/s budget, so an operator script
 // hammering /status must not spend that budget independently.
@@ -51,7 +59,19 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 	// CORS is opt-in: no header at all unless an operator explicitly allows an
 	// origin — a wildcard on an unauthenticated state-changing route would let
 	// any webpage in the operator's browser queue relay jobs.
-	const corsOrigin = process.env.BACKEND_CORS_ORIGIN || null;
+	const _rawCorsOrigin = process.env.BACKEND_CORS_ORIGIN;
+	let corsOrigin = _rawCorsOrigin ? _rawCorsOrigin.trim() : null;
+	if (corsOrigin === "") corsOrigin = null;
+	// Guard CRLF injection: reject if value contains \r or \n (trim handles edges, this handles interior).
+	if (corsOrigin && /[\r\n]/.test(corsOrigin)) {
+		log.warn("[server] BACKEND_CORS_ORIGIN contains CRLF — rejected (fail-closed)");
+		corsOrigin = null;
+	}
+	// Reject wildcard "*" — fail-closed: treat as no header (any origin could enqueue).
+	if (corsOrigin && corsOrigin.trim() === "*") {
+		log.warn('[server] BACKEND_CORS_ORIGIN="*" rejected — wildcard CORS is not allowed (fail-closed)');
+		corsOrigin = null;
+	}
 	// Timestamp of the last live Iris lookup made by /status (any outcome).
 	let lastIrisCallAt = 0;
 
@@ -60,12 +80,12 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 			? {
 					"Access-Control-Allow-Origin": corsOrigin,
 					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-					"Access-Control-Allow-Headers": "Content-Type"
+					"Access-Control-Allow-Headers": "Content-Type, Authorization"
 				}
 			: {};
 	}
 
-	function json(res, code, obj) {
+	function json(res, code, obj, extraHeaders = {}) {
 		const body = JSON.stringify(obj);
 		res.writeHead(code, {
 			"Content-Type": "application/json; charset=utf-8",
@@ -73,7 +93,8 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 			...corsHeaders(),
 			"Cache-Control": "no-store",
 			"X-Content-Type-Options": "nosniff",
-			"X-Frame-Options": "DENY"
+			"X-Frame-Options": "DENY",
+			...extraHeaders
 		});
 		res.end(body);
 	}
@@ -81,16 +102,36 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 	async function readJsonBody(req) {
 		const chunks = [];
 		let size = 0;
-		for await (const chunk of req) {
-			size += chunk.length;
-			if (size > MAX_BODY) throw Object.assign(new Error("body too large"), { statusCode: 413 });
-			chunks.push(chunk);
-		}
-		if (chunks.length === 0) throw Object.assign(new Error("empty body"), { statusCode: 400 });
+		let timeout;
+		const timeoutPromise = new Promise((_, reject) => {
+			timeout = setTimeout(() => {
+				try {
+					req.destroy();
+				} catch (_) {}
+				reject(Object.assign(new Error("request timeout"), { statusCode: 408 }));
+			}, 30000);
+			if (timeout.unref) timeout.unref();
+		});
 		try {
-			return JSON.parse(Buffer.concat(chunks).toString("utf8"));
-		} catch (_) {
-			throw Object.assign(new Error("body is not valid JSON"), { statusCode: 400 });
+			const readPromise = (async () => {
+				for await (const chunk of req) {
+					size += chunk.length;
+					if (size > MAX_BODY) throw Object.assign(new Error("body too large"), { statusCode: 413 });
+					chunks.push(chunk);
+				}
+				if (chunks.length === 0) throw Object.assign(new Error("empty body"), { statusCode: 400 });
+				try {
+					return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+				} catch (_) {
+					throw Object.assign(new Error("body is not valid JSON"), { statusCode: 400 });
+				}
+			})();
+			const result = await Promise.race([readPromise, timeoutPromise]);
+			clearTimeout(timeout);
+			return result;
+		} catch (e) {
+			clearTimeout(timeout);
+			throw e;
 		}
 	}
 
@@ -131,6 +172,13 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 		"GET /jobs": async () => ({ jobs: relayer ? relayer.getJobs() : {} }),
 
 		"POST /relay": async (query, req) => {
+			// Rate limit check: 10 requests per minute per IP (before auth to throttle brute-force).
+			const clientIp = req.socket.remoteAddress || "unknown";
+			if (!checkRelayRateLimit(clientIp)) {
+				const entry = relayRateLimit.get(clientIp);
+				const retryAfter = entry ? Math.max(1, Math.ceil((entry.resetAt - Date.now()) / 1000)) : 60;
+				return [{ error: "rate limit exceeded" }, 429, { "Retry-After": String(retryAfter) }];
+			}
 			// Auth check: if BACKEND_API_TOKEN is set, require matching Bearer token.
 			const apiToken = process.env.BACKEND_API_TOKEN;
 			if (apiToken) {
@@ -138,11 +186,6 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 				if (auth !== `Bearer ${apiToken}`) {
 					return [{ error: "unauthorized" }, 401];
 				}
-			}
-			// Rate limit check: 10 requests per minute per IP.
-			const clientIp = req.socket.remoteAddress || "unknown";
-			if (!checkRelayRateLimit(clientIp)) {
-				return [{ error: "rate limit exceeded" }, 429];
 			}
 			if (!relayer) return [{ error: "relayer role not running" }, 503];
 			const body = await readJsonBody(req);
@@ -216,13 +259,17 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 			const result = await handler(url.searchParams, req);
 			const out = Array.isArray(result) ? result[0] : result;
 			const code = Array.isArray(result) ? result[1] || 200 : 200;
-			json(res, code, out);
+			const extraHeaders = Array.isArray(result) && result[2] && typeof result[2] === "object" ? result[2] : {};
+			json(res, code, out, extraHeaders);
 		} catch (e) {
 			const code = e.statusCode || 500;
 			if (code === 500) log.error(`[server] ${req.method} ${req.url}: ${e.message}`);
 			json(res, code, { error: e.message });
 		}
 	});
+	server.timeout = 30000;
+	server.headersTimeout = 31000;
+	server.requestTimeout = 30000;
 
 	return server;
 }

@@ -34,7 +34,11 @@ function loadFrontendConfig() {
 	// const is block-scoped in vm — expose CONFIG to the sandbox explicitly
 	const wrapped = src + "\n;this.CONFIG = CONFIG;";
 	const sandbox = {};
-	vm.runInNewContext(wrapped, sandbox, { filename: FRONTEND_CONFIG });
+	vm.runInNewContext(wrapped, sandbox, {
+		filename: FRONTEND_CONFIG,
+		timeout: 100,
+		codeGeneration: { strings: false, wasm: false }
+	});
 	return sandbox.CONFIG;
 }
 

@@ -100,6 +100,8 @@ npm run backend:server
 | `RELAYER_ATTESTATION_TIMEOUT_MS` | `600000` | batas tunggu attestation per job |
 | `RELAYER_MAX_ATTEMPTS` | `5` | max percobaan submit per job sebelum `failed` |
 | `RELAYER_MCP_SUBMIT` | `false` | opt-in ketat (fail-closed): tanpa ini tool submit via MCP hanya mengantri job ops, tidak mendorong ke jalur kirim |
+| `MCP_IRIS_TIMEOUT_MS` | `15000` | deadline lookup Iris di `warparc_status` + fetch klien Iris standalone (mcp-server.js:81) — upstream menggantung → frame error JSON-RPC, bukan diam |
+| `MCP_RPC_TIMEOUT_MS` | `15000` | deadline `validateBurnTx` (lookup receipt RPC) saat submit via MCP (mcp-server.js:84) |
 
 ## API
 

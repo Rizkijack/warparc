@@ -84,6 +84,87 @@ function rpcTimeoutMs() {
 	return envInt("MCP_RPC_TIMEOUT_MS", RPC_TIMEOUT_DEFAULT_MS);
 }
 
+const MAX_FRAME_BYTES = 64 * 1024;
+
+/**
+ * Redact RPC URL sebelum di-expose ke MCP client — operator bisa override
+ * rpcUrl via env dengan private Infura/Alchemy URL yang mengandung secret
+ * (`.../v3/<TOKEN>` atau `?apikey=SECRET`). Helper ini mengganti token
+ * dengan `***` atau fallback ke `origin` bila terdeteksi long hex token
+ * (>=32 hex chars) agar README claim "tidak pernah memuat secret" tetap benar.
+ * - `https://mainnet.infura.io/v3/<SECRET>` → `https://mainnet.infura.io/v3/***`
+ * - `https://example.com/rpc?apikey=SECRET` → `https://example.com/rpc?apikey=***`
+ * - long hex token tanpa pola /v3/ → `new URL(url).origin`
+ * - non-URL stub ("stub") → diteruskan apa adanya
+ */
+function redactRpcUrl(url) {
+	if (typeof url !== "string" || url.trim() === "") return url;
+	try {
+		const u = new URL(url);
+		const hasLongHex = /[0-9a-f]{32,}/i.test(url);
+		// Redact pathname token /v3/<token> or /v2/<token> jika ada segmen setelah /vN/
+		const vPath = u.pathname.match(/\/v\d+\/([^/?#]+)/);
+		if (vPath && vPath[1].length >= 4) {
+			u.pathname = u.pathname.replace(/(\/v\d+\/)[^/?#]+/, "$1***");
+			// Jika masih ada query sensitive, redact juga
+			let qDirty = false;
+			for (const k of [...u.searchParams.keys()]) {
+				const lk = k.toLowerCase();
+				if (lk.includes("apikey") || lk === "api_key" || lk === "key" || lk === "token" || lk.includes("secret") || lk === "projectid") {
+					u.searchParams.set(k, "***");
+					qDirty = true;
+				}
+			}
+			// Jika hasLongHex tapi sudah di-redact path, kembalikan URL ter-redact
+			return u.toString();
+		}
+		// Redact query sensitive params (apikey, key, token, etc)
+		let qDirty = false;
+		for (const k of [...u.searchParams.keys()]) {
+			const lk = k.toLowerCase();
+			if (lk.includes("apikey") || lk === "api_key" || lk === "key" || lk === "token" || lk.includes("secret") || lk === "projectid") {
+				u.searchParams.set(k, "***");
+				qDirty = true;
+			}
+			// Nilai query mengandung long hex token → redact nilai tersebut
+			const v = u.searchParams.get(k);
+			if (v && /[0-9a-f]{32,}/i.test(v)) {
+				u.searchParams.set(k, "***");
+				qDirty = true;
+			}
+		}
+		if (qDirty) return u.toString();
+		// Long hex token tanpa pola /vN/ atau query sensitive → hanya origin
+		if (hasLongHex) return u.origin;
+		return url;
+	} catch (_) {
+		// Fallback untuk string bukan URL valid
+		let out = url;
+		const orig = out;
+		out = out.replace(/(\/v\d+\/)[^/?#\s]+/g, "$1***");
+		out = out.replace(/([?&](?:apikey|api_key|apikey|key|token|secret|projectId)=)[^&#\s]+/gi, "$1***");
+		if (out !== orig) return out;
+		if (/[0-9a-f]{32,}/i.test(url)) return "***";
+		return url;
+	}
+}
+
+/**
+ * Ekstrak id dari frame mentah untuk respons error frame-too-large.
+ * Jika JSON invalid atau id tidak ada, kembalikan null (spec: id null untuk parse error).
+ */
+function extractIdOrNull(line) {
+	try {
+		const obj = JSON.parse(line);
+		if (obj && typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, "id")) {
+			const v = obj.id;
+			// JSON-RPC id bisa string, number, atau null — kembalikan apa adanya
+			if (typeof v === "string" || typeof v === "number" || v === null) return v;
+		}
+	} catch (_) {}
+	return null;
+}
+
 /**
  * Batasi waktu tunggu promise upstream — hang tetap melempar Error (frame
  * JSON-RPC error), bukan diam selamanya. Timer selalu di-clear; settlement
@@ -161,8 +242,9 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 	async function hJobs(args) {
 		const all = relayer ? relayer.getJobs() : {};
 		const status = reqString(args, "status");
-		const jobs = Object.values(all).filter((j) => (status === null ? true : j.status === status));
-		return { total: Object.keys(all).length, status: status || "all", jobs };
+		const filtered = Object.values(all).filter((j) => (status === null ? true : j.status === status));
+		const lim = Math.min(Math.max(parseInt(args && args.limit, 10) || 100, 1), 100);
+		return { total: Object.keys(all).length, status: status || "all", limit: lim, count: filtered.length, jobs: filtered.slice(0, lim) };
 	}
 
 	async function hEvents(args) {
@@ -245,7 +327,7 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 				name: c.name || null,
 				chainId: c.chainId ?? null,
 				cctpDomain: c.cctpDomain ?? null,
-				rpcUrl: c.rpcUrl || null,
+				rpcUrl: c.rpcUrl ? redactRpcUrl(c.rpcUrl) : null,
 				disabled: !!c.disabled
 			});
 		}
@@ -268,8 +350,8 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 		},
 		{
 			name: "warparc_jobs",
-			description: "Daftar job relayer, opsional difilter status lifecyle (queued, attestation_wait, ready, submitting, relayed, skipped, failed).",
-			inputSchema: { type: "object", properties: { status: { type: "string", description: "Filter status (opsional)" } } }
+			description: "Daftar job relayer, opsional difilter status lifecyle (queued, attestation_wait, ready, submitting, relayed, skipped, failed). Dibatasi limit (default 100, max 100) untuk mencegah respons >1MB.",
+			inputSchema: { type: "object", properties: { status: { type: "string", description: "Filter status (opsional)" }, limit: { type: "integer", description: "Maks job dikembalikan (default 100, max 100)", maximum: 100, minimum: 1 } } }
 		},
 		{
 			name: "warparc_events",
@@ -406,6 +488,9 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 	 * @returns {Promise<string|null>} frame respons, atau null untuk notifikasi.
 	 */
 	async function handleFrame(line) {
+		if (typeof line === "string" && line.length > MAX_FRAME_BYTES) {
+			return rpcErr(extractIdOrNull(line), ERR_PARSE, "Frame too large");
+		}
 		let msg = null;
 		try {
 			msg = JSON.parse(line);
@@ -415,14 +500,18 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 		if (!msg || typeof msg !== "object" || Array.isArray(msg)) {
 			return rpcErr(null, ERR_INVALID_REQUEST, "Invalid Request");
 		}
+		if (msg.jsonrpc !== "2.0") {
+			const badId = Object.prototype.hasOwnProperty.call(msg, "id") ? msg.id : null;
+			return rpcErr(badId, ERR_INVALID_REQUEST, "Invalid Request: jsonrpc must be 2.0");
+		}
 		const { id, method, params } = msg;
-		const notification = id === undefined || id === null;
+		const isNotification = !Object.prototype.hasOwnProperty.call(msg, "id");
 
 		if (method === "initialize") {
 			// Version negotiation (spec): pakai protocolVersion client bila
 			// didukung; server mengembalikan versi yang dia setujui.
 			clientProtocol = pickProtocol(params && typeof params.protocolVersion === "string" ? params.protocolVersion : null);
-			if (!notification) {
+			if (!isNotification) {
 				return rpc(id, {
 					protocolVersion: clientProtocol,
 					capabilities: {
@@ -437,7 +526,7 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 		}
 
 		// Notifikasi (initialized, cancelled, progress, …) : tanpa respons.
-		if (notification) return null;
+		if (isNotification) return null;
 
 		try {
 			switch (method) {
@@ -528,6 +617,10 @@ if (require.main === module) {
 	const readline = require("readline");
 	const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
 	rl.on("line", async (line) => {
+		if (line.length > MAX_FRAME_BYTES) {
+			process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id: extractIdOrNull(line), error: { code: -32700, message: "Frame too large" } }) + "\n");
+			return;
+		}
 		const text = line.trim();
 		if (text === "") return;
 		try {
@@ -548,7 +641,7 @@ if (require.main === module) {
 	process.on("SIGTERM", shutdown);
 }
 
-module.exports = { createMcpServer, PROTOCOL_VERSIONS, LATEST_PROTOCOL, buildStandaloneDeps, makeStderrLogger, withTimeout };
+module.exports = { createMcpServer, PROTOCOL_VERSIONS, LATEST_PROTOCOL, buildStandaloneDeps, makeStderrLogger, withTimeout, redactRpcUrl, extractIdOrNull, MAX_FRAME_BYTES };
 
 
 

@@ -24,7 +24,7 @@ https://modelcontextprotocol.io: discovery → deployment path → scaffold → 
 
 ```bash
 npm run backend:mcp          # jalankan server; stdout = protocol, log di stderr
-npm run backend:mcp:smoke    # 40+ asersi offline (protocol/tools/resources/prompts/gate/stdout-purity/timeout/E2E)
+npm run backend:mcp:smoke    # 70+ asersi offline (protocol/tools/resources/prompts/gate/stdout-purity/timeout/E2E + redact/id:null/frame-limit/jobs-limit/jsonrpc)
 ```
 
 Koneksi client (contoh `.mcp.json` di root repo — **jangan commit bila memuat
@@ -66,12 +66,12 @@ Knob relayer internal (`RELAYER_*` lain) tidak berubah — lihat backend/README.
 | Tool | Argumen | Perilaku / guard |
 |---|---|---|
 | `warparc_health` | — | Liveness + ringkasan indexer/relayer |
-| `warparc_jobs` | `status?` | Daftar job relayer (+filter status) |
+| `warparc_jobs` | `status? limit?` | Daftar job relayer (+filter status); `limit` default 100, max 100 — mencegah respons ~1 MB bila `RELAYER_MAX_JOBS=500` |
 | `warparc_events` | `chain? address? kind? limit?` | Query event USDC terindeks; `kind` = erc20\|system (Arc dual-emitter — jangan dijumlahkan lintas kind); limit cap 1000 |
 | `warparc_status` | `srcChain txHash` | Job + state Iris live; di-throttle (`BACKEND_STATUS_IRIS_RPS`) agar tidak memakai budget 40 req/s relayer; deadline `MCP_IRIS_TIMEOUT_MS` |
 | `warparc_relay_submit` | `srcChain burnTxHash` | **Enqueue saja** — nonaktif default (fail-closed): butuh `RELAYER_MCP_SUBMIT=true`; saat aktif pun submit on-chain tetap butuh relayer LIVE (`RELAYER_ENABLED=true && RELAYER_DRY_RUN=false && RELAYER_PRIVATE_KEY`) |
 | `warparc_budget` | — | Budget gas harian per chain tujuan (USDC Arc / ETH EVM) + state pause |
-| `warparc_config` | — | Ringkasan network/chains/CCTP domain — **tidak pernah memuat secret** |
+| `warparc_config` | — | Ringkasan network/chains/CCTP domain — **tidak pernah memuat secret**; `rpcUrl` di-redact: `.../v3/<SECRET>` → `.../v3/***`, `?apikey=SECRET` → `?apikey=***`, atau `origin` saja bila terdeteksi long hex token (≥32 hex) — mencegah bocornya Infura/Alchemy key operator |
 
 ## Resources (2)
 
@@ -90,8 +90,13 @@ Knob relayer internal (`RELAYER_*` lain) tidak berubah — lihat backend/README.
 ## Keamanan (fail-closed)
 
 - Default testnet + watch-only; MCP tidak pernah mengekspos private key.
+- `warparc_config` me-redact `rpcUrl` sebelum di-expose: `.../v3/<SECRET>` → `.../v3/***`, `?apikey=SECRET` → `?apikey=***`, atau hanya `origin` bila terdeteksi long hex token (≥32 hex) — operator bebas override RPC dengan Infura/Alchemy private URL tanpa bocor ke MCP client.
 - Tool tulis ter-gate ganda: `RELAYER_MCP_SUBMIT=true` (env, default off)
   lalu guard relayer LIVE yang sama dengan HTTP API.
+- Validasi `jsonrpc:"2.0"` ketat: frame tanpa `jsonrpc:"2.0"` ditolak `-32600 Invalid Request` (id: `null` bila tidak ada, `null` bila `id:null`), bukan di-silent.
+- `id:null` diperlakukan sebagai request (harus dibalas `id:null`), bukan notifikasi — notifikasi sejati adalah frame **tanpa** member `id` (`!hasOwnProperty("id")`) sesuai JSON-RPC 2.0.
+- Frame stdio dibatasi `64 KiB` (`MAX_FRAME_BYTES`): line `>64*1024` langsung dibalas `-32700 Frame too large` (via `extractIdOrNull(line)`) tanpa di-buffer tak terbatas — mem-mirror `MAX_BODY` 4096 di HTTP server.
+- `warparc_jobs` dibatasi `limit` (default 100, max 100): mencegah `JSON.stringify` ~1 MB yang memblokir event loop bila `RELAYER_MAX_JOBS=500`.
 - Tool deskripsi jujur (spec: "descriptions of tool behavior should be
   considered untrusted unless from a trusted server" — server ini trusted,
   deskripsi mencerminkan guard asli).
