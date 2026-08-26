@@ -3,7 +3,7 @@
  *
  * Routes:
  *   GET  /health                       — liveness + indexer/relayer summary
- *   GET  /events?chain=&address=&kind=&limit= — indexed USDC transfers (newest first; kind = erc20|system)
+ *   GET  /events?chain=&address=&kind=&limit= — indexed USDC transfers (newest first; chain required, kind = erc20|system)
  *   GET  /jobs                         — relayer job list
  *   POST /relay {srcChain, burnTxHash} — queue a burn for relaying
  *   GET  /status?srcChain=&txHash=     — job state + live Iris attestation state
@@ -227,9 +227,18 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 			if (kind !== null && kind !== "erc20" && kind !== "system") {
 				throw Object.assign(new Error(`kind must be "erc20" or "system"`), { statusCode: 400 });
 			}
+			// An unrecognized ?chain= used to silently return an empty 200 —
+			// indistinguishable from "nothing indexed yet". Validate against the
+			// chains configured for the active network (backendCfg.cfg.chains);
+			// chain is required so a caller states which ledger it queries.
+			// ?address= stays optional — absent means no address filter.
+			const chain = query.get("chain") || "";
+			if (!backendCfg.cfg.chains[chain]) {
+				throw Object.assign(new Error(`unknown chain "${chain}"`), { statusCode: 400 });
+			}
 			return {
 				events: store.queryEvents({
-					chain: query.get("chain") || undefined,
+					chain,
 					address: query.get("address") || undefined,
 					kind: kind || undefined,
 					limit

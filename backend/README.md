@@ -96,7 +96,7 @@ npm run backend:server
 | `RELAYER_ARC_MAX_FEE_GAS_GWEI` | `30` | maxFeePerGas tx Arc (Gwei, type-2 tip 0); di bawah floor jaringan 20 Gwei tx ditolak |
 | `RELAYER_ALLOW_HOOKS` | `false` | izinkan relay burn ber-hook |
 | `RELAYER_POLL_MS` | `5000` | interval tick relayer |
-| `RELAYER_MAX_JOBS` | `500` | cap store job (terminal terlama dipangkas) |
+| `RELAYER_MAX_JOBS` | `500` | cap store job (terminal terlama dipangkas); `0` = tanpa cap |
 | `RELAYER_ATTESTATION_TIMEOUT_MS` | `600000` | batas tunggu attestation per job |
 | `RELAYER_MAX_ATTEMPTS` | `5` | max percobaan submit per job sebelum `failed` |
 | `RELAYER_MCP_SUBMIT` | `false` | opt-in ketat (fail-closed): tanpa ini tool submit via MCP hanya mengantri job ops, tidak mendorong ke jalur kirim |

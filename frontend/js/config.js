@@ -471,7 +471,7 @@ const CONFIG = {
 	// value. EMPTY => the WalletConnect option stays disabled (fail-closed).
 	walletconnect: {
 		projectId: "74c3944c7d1579478f020903a8e6d008",
-		sdkVersion: "2" // pinned @walletconnect/ethereum-provider major, served via jsdelivr +esm
+		sdkVersion: "2.23.10" // pinned @walletconnect/ethereum-provider, exact semver (audit #7a: major-only pin auto-trusts every 2.x via jsdelivr +esm) — bump deliberately, not implicitly
 	},
 	lzScan: "https://layerzeroscan.com",
 	// ETH Bridge Protocol Configuration — native ETH cross-chain bridging

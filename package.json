@@ -25,6 +25,9 @@
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.0",
     "dotenv": "^16.4.0",
-    "hardhat": "^2.22.0"
+    "hardhat": "^2.22.0",
+    "@layerzerolabs/lz-evm-oapp-v2": "^3.0.168",
+    "@layerzerolabs/lz-evm-protocol-v2": "^3.0.168",
+    "@openzeppelin/contracts": "^4.9.6"
   }
 }

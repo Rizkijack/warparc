@@ -55,14 +55,11 @@ const CHAIN_CONFIG = {
 async function main() {
 	const network = hre.network.name;
 
-	// Contracts are disabled (BridgeToken.sol.disabled / BridgeAdapter.sol.disabled):
-	// the OFT path is deprecated — canonical USDC route is Circle CCTP V2.
-	if (!fs.existsSync(path.join(__dirname, "..", "contracts", "BridgeToken.sol"))) {
-		console.error("BLOCKED: BridgeToken/BridgeAdapter are DISABLED (.sol.disabled) — the LayerZero");
-		console.error("OFT path is deprecated; the canonical USDC route is Circle CCTP V2.");
-		console.error("Reviving it = rename the contracts back AND delete the constructor revert guards, then review DEPLOY.md Appendix A.");
-		process.exit(1);
-	}
+// Note: BridgeToken/BridgeAdapter are SAO contracts with Pausable + daily-cap
+// circuit breakers and an EID allowlist (revived 2026-08-24). They compile
+// and may be deployed, but the canonical USDC route is Circle CCTP V2 — the
+// OFT path is kept only for the ABT demo token. Review DEPLOY.md Appendix A
+// and MAINNET-CHECKLIST.md Phase 3 before mainnet deployment.
 
 	// Guard (pentest F2 HIGH): live networks MUST have a real PRIVATE_KEY.
 	// A missing, placeholder, or all-zero key would deploy with a null signer.

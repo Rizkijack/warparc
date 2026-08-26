@@ -92,11 +92,21 @@ function main() {
 
 	async function shutdown(signal) {
 		console.log(`\n[backend] ${signal} — shutting down`);
+		// Force-exit watchdog: a hung await (tx.wait, wedged socket) must not turn
+		// SIGINT/SIGTERM into a zombie. If graceful shutdown has not finished in
+		// 5s, leave with exit code 1. unref'd — a prompt shutdown disarms it below.
+		const forceExitTimer = setTimeout(() => {
+			console.error("[backend] graceful shutdown timed out (5000ms) — forcing exit");
+			process.exitCode = 1;
+			process.exit(1);
+		}, 5000);
+		forceExitTimer.unref();
 		try {
 			if (httpServer) httpServer.close();
 		} catch (_) {}
 		// Await in-flight ticks/sweeps — they may be mid-write to the store.
 		await Promise.allSettled([indexerStop && indexerStop.stop(), relayer && relayer.stop()].filter(Boolean));
+		clearTimeout(forceExitTimer); // settled normally — disarm the watchdog
 		for (const release of releases) {
 			try {
 				release();

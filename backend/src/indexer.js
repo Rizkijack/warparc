@@ -21,6 +21,13 @@
 const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 const LOOKBACK_DEFAULT = 2000;
 const ZERO_ADDRESS = "0x" + "0".repeat(40);
+
+// Per-RPC-call deadline: a hung socket (silent TCP black hole) previously
+// stalled the whole pollAll loop for every chain (undici's default timeouts
+// stretch to minutes). 15s bounds one HTTP attempt; an abort is classified
+// like a transient HTTP failure so the existing polite-retry/backoff path
+// applies. Mirrors the relayer's IRIS_FETCH_TIMEOUT_MS guard.
+const RPC_FETCH_TIMEOUT_MS = parseInt(process.env.INDEXER_RPC_TIMEOUT_MS, 10) || 15_000;
 // docs.arc.io/arc/references/usdc-system-events — mint/burn are the only 0x0
 // paths (via precompile): Transfer(0x0→to) = mint, Transfer(from→0x0) = burn.
 function directionOf(from, to) {
@@ -206,6 +213,18 @@ function createChainIndexer({ chain, rpcCall, getState, setState, persist, log =
 	}
 
 	return { key: chain.key, pollOnce };
+}
+
+/** fetch() with a hard deadline: aborts the request once ms elapse so a hung
+ *  socket surfaces as a rejection instead of freezing the caller. */
+async function fetchWithTimeout(url, opts, ms) {
+	const ac = new AbortController();
+	const timer = setTimeout(() => ac.abort(), ms);
+	try {
+		return await fetch(url, { ...opts, signal: ac.signal });
+	} finally {
+		clearTimeout(timer);
+	}
 }
 
 /** Plain JSON-RPC-over-HTTP wrapper (no deps) with one polite retry on
