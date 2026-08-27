@@ -23,26 +23,9 @@
 
 const fs = require("fs");
 const path = require("path");
+const { createLogger } = require("./logger");
 
-function createLogger() {
-	return {
-		info: (msg, extra) => {
-			if (process.env.LOG_JSON === "true") console.error(JSON.stringify({ ts: new Date().toISOString(), level: "info", msg, ...extra }));
-			else if (console.info) console.info(`[store] ${msg}` + (extra && Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ""));
-			else console.error(`[store] ${msg}`);
-		},
-		warn: (msg, extra) => {
-			if (process.env.LOG_JSON === "true") console.error(JSON.stringify({ ts: new Date().toISOString(), level: "warn", msg, ...extra }));
-			else if (console.warn) console.warn(`[store] ${msg}` + (extra && Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ""));
-			else console.error(`[store] ${msg}`);
-		},
-		error: (msg, extra) => {
-			if (process.env.LOG_JSON === "true") console.error(JSON.stringify({ ts: new Date().toISOString(), level: "error", msg, ...extra }));
-			else console.error(`[store] ${msg}` + (extra && Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ""));
-		}
-	};
-}
-const _log = createLogger();
+const _log = createLogger("store");
 
 function _eventsMaxMb() {
 	const v = parseInt(process.env.BACKEND_EVENTS_MAX_MB, 10);
@@ -216,7 +199,7 @@ class Store {
    *        limit   — keep only the newest N (default 100)
    * @returns {object[]} matching entries, newest first
    */
-  queryEvents({ chain, address, kind, limit = 100 } = {}) {
+  queryEvents({ chain, address, kind, limit = 100, offset = 0 } = {}) {
     // ensure cache freshness for getMetrics/countEvents reuse; file iteration is independent but we keep cache coherent
     if (this._events === null) {
       this._events = this._readEvents();
@@ -232,12 +215,14 @@ class Store {
     }
     const want = address ? address.toLowerCase() : null;
     const n = Math.max(0, limit | 0);
-    if (n === 0) return [];
+    const skip = Math.max(0, offset | 0);
+    if (n === 0) return { events: [], hasMore: false };
     // iterate files newest-first with early-stop and global dedupe Set
     // files = [active, ...rotated reverse-lexicographic] from _discoverEventFiles
     const files = this._discoverEventFiles();
     const seen = new Set();
     const out = [];
+    let skipped = 0;
     for (const file of files) {
       let raw;
       try {
@@ -269,12 +254,13 @@ class Store {
           if (seen.has(key)) continue;
           seen.add(key);
         }
+        if (skipped < skip) { skipped++; continue; }
         out.push(e);
         if (out.length >= n) break;
       }
       if (out.length >= n) break;
     }
-    return out;
+    return { events: out, hasMore: out.length === n };
   }
 
   /** Total indexed events, optionally per chain — cheap view over the cache. */

@@ -165,6 +165,7 @@ const CONFIG = {
 			network: "mainnet",
 			chainId: 56,
 			cctpDomain: 4, // UNVERIFIED — Circle 2026-08-26 lists BSC 17 (USYC-only), 4=Noble V1 — re-verify (https://developers.circle.com/cctp/concepts/supported-chains-and-domains)
+			disabled: true, // Disabled until CCTP domain is verified — wrong domain = unrecoverable fund loss
 			name: "BNB Smart Chain",
 			shortName: "BSC",
 			nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
@@ -210,6 +211,7 @@ const CONFIG = {
 			network: "mainnet",
 			chainId: 534352,
 			cctpDomain: 12, // UNVERIFIED — 12=Codex, Scroll not in published list — TBD (2026-08-26)
+			disabled: true, // Disabled until CCTP domain is verified — wrong domain = unrecoverable fund loss
 			name: "Scroll",
 			shortName: "Scroll",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -225,6 +227,7 @@ const CONFIG = {
 			network: "mainnet",
 			chainId: 81457,
 			cctpDomain: 13, // UNVERIFIED — 13=Sonic, Blast not in published list — TBD (2026-08-26)
+			disabled: true, // Disabled until CCTP domain is verified — wrong domain = unrecoverable fund loss
 			name: "Blast",
 			shortName: "Blast",
 			nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -469,6 +472,8 @@ const CONFIG = {
 	// WalletConnect — remote/mobile wallet sessions. projectId comes from
 	// https://cloud.walletconnect.com (free tier); it is a public client-side
 	// value. EMPTY => the WalletConnect option stays disabled (fail-closed).
+	// TODO: inject at deploy time via build script to avoid tying this billing
+	// account to a committed value (rate-limit / quota abuse risk).
 	walletconnect: {
 		projectId: "74c3944c7d1579478f020903a8e6d008",
 		sdkVersion: "2.23.10" // pinned @walletconnect/ethereum-provider, exact semver (audit #7a: major-only pin auto-trusts every 2.x via jsdelivr +esm) — bump deliberately, not implicitly

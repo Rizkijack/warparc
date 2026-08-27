@@ -19,29 +19,7 @@ const http = require("http");
 const { URL } = require("url");
 
 const MAX_BODY = 4096;
-
-// Structured JSON logging helper — LOG_JSON=true switches to JSON lines on stderr.
-function createLogger() {
-	const useJson = process.env.LOG_JSON === "true";
-	function out(level, msg, extra) {
-		if (useJson) {
-			const rec = { ts: new Date().toISOString(), level, msg, ...extra };
-			console.error(JSON.stringify(rec));
-		} else {
-			const tag = `[server] ${msg}`;
-			const suffix = extra && Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : "";
-			const line = tag + suffix;
-			if (level === "info" && console.info) console.info(line);
-			else if (level === "warn" && console.warn) console.warn(line);
-			else console.error(line);
-		}
-	}
-	return {
-		info: (msg, extra) => out("info", msg, extra),
-		warn: (msg, extra) => out("warn", msg, extra),
-		error: (msg, extra) => out("error", msg, extra)
-	};
-}
+const { createLogger } = require("./logger");
 
 // Prometheus metrics renderer — <50 lines, zero-dep.
 function renderMetrics({ store, relayer, indexerChains, startTime, requestCounts }) {
@@ -122,7 +100,7 @@ function statusIrisMinIntervalMs() {
 
 function createServer({ backendCfg, store, relayer, iris, indexerChains, log = console }) {
 	const startedAt = Date.now();
-	const logger = log === console ? createLogger() : log;
+	const logger = log === console ? createLogger("server") : log;
 	const apiRequests = {};
 	// CORS is opt-in: no header at all unless an operator explicitly allows an
 	// origin — a wildcard on an unauthenticated state-changing route would let
@@ -221,6 +199,8 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 		"GET /events": async (query) => {
 			const limitRaw = parseInt(query.get("limit") || "100", 10);
 			const limit = Number.isInteger(limitRaw) && limitRaw > 0 && limitRaw <= 1000 ? limitRaw : 100;
+			const offsetRaw = parseInt(query.get("offset") || "0", 10);
+			const offset = Number.isInteger(offsetRaw) && offsetRaw >= 0 ? offsetRaw : 0;
 			// Dual-emitter Arc events carry kind: "erc20" | "system" — summing
 			// across kinds double-counts, so let consumers pick exactly one.
 			const kind = query.get("kind");
@@ -236,13 +216,21 @@ function createServer({ backendCfg, store, relayer, iris, indexerChains, log = c
 			if (!backendCfg.cfg.chains[chain]) {
 				throw Object.assign(new Error(`unknown chain "${chain}"`), { statusCode: 400 });
 			}
+			const result = store.queryEvents({
+				chain,
+				address: query.get("address") || undefined,
+				kind: kind || undefined,
+				limit,
+				offset
+			});
 			return {
-				events: store.queryEvents({
-					chain,
-					address: query.get("address") || undefined,
-					kind: kind || undefined,
-					limit
-				})
+				events: result.events,
+				pagination: {
+					limit,
+					offset,
+					hasMore: result.hasMore,
+					nextOffset: result.hasMore ? offset + limit : null
+				}
 			};
 		},
 

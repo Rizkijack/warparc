@@ -449,12 +449,12 @@ const TRANSLATIONS = {
 		usdcBridgingUnavailable: "Bridge USDC indisponível em",
 		bridgeNotDeployed: "Bridge não implantado em",
 		bridgeToken: "Bridge", to: "para",
-		estFee: "Оценка комиссии",
-		estOutput: "Оценка вывода",
-		estTime: "Оценка времени",
-		relayDesc: "Описание реле",
-		route: "Маршрут",
-		selectProtocol: "Выбрать протокол",
+		estFee: "Taxa estimada",
+		estOutput: "Saída estimada",
+		estTime: "Tempo estimado",
+		relayDesc: "Descrição do relay",
+		route: "Rota",
+		selectProtocol: "Selecionar protocolo",
 		ethNotAvailable: "ETH indisponível em",
 		ethOnlyEvm: "Bridge ETH disponível apenas em cadeias EVM (não Arc)",
 	},
@@ -498,12 +498,12 @@ const TRANSLATIONS = {
 		noWallet: "Кошелёк не обнаружен. Установите MetaMask.", connectionRejected: "Подключение отклонено: ",
 		anotherBridge: "Другой процесс моста выполняется",
 		forwardCompleted: "Пересылка завершена — средства на",
-		estFee: "推定手数料",
-		estOutput: "推定出力",
-		estTime: "推定時間",
-		relayDesc: "リレーの説明",
-		route: "ルート",
-		selectProtocol: "プロトコルを選択",
+		estFee: "Оценка комиссии",
+		estOutput: "Оценка вывода",
+		estTime: "Оценка времени",
+		relayDesc: "Описание реле",
+		route: "Маршрут",
+		selectProtocol: "Выбрать протокол",
 		attestationTimeout: "Таймаут аттестации — сжигание успешно; повторите минт с хешем",
 		forwardTimeout: "Таймаут пересылки — аттестация подписана, ручной минт возможен",
 		forwardTimeoutNoAtt: "Таймаут пересылки — аттестация ещё не подписана; Circle может ещё переслать",
@@ -2342,7 +2342,7 @@ async function resumePendingCctp() {
 			// The mint always pays the ORIGINAL recipient; a different connected
 			// account only pays the gas — make that explicit before proceeding.
 			if (p.recipient && state.account && p.recipient.toLowerCase() !== state.account.toLowerCase() &&
-				!window.confirm(t("resumeConfirm") + " " + shortAddr(p.recipient) + ", BUKAN akun yang tersambung sekarang. Mint manual akan mengirim dana ke penerima asli (gas dibayar akun sekarang). Lanjutkan?")) {
+				!window.confirm(t("resumeConfirm") + " " + shortAddr(p.recipient) + ", NOT the currently connected account. Manual mint will send funds to the original recipient (gas paid by current account). Continue?")) {
 				return;
 			}
 			btn.textContent = t("waitingAttest");

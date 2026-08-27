@@ -47,10 +47,11 @@ npm run backend:server
   bila `BACKEND_CORS_ORIGIN` diset eksplisit.
 - Limitasi diketahui: tx dengan beberapa burn (batch) hanya me-relay pesan
   pertama (di-log warning); jalur manual frontend tetap bisa menyelesaikan sisanya.
-- Operasional: `events.jsonl` append-only tanpa rotasi otomatis (warning di
-  log saat >50 MB); `/events` dibatasi `limit` ≤ 1000 tanpa pagination cursor;
-  histori pre-Zero5 (event `NativeCoin*`) tidak di-backfill — hanya era
-  EIP-7708 Transfer. Semua itu disengaja untuk skala ops testnet.
+- Operasional: `events.jsonl` append-only dengan rotasi otomatis saat >50 MB
+  (dikonfigurasi via `BACKEND_EVENTS_MAX_MB`); `/events` mendukung pagination
+  via `offset` + `limit` (max 1000); histori pre-Zero5 (event `NativeCoin*`)
+  tidak di-backfill — hanya era EIP-7708 Transfer. Semua itu disengaja untuk
+  skala ops testnet.
 - `blockTimestamp` diisi eksak hanya saat chunk mengandung ≤100 blok ber-event
   (Arc testnet yang padat melewatinya — peringatan sekali di log; `ts` waktu
   ingest selalu ada). RPC di-wrapper retry sekali saat 429/503 + jeda

@@ -29,6 +29,7 @@
 const { ethers } = require("ethers");
 const { createIrisClient } = require("./attestation");
 const { parseCctpV2Message, MESSAGE_SENT_TOPIC, isZeroBytes32, CctpParseError } = require("./cctp");
+const { createLogger } = require("./logger");
 
 const TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 const ALREADY_RELAYED_RE = /already|replay|used|nonce/i;
@@ -47,7 +48,10 @@ const IRIS_FETCH_TIMEOUT_MS = parseInt(process.env.RELAYER_IRIS_TIMEOUT_MS, 10) 
 const ARC_MAX_FEE_GAS_GWEI = (() => {
 	const raw = parseInt(process.env.RELAYER_ARC_MAX_FEE_GAS_GWEI, 10);
 	if (Number.isFinite(raw) && raw > 0) {
-		if (raw < 20) console.warn(`[relayer] RELAYER_ARC_MAX_FEE_GAS_GWEI=${raw} is below the 20 Gwei Arc floor — txs will be rejected`);
+		if (raw < 20) {
+			const _lg = createLogger("relayer");
+			_lg.warn(`[relayer] RELAYER_ARC_MAX_FEE_GAS_GWEI=${raw} is below the 20 Gwei Arc floor — txs will be rejected`);
+		}
 		return raw;
 	}
 	return 30;
@@ -56,6 +60,7 @@ const ARC_MAX_FEE_PER_GAS_WEI = ethers.utils.parseUnits(String(ARC_MAX_FEE_GAS_G
 const ARC_PRIORITY_FEE_WEI = ethers.BigNumber.from(0);
 
 function createRelayer({ backendCfg, chains, store, log = console }) {
+	if (log === console) log = createLogger("relayer");
 	const { relayer: rcfg, network } = backendCfg;
 	const iris = createIrisClient({ baseUrl: backendCfg.cfg.iris[network], log });
 	const byDomain = new Map(chains.map((c) => [c.cctpDomain, c]));
@@ -410,8 +415,13 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 				return;
 			}
 			if (ALREADY_RELAYED_RE.test(msgText)) {
-				const parsed = parseCctpV2Message(job.message);
-				const confirmed = await nonceUsed(dst, parsed.nonce);
+				let parsed = null;
+				try {
+					parsed = parseCctpV2Message(job.message);
+				} catch (parseErr) {
+					log.warn(`[relayer] failed to parse CCTP message for ${job.txHash}: ${parseErr.message}`);
+				}
+				const confirmed = parsed && await nonceUsed(dst, parsed.nonce);
 				if (confirmed) {
 					updateJob(job.txHash, { status: "relayed", error: `already relayed: ${msgText.slice(0, 200)}` });
 					log.info(`[relayer] ${job.txHash} already relayed elsewhere (usedNonces ✓) — done`);
@@ -496,8 +506,7 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 	// --- loop -----------------------------------------------------------------
 
 	let timer = null;
-	let ticking = false; // reentrancy guard: true while a tick is still awaiting
-	let inFlightTick = Promise.resolve(); // latest started tick — stop() awaits it
+	let ticking = null; // in-flight tick — stop() awaits it (null when idle)
 	let irisCursor = 0; // round-robin cursor over attestation polling
 	async function tick() {
 		const jobs = loadJobs();
@@ -535,21 +544,23 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 				`${rcfg.autoRelay ? ", auto-relay ON" : ""})`
 		);
 		timer = setInterval(() => {
-			if (ticking) return; // previous tick still running — skip this beat (no overlap)
-			ticking = true;
-			inFlightTick = tick()
+			if (ticking) return;
+			ticking = tick()
 				.catch((e) => log.error(`[relayer] tick error (continuing): ${e.message}`))
 				.finally(() => {
-					ticking = false;
+					ticking = null;
 				});
 		}, rcfg.pollMs);
+		if (timer.unref) timer.unref();
 	}
+
 	function stop() {
 		if (timer) clearInterval(timer);
 		timer = null;
 		// Await the in-flight tick AND any open submits — a killed submit stays
 		// "submitting" on disk and re-broadcasts after restart (wasting gas).
-		return Promise.allSettled([inFlightTick, ...submitPromises]).then(() => {});
+		const pending = ticking ? [ticking, ...submitPromises] : [...submitPromises];
+		return Promise.allSettled(pending).then(() => {});
 	}
 
 	function getJobs() {
@@ -585,4 +596,4 @@ function createRelayer({ backendCfg, chains, store, log = console }) {
 	return { start, stop, enqueue, validateBurnTx, getJobs, stats, tick };
 }
 
-module.exports = { createRelayer, ALREADY_RELAYED_RE };
+module.exports = { createRelayer, ALREADY_RELAYED_RE, createLogger };

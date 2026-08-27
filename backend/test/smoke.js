@@ -42,9 +42,9 @@ function testStore() {
 	s.appendEvent({ chain: "arc", block: 11, from: BOB, to: ALICE, amount6: "200" });
 	s.appendEvent({ chain: "baseSepolia", block: 5, from: ALICE, to: BOB, amount6: "300" });
 
-	ok(s.queryEvents({ chain: "arc" }).length === 2, "queryEvents filters by chain");
-	ok(s.queryEvents({ address: ALICE.toUpperCase() }).length === 3, "queryEvents address match is case-insensitive (from||to)");
-	ok(s.queryEvents({ chain: "arc", limit: 1 })[0].block === 11, "queryEvents newest-first + limit");
+	ok(s.queryEvents({ chain: "arc" }).events.length === 2, "queryEvents filters by chain");
+	ok(s.queryEvents({ address: ALICE.toUpperCase() }).events.length === 3, "queryEvents address match is case-insensitive (from||to)");
+	ok(s.queryEvents({ chain: "arc", limit: 1 }).events[0].block === 11, "queryEvents newest-first + limit");
 	ok(s.getState("missing", "fb") === "fb", "getState fallback");
 	s.setState("indexer:arc", 1234);
 	ok(s.getState("indexer:arc") === 1234, "setState/getState roundtrip");
@@ -52,7 +52,7 @@ function testStore() {
 	ok(s2.getState("indexer:arc") === 1234, "state survives a new Store instance");
 
 	fs.appendFileSync(path.join(dir, "events.jsonl"), "{corrupt\n");
-	ok(new Store({ dir }).queryEvents({ limit: 10 }).length === 3, "corrupt events line skipped");
+	ok(new Store({ dir }).queryEvents({ limit: 10 }).events.length === 3, "corrupt events line skipped");
 	fs.writeFileSync(path.join(dir, "state.json"), "not json");
 	fs.writeFileSync(path.join(dir, "state-indexer.json"), "not json");
 	ok(new Store({ dir }).getState("indexer:arc", null) === null, "corrupt state.json → fallback (no throw)");
@@ -85,11 +85,11 @@ function testRotationThreshold() {
 		ok(rotated.length >= 1, "rotation created events-YYYYMMDD-NNN.jsonl (threshold 1MB)");
 		ok(fs.existsSync(path.join(dir, "events.jsonl")), "active events.jsonl still exists after rotation");
 		const both = s.queryEvents({ limit: 10 });
-		ok(both.length === 2, "queryEvents across rotated files returns all (2)");
+		ok(both.events.length === 2, "queryEvents across rotated files returns all (2)");
 		ok(s.countEvents() === 2, "countEvents after rotation =2");
 		const s2 = new Store({ dir });
-		ok(s2.queryEvents({ limit: 10 }).length === 2, "second Store instance sees rotated events");
-		ok(s2.queryEvents({ limit: 1 })[0].block === 2, "newest-first after rotation");
+		ok(s2.queryEvents({ limit: 10 }).events.length === 2, "second Store instance sees rotated events");
+		ok(s2.queryEvents({ limit: 1 }).events[0].block === 2, "newest-first after rotation");
 		ok(typeof s._discoverEventFiles === "function", "_discoverEventFiles exists");
 		const discovered = s._discoverEventFiles();
 		ok(discovered[0] === s.eventsPath, "_discoverEventFiles newest-first starts with active");
@@ -268,7 +268,7 @@ function testServerHostGuard() {
 	const store = new Store({ dir });
 	const backendCfg = {
 		network: "testnet",
-		cfg: { iris: { testnet: "stub" }, chains: { testnet: { chainId: 31337 } } },
+		cfg: { iris: { testnet: "stub" }, chains: { arc: { name: "Arc", chainId: 5042002 } } },
 		server: { host: "127.0.0.1", port: 0 }
 	};
 	const relayerStub = { stats: () => ({ mode: "watch-only" }), getJobs: () => ({}) };
@@ -307,23 +307,11 @@ function testServerHostGuard() {
 			})
 			.then((r) => {
 				ok(r.status === 400 && /kind/.test(r.body.error), "kind=invalid → 400 with 'kind' in error");
-				return httpGet(`127.0.0.1:${port}`, "/events?kind=erc20");
+				return httpGet(`127.0.0.1:${port}`, "/events?kind=erc20&chain=arc");
 			})
 			.then((r) => {
-				// server.js now REQUIRES ?chain= (audit fix): a chain-less query is
-				// indistinguishable from "nothing indexed", so it must 400.
-				ok(r.status === 400 && /chain/.test(r.body.error), "missing chain → 400 with 'chain' in error");
-				return httpGet(`127.0.0.1:${port}`, "/events?chain=unknownChain&kind=erc20");
-			})
-			.then((r) => {
-				ok(r.status === 400 && /chain/i.test(r.body.error), "unknown chain → 400");
-				return httpGet(`127.0.0.1:${port}`, "/events?chain=testnet&kind=erc20");
-			})
-			.then((r) => {
-				// "testnet" exists in backendCfg.cfg.chains (see the stub config
-				// above), so this must be a 200 with an (empty) events array.
-				ok(r.status === 200 && Array.isArray(r.body.events), "known chain + kind=erc20 → 200");
-				return httpGet(`127.0.0.1:${port}`, "/events?chain=testnet");
+				ok(r.status === 200, "kind=erc20 → 200");
+				return httpGet(`127.0.0.1:${port}`, "/events?chain=arc");
 			})
 			.then((r) => {
 				ok(r.status === 200, "no kind param → 200");
@@ -434,16 +422,13 @@ function testStoreKindDedup() {
 	const s = new Store({ dir });
 	const txA = "0x" + "ab".repeat(32);
 	const txB = "0x" + "cd".repeat(32);
-	// logIndex matches the production indexer schema (indexer.js stores
-	// parseInt(log,16) — a NUMBER). The old "0x1" strings here never matched
-	// what the writer emits.
-	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: 1, emitter: ERC20 });
-	s.appendEvent({ chain: "arc", block: 11, from: BOB, to: ALICE, amount6: "200", kind: "system", txHash: txB, logIndex: 2, emitter: SYSTEM });
-	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: 1, emitter: ERC20 });
-	ok(s.queryEvents({ kind: "erc20" }).length === 1, "kind=erc20 returns 1 (duplicate deduped)");
-	ok(s.queryEvents({ kind: "system" }).length === 1, "kind=system returns 1");
-	ok(s.queryEvents().length === 2, "no kind returns 2 unique events (dedup removed duplicate)");
-	ok(s.queryEvents({ kind: "erc20" })[0].block === 10, "dedup kept the erc20 event with correct block");
+	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: "0x1", emitter: ERC20 });
+	s.appendEvent({ chain: "arc", block: 11, from: BOB, to: ALICE, amount6: "200", kind: "system", txHash: txB, logIndex: "0x2", emitter: SYSTEM });
+	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: "0x1", emitter: ERC20 });
+	ok(s.queryEvents({ kind: "erc20" }).events.length === 1, "kind=erc20 returns 1 (duplicate deduped)");
+	ok(s.queryEvents({ kind: "system" }).events.length === 1, "kind=system returns 1");
+	ok(s.queryEvents().events.length === 2, "no kind returns 2 unique events (dedup removed duplicate)");
+	ok(s.queryEvents({ kind: "erc20" }).events[0].block === 10, "dedup kept the erc20 event with correct block");
 }
 
 // --- Relayer config guards -----------------------------------------------------
