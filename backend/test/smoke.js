@@ -42,9 +42,9 @@ function testStore() {
 	s.appendEvent({ chain: "arc", block: 11, from: BOB, to: ALICE, amount6: "200" });
 	s.appendEvent({ chain: "baseSepolia", block: 5, from: ALICE, to: BOB, amount6: "300" });
 
-	ok(s.queryEvents({ chain: "arc" }).length === 2, "queryEvents filters by chain");
-	ok(s.queryEvents({ address: ALICE.toUpperCase() }).length === 3, "queryEvents address match is case-insensitive (from||to)");
-	ok(s.queryEvents({ chain: "arc", limit: 1 })[0].block === 11, "queryEvents newest-first + limit");
+	ok(s.queryEvents({ chain: "arc" }).events.length === 2, "queryEvents filters by chain");
+	ok(s.queryEvents({ address: ALICE.toUpperCase() }).events.length === 3, "queryEvents address match is case-insensitive (from||to)");
+	ok(s.queryEvents({ chain: "arc", limit: 1 }).events[0].block === 11, "queryEvents newest-first + limit");
 	ok(s.getState("missing", "fb") === "fb", "getState fallback");
 	s.setState("indexer:arc", 1234);
 	ok(s.getState("indexer:arc") === 1234, "setState/getState roundtrip");
@@ -52,7 +52,7 @@ function testStore() {
 	ok(s2.getState("indexer:arc") === 1234, "state survives a new Store instance");
 
 	fs.appendFileSync(path.join(dir, "events.jsonl"), "{corrupt\n");
-	ok(new Store({ dir }).queryEvents({ limit: 10 }).length === 3, "corrupt events line skipped");
+	ok(new Store({ dir }).queryEvents({ limit: 10 }).events.length === 3, "corrupt events line skipped");
 	fs.writeFileSync(path.join(dir, "state.json"), "not json");
 	fs.writeFileSync(path.join(dir, "state-indexer.json"), "not json");
 	ok(new Store({ dir }).getState("indexer:arc", null) === null, "corrupt state.json → fallback (no throw)");
@@ -85,11 +85,11 @@ function testRotationThreshold() {
 		ok(rotated.length >= 1, "rotation created events-YYYYMMDD-NNN.jsonl (threshold 1MB)");
 		ok(fs.existsSync(path.join(dir, "events.jsonl")), "active events.jsonl still exists after rotation");
 		const both = s.queryEvents({ limit: 10 });
-		ok(both.length === 2, "queryEvents across rotated files returns all (2)");
+		ok(both.events.length === 2, "queryEvents across rotated files returns all (2)");
 		ok(s.countEvents() === 2, "countEvents after rotation =2");
 		const s2 = new Store({ dir });
-		ok(s2.queryEvents({ limit: 10 }).length === 2, "second Store instance sees rotated events");
-		ok(s2.queryEvents({ limit: 1 })[0].block === 2, "newest-first after rotation");
+		ok(s2.queryEvents({ limit: 10 }).events.length === 2, "second Store instance sees rotated events");
+		ok(s2.queryEvents({ limit: 1 }).events[0].block === 2, "newest-first after rotation");
 		ok(typeof s._discoverEventFiles === "function", "_discoverEventFiles exists");
 		const discovered = s._discoverEventFiles();
 		ok(discovered[0] === s.eventsPath, "_discoverEventFiles newest-first starts with active");
@@ -425,10 +425,10 @@ function testStoreKindDedup() {
 	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: "0x1", emitter: ERC20 });
 	s.appendEvent({ chain: "arc", block: 11, from: BOB, to: ALICE, amount6: "200", kind: "system", txHash: txB, logIndex: "0x2", emitter: SYSTEM });
 	s.appendEvent({ chain: "arc", block: 10, from: ALICE, to: BOB, amount6: "100", kind: "erc20", txHash: txA, logIndex: "0x1", emitter: ERC20 });
-	ok(s.queryEvents({ kind: "erc20" }).length === 1, "kind=erc20 returns 1 (duplicate deduped)");
-	ok(s.queryEvents({ kind: "system" }).length === 1, "kind=system returns 1");
-	ok(s.queryEvents().length === 2, "no kind returns 2 unique events (dedup removed duplicate)");
-	ok(s.queryEvents({ kind: "erc20" })[0].block === 10, "dedup kept the erc20 event with correct block");
+	ok(s.queryEvents({ kind: "erc20" }).events.length === 1, "kind=erc20 returns 1 (duplicate deduped)");
+	ok(s.queryEvents({ kind: "system" }).events.length === 1, "kind=system returns 1");
+	ok(s.queryEvents().events.length === 2, "no kind returns 2 unique events (dedup removed duplicate)");
+	ok(s.queryEvents({ kind: "erc20" }).events[0].block === 10, "dedup kept the erc20 event with correct block");
 }
 
 // --- Relayer config guards -----------------------------------------------------

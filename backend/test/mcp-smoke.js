@@ -270,6 +270,8 @@ async function runGateTests() {
 		const relayer = stubRelayer({ validate: async () => void validateCalls++ });
 		const { mcp } = makeServer({ relayer });
 		const call = (frame) => mcp.handleFrame(frame);
+		// Initialize first (required by spec)
+		await call(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "mcp-smoke", version: "0.0.0" } } }));
 		const submitFrame = (id) =>
 			JSON.stringify({
 				jsonrpc: "2.0",
@@ -321,6 +323,8 @@ async function runStdoutPurityTest() {
 		const cap = captureStreams();
 		let resp;
 		try {
+			// Initialize first (required by spec)
+			await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "mcp-smoke", version: "0.0.0" } } }));
 			resp = await mcp.handleFrame(
 				JSON.stringify({
 					jsonrpc: "2.0",
@@ -483,6 +487,8 @@ async function runAuditFixTests() {
 		};
 		const store = new Store({ dir });
 		const mcp = createMcpServer({ backendCfg, store, relayer: null, iris: null, indexerChains: [{ key: "arc" }], log: silentLog() });
+		// Initialize first (required by spec)
+		await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "mcp-smoke", version: "0.0.0" } } }));
 		const r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 101, method: "tools/call", params: { name: "warparc_config", arguments: {} } })));
 		ok(!r.result.isError, "warparc_config with secret URLs → still ok");
 		const chains = JSON.parse(r.result.content[0].text).chains;
@@ -495,6 +501,8 @@ async function runAuditFixTests() {
 	// 2. id:null must get response (not treated as notification)
 	{
 		const { mcp } = makeServer();
+		// Initialize first (required by spec)
+		await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "mcp-smoke", version: "0.0.0" } } }));
 		const r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: null, method: "ping" })));
 		ok(r.jsonrpc === "2.0" && r.id === null && r.result !== undefined, "id:null treated as request — returns response with id:null (JSON-RPC 2.0)");
 		const notif = await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", method: "ping" }));
@@ -533,6 +541,8 @@ async function runAuditFixTests() {
 		}
 		const relayer = { stats: () => ({ mode: "watch-only" }), getJobs: () => jobsMap, enqueue: () => ({}), validateBurnTx: async () => {} };
 		const mcp = createMcpServer({ backendCfg, store, relayer, iris: null, indexerChains: [{ key: "arc" }], log: silentLog() });
+		// Initialize first (required by spec)
+		await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "mcp-smoke", version: "0.0.0" } } }));
 		let r = JSON.parse(await mcp.handleFrame(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "warparc_jobs", arguments: {} } })));
 		let out = JSON.parse(r.result.content[0].text);
 		ok(out.jobs.length === 100 && out.limit === 100, "warparc_jobs default limit 100 (backwards compatible when omitted)");

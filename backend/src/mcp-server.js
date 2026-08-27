@@ -219,6 +219,7 @@ function toolError(message) {
  */
 function createMcpServer({ backendCfg, store, relayer = null, iris = null, indexerChains = [], log = console }) {
 	let clientProtocol = LATEST_PROTOCOL;
+	let initialized = false;
 	const startedAt = Date.now();
 	let lastIrisCallAt = 0;
 
@@ -257,8 +258,17 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 		}
 		const lim = parseInt(args && args.limit, 10);
 		const limit = Number.isInteger(lim) && lim > 0 ? Math.min(lim, 1000) : 100;
-		const events = store.queryEvents({ chain, address, kind, limit });
-		return { count: events.length, limit, events };
+		const off = parseInt(args && args.offset, 10);
+		const offset = Number.isInteger(off) && off >= 0 ? off : 0;
+		const result = store.queryEvents({ chain, address, kind, limit, offset });
+		return {
+			count: result.events.length,
+			limit,
+			offset,
+			hasMore: result.hasMore,
+			nextOffset: result.hasMore ? offset + limit : null,
+			events: result.events
+		};
 	}
 
 	async function hStatus(args) {
@@ -356,14 +366,15 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 		},
 		{
 			name: "warparc_events",
-			description: "Query event transfer USDC terindeks, terbaru dulu. chain/address/kind/limit; kind=erc20|system — Arc memancarkan DUA log per pergerakan, jangan dijumlahkan lintas kind.",
+			description: "Query event transfer USDC terindeks, terbaru dulu. chain/address/kind/limit/offset; kind=erc20|system — Arc memancarkan DUA log per pergerakan, jangan dijumlahkan lintas kind.",
 			inputSchema: {
 				type: "object",
 				properties: {
 					chain: { type: "string" },
 					address: { type: "string" },
 					kind: { type: "string", enum: ["erc20", "system"] },
-					limit: { type: "integer", maximum: 1000 }
+					limit: { type: "integer", maximum: 1000 },
+					offset: { type: "integer", minimum: 0, description: "Pagination offset (default 0)" }
 				}
 			}
 		},
@@ -447,8 +458,8 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 		}
 		if (uri === "warparc://events/recent") {
 			const total = store.countEvents();
-			const events = store.queryEvents({ limit: 500 });
-			return [{ uri, mimeType: "application/json", text: JSON.stringify({ total, returned: events.length, events }, null, 2) }];
+			const result = store.queryEvents({ limit: 500 });
+			return [{ uri, mimeType: "application/json", text: JSON.stringify({ total, returned: result.events.length, hasMore: result.hasMore, events: result.events }, null, 2) }];
 		}
 		throw Object.assign(new Error(`Unknown resource: ${uri}`), { mcpInvalidParams: true });
 	}
@@ -529,6 +540,7 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 			// Version negotiation (spec): pakai protocolVersion client bila
 			// didukung; server mengembalikan versi yang dia setujui.
 			clientProtocol = pickProtocol(params && typeof params.protocolVersion === "string" ? params.protocolVersion : null);
+			initialized = true;
 			if (!isNotification) {
 				return rpc(id, {
 					protocolVersion: clientProtocol,
@@ -545,6 +557,11 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 
 		// Notifikasi (initialized, cancelled, progress, …) : tanpa respons.
 		if (isNotification) return null;
+
+		// Guard: reject tool/resource/prompt calls before initialize handshake.
+		if (!initialized && method !== "ping") {
+			return rpcErr(id, ERR_INVALID_REQUEST, "Server not initialized — send initialize first");
+		}
 
 		try {
 			switch (method) {

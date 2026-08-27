@@ -29,25 +29,7 @@
 const { ethers } = require("ethers");
 const { createIrisClient } = require("./attestation");
 const { parseCctpV2Message, MESSAGE_SENT_TOPIC, isZeroBytes32, CctpParseError } = require("./cctp");
-
-function createLogger() {
-	return {
-		info: (msg, extra) => {
-			if (process.env.LOG_JSON === "true") console.error(JSON.stringify({ ts: new Date().toISOString(), level: "info", msg, ...extra }));
-			else if (console.info) console.info(msg + (extra && Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ""));
-			else console.error(msg);
-		},
-		warn: (msg, extra) => {
-			if (process.env.LOG_JSON === "true") console.error(JSON.stringify({ ts: new Date().toISOString(), level: "warn", msg, ...extra }));
-			else if (console.warn) console.warn(msg + (extra && Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ""));
-			else console.error(msg);
-		},
-		error: (msg, extra) => {
-			if (process.env.LOG_JSON === "true") console.error(JSON.stringify({ ts: new Date().toISOString(), level: "error", msg, ...extra }));
-			else console.error(msg + (extra && Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ""));
-		}
-	};
-}
+const { createLogger } = require("./logger");
 
 const TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 const ALREADY_RELAYED_RE = /already|replay|used|nonce/i;
@@ -67,7 +49,7 @@ const ARC_MAX_FEE_GAS_GWEI = (() => {
 	const raw = parseInt(process.env.RELAYER_ARC_MAX_FEE_GAS_GWEI, 10);
 	if (Number.isFinite(raw) && raw > 0) {
 		if (raw < 20) {
-			const _lg = createLogger();
+			const _lg = createLogger("relayer");
 			_lg.warn(`[relayer] RELAYER_ARC_MAX_FEE_GAS_GWEI=${raw} is below the 20 Gwei Arc floor — txs will be rejected`);
 		}
 		return raw;
@@ -78,7 +60,7 @@ const ARC_MAX_FEE_PER_GAS_WEI = ethers.utils.parseUnits(String(ARC_MAX_FEE_GAS_G
 const ARC_PRIORITY_FEE_WEI = ethers.BigNumber.from(0);
 
 function createRelayer({ backendCfg, chains, store, log = console }) {
-	if (log === console) log = createLogger();
+	if (log === console) log = createLogger("relayer");
 	const { relayer: rcfg, network } = backendCfg;
 	const iris = createIrisClient({ baseUrl: backendCfg.cfg.iris[network], log });
 	const byDomain = new Map(chains.map((c) => [c.cctpDomain, c]));

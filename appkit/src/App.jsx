@@ -9,11 +9,33 @@
 // NOTE: kit.bridge() does NOT throw for step failures — it resolves with
 // BridgeResult.state 'pending' | 'success' | 'error'. The UI must branch on
 // result.state and offer appKit.retryBridge() for recovery.
-import { useMemo, useState } from "react";
+import { useMemo, useState, Component } from "react";
 import { useAccount, useChainId, useSwitchChain, useConnect, useDisconnect } from "wagmi";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
 import { AppKit } from "@circle-fin/app-kit";
 import { supportedChains, CHAIN_ID_TO_KIT_NAME } from "./wagmi";
+
+// Error Boundary — catches unhandled SDK/render errors instead of crashing the whole app.
+export class ErrorBoundary extends Component {
+	state = { error: null };
+	static getDerivedStateFromError(error) { return { error }; }
+	render() {
+		if (this.state.error) {
+			return (
+				<div style={{ maxWidth: 760, margin: "40px auto", padding: 24, fontFamily: "system-ui, sans-serif" }}>
+					<h2 style={{ color: "#9F2F2D" }}>Something went wrong</h2>
+					<pre style={{ whiteSpace: "pre-wrap", background: "#FBFBFA", padding: 12, borderRadius: 6, border: "1px solid #EAEAEA", fontSize: 13 }}>
+						{this.state.error.message || String(this.state.error)}
+					</pre>
+					<button onClick={() => { this.setState({ error: null }); window.location.reload(); }} style={{ background: "#1F2324", color: "#fff", border: "none", borderRadius: 4, padding: "9px 16px", fontWeight: 600, cursor: "pointer", marginTop: 12 }}>
+						Reload
+					</button>
+				</div>
+			);
+		}
+		return this.props.children;
+	}
+}
 
 const appKit = new AppKit();
 
