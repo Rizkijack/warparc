@@ -28,6 +28,7 @@
 "use strict";
 
 const fs = require("fs");
+const path = require("path");
 
 const { loadBackendConfig, getIndexerChains, getRelayerChains } = require("./config");
 const { Store } = require("./store");
@@ -275,11 +276,28 @@ function createMcpServer({ backendCfg, store, relayer = null, iris = null, index
 	];
 
 	function readStateRaw() {
+		// merge shards: legacy state.json + state-indexer.json + state-relayer.json (shard overrides legacy), fallback "{}"
+		let merged = {};
+		const tryRead = (p) => {
+			try {
+				const raw = fs.readFileSync(p, "utf8");
+				const parsed = JSON.parse(raw);
+				if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) Object.assign(merged, parsed);
+			} catch (e) {
+				if (e && e.code === "ENOENT") return;
+				if (e instanceof SyntaxError) return;
+				if (e && typeof e.message === "string" && e.message.includes("Unexpected token")) return;
+				throw e;
+			}
+		};
+		const dir = store.dir;
+		tryRead(path.join(dir, "state.json"));
+		tryRead(path.join(dir, "state-indexer.json"));
+		tryRead(path.join(dir, "state-relayer.json"));
 		try {
-			return fs.readFileSync(store.statePath, "utf8");
-		} catch (e) {
-			if (e.code === "ENOENT") return "{}\n";
-			throw e;
+			return JSON.stringify(merged, null, 2) + "\n";
+		} catch (_) {
+			return "{}\n";
 		}
 	}
 
