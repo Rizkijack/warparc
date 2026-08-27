@@ -84,6 +84,14 @@ async function main() {
 		process.exit(1);
 	}
 
+	// Guard (audit): BridgeAdapter (OFT USDC) is legacy path — canonical USDC is CCTP V2.
+	// Require explicit ENABLE_OFT_ADAPTER=1 for any live deployment that includes the adapter.
+	if (LIVE_NETWORKS.has(network) && config.mode === "both" && process.env.ENABLE_OFT_ADAPTER !== "1") {
+		console.error(`ERROR: BridgeAdapter (OFT USDC) is legacy — canonical route is CCTP V2. Set ENABLE_OFT_ADAPTER=1 to confirm OFT adapter deploy on ${network}.`);
+		console.error(`Refusing to deploy BridgeAdapter without explicit opt-in (see DEPLOY.md Appendix A).`);
+		process.exit(1);
+	}
+
 	console.log(`\n=== Deploying to ${network} ===`);
 	console.log(`Chain ID: ${hre.network.config.chainId}`);
 	console.log(`LZ Endpoint: ${config.lzEndpoint}`);

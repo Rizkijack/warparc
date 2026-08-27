@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity 0.8.24;
 
 /// @notice Minimal mock of LayerZero EndpointV2 for LOCAL testing only.
 /// It satisfies the OFT constructor (setDelegate) so the OFT can deploy on a

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.22;
+pragma solidity 0.8.24;
 
 import { OFTAdapter } from "@layerzerolabs/lz-evm-oapp-v2/contracts/oft/OFTAdapter.sol";
 
 import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
-
 
 /// @title BridgeAdapter (revived with hard guards)
 /// @notice OFTAdapter wrapping an existing ERC20 (canonical USDC) with real
@@ -13,9 +12,16 @@ import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
 ///
 /// Circuit-breakers:
 ///   1. pause() — owner-only emergency brake; applies to all debits/credits.
-///   2. allowedEid — per-EID allowlist; _debit/_credit revert on foreign EID.
+///      When paused, outbound _debit reverts. Inbound _credit also reverts
+///      via whenNotPaused — LayerZero stores the payload as retryable.
+///      Operators MUST call EndpointV2 retry/clear after unpause to release
+///      stuck inbound messages (see DEPLOY.md Appendix A).
+///   2. allowedEid — per-EID allowlist; _debit checks _dstEid and _credit
+///      checks _srcEid. Initially empty (no EID allowed) — owner must call
+///      setEidAllowed for each peer before traffic flows.
 ///   3. Daily USDC cap (6-decimals subunits) — sliding 24h window reset on
 ///      first outbound debit past the window boundary (no off-chain cron).
+///      dailyCap == 0 means no cap. Use setDailyCap(0) to disable.
 ///
 /// setPeer is inherited from OAppCore (onlyOwner). Constructor refuses
 /// zero endpoint/delegate so a half-configured deploy cannot reach mainnet.
@@ -35,7 +41,6 @@ contract BridgeAdapter is OFTAdapter, Pausable {
     error ZeroAddress();
     error EidNotAllowed(uint32 eid);
     error DailyCapExceeded(uint256 requested, uint256 remaining);
-    error ZeroCap();
 
     constructor(
         address _token,
@@ -56,13 +61,18 @@ contract BridgeAdapter is OFTAdapter, Pausable {
     }
 
     // ----- Owner-only daily cap -----
+    /// @notice Set daily cap in 6-decimal subunits. 0 disables cap and
+    ///         returns to unlimited mode. Emits DailyCapUpdated.
     function setDailyCap(uint256 _newCap) external onlyOwner {
-        if (_newCap == 0) revert ZeroCap();
         uint256 old = dailyCap;
         dailyCap = _newCap;
         emit DailyCapUpdated(old, _newCap);
     }
 
+    /// @notice Owner-only manual window roll. Resets spent to 0 and
+    ///         anchors new window to current block.timestamp. Use only
+    ///         for emergency cap bypass — prefer automatic roll on next
+    ///         _debit after 24h (see _debit). Emits DailyWindowRolled.
     function rollDailyWindow() external onlyOwner {
         dayStartUtc = block.timestamp;
         dailySpent = 0;
@@ -82,7 +92,8 @@ contract BridgeAdapter is OFTAdapter, Pausable {
     // ----- Hooks applied to every cross-chain send/receive -----
     /// @dev OFTAdapter._debit is `internal virtual`; we override to add the
     ///      pause + EID + daily-cap guards before the underlying escrow
-    ///      transfer happens.
+    ///      transfer happens. Daily cap accounting uses the actual
+    ///      amountSentLD returned by OFTAdapter to avoid dust/rounding drift.
     function _debit(
         address _from,
         uint256 _amountLD,
@@ -98,18 +109,24 @@ contract BridgeAdapter is OFTAdapter, Pausable {
         if (dailyCap != 0) {
             uint256 remaining = dailyCap > dailySpent ? dailyCap - dailySpent : 0;
             if (_amountLD > remaining) revert DailyCapExceeded(_amountLD, remaining);
-            dailySpent += _amountLD;
         }
-        return OFTAdapter._debit(_from, _amountLD, _minAmountLD, _dstEid);
+        (amountSentLD, amountReceivedLD) = OFTAdapter._debit(_from, _amountLD, _minAmountLD, _dstEid);
+        if (dailyCap != 0) {
+            // use actual amountSentLD rather than requested _amountLD
+            dailySpent += amountSentLD;
+        }
+        return (amountSentLD, amountReceivedLD);
     }
 
-    /// @dev Reflective guard on the receive side too — if a destination OFT
-    ///      is paused, no inbound credits will run.
+    /// @dev Inbound guard — paused check blocks _credit via whenNotPaused
+    ///      (payload becomes retryable on EndpointV2, not lost) + EID
+    ///      allowlist rejects unknown srcEid even if setPeer was mis-set.
     function _credit(
         address _to,
         uint256 _amountLD,
         uint32 _srcEid
     ) internal virtual override whenNotPaused returns (uint256 amountReceivedLD) {
+        if (!allowedEid[_srcEid]) revert EidNotAllowed(_srcEid);
         return OFTAdapter._credit(_to, _amountLD, _srcEid);
     }
 }

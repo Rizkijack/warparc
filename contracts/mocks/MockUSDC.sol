@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.22;
+pragma solidity 0.8.24;
 
 /// @notice Minimal ERC20 used solely by scripts/local-test.js to instantiate
-///         BridgeAdapter (which needs an innerToken). NOT for production.
+///         BridgeAdapter (which needs an innerToken).
+/// @dev WARNING: test-only, never deploy to live/testnet. Mint is
+///      restricted to deployer to prevent open minting if ever mis-deployed.
 contract MockUSDC {
 	string public name = "MockUSDC";
 	string public symbol = "USDC";
@@ -10,8 +12,14 @@ contract MockUSDC {
 	uint256 public totalSupply;
 	mapping(address => uint256) public balanceOf;
 	mapping(address => mapping(address => uint256)) public allowance;
+	address public immutable deployer;
+
+	constructor() {
+		deployer = msg.sender;
+	}
 
 	function mint(address to, uint256 amount) external {
+		require(msg.sender == deployer, "MockUSDC: only deployer can mint");
 		balanceOf[to] += amount;
 		totalSupply += amount;
 	}
