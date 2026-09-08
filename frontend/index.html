@@ -4,299 +4,347 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#F5F7FA">
+<meta name="description" content="WarpArc Bridge - Move USDC between Arc and EVM chains via Circle CCTP V2. Burn and mint, deterministic finality under one second.">
 <title>WarpArc Bridge · Circle CCTP V2</title>
-<!-- Anti-FOUC: js/theme.js MUST stay synchronous in <head> BEFORE the stylesheets below. -->
 <script src="js/theme.js"></script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12.5' fill='none' stroke='%232775CA' stroke-width='4.5' stroke-dasharray='59 20' stroke-linecap='round' transform='rotate(-45 16 16)'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <nav>
-	<div class="nav-brand">
-		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-			<rect x="3" y="3" width="7" height="7" rx="1.5" fill="#2F3437"/>
-			<rect x="14" y="3" width="7" height="7" rx="1.5" fill="#2F3437" opacity="0.4"/>
-			<rect x="3" y="14" width="7" height="7" rx="1.5" fill="#787774"/>
-			<rect x="14" y="14" width="7" height="7" rx="1.5" fill="#787774" opacity="0.4"/>
-		</svg>
-		WarpArc
-	</div>
-	<div class="nav-right">
-		<div class="lang-selector" id="lang-selector">
-			<button class="lang-btn" id="lang-btn" aria-label="Select language" title="Language" aria-expanded="false" aria-haspopup="true">
-				<span class="lang-flag" id="lang-flag">EN</span>
-				<svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
-			</button>
-			<div class="lang-dropdown" id="lang-dropdown">
-				<button class="lang-option" data-lang="en"><span class="lang-flag">EN</span> English</button>
-				<button class="lang-option" data-lang="zh"><span class="lang-flag">ZH</span> 中文</button>
-				<button class="lang-option" data-lang="hi"><span class="lang-flag">HI</span> हिन्दी</button>
-				<button class="lang-option" data-lang="es"><span class="lang-flag">ES</span> Español</button>
-				<button class="lang-option" data-lang="fr"><span class="lang-flag">FR</span> Français</button>
-				<button class="lang-option" data-lang="ar"><span class="lang-flag">AR</span> العربية</button>
-				<button class="lang-option" data-lang="bn"><span class="lang-flag">BN</span> বাংলা</button>
-				<button class="lang-option" data-lang="pt"><span class="lang-flag">PT</span> Português</button>
-				<button class="lang-option" data-lang="ru"><span class="lang-flag">RU</span> Русский</button>
-				<button class="lang-option" data-lang="ja"><span class="lang-flag">JA</span> 日本語</button>
+	<div class="nav-inner">
+		<a class="nav-brand" href="#" aria-label="WarpArc home">
+			<span class="brand-mark" aria-hidden="true">
+				<svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+					<rect x="3" y="3" width="7" height="7" rx="1.6" fill="var(--ink)"/>
+					<rect x="14" y="3" width="7" height="7" rx="1.6" fill="var(--ink)" opacity="0.38"/>
+					<rect x="3" y="14" width="7" height="7" rx="1.6" fill="var(--text3)"/>
+					<rect x="14" y="14" width="7" height="7" rx="1.6" fill="var(--text3)" opacity="0.42"/>
+				</svg>
+			</span>
+			<span class="brand-word">WarpArc</span>
+			<span class="brand-sub">CCTP V2</span>
+		</a>
+		<div class="nav-right">
+			<div class="lang-selector" id="lang-selector">
+				<button class="lang-btn" id="lang-btn" aria-label="Select language" title="Language" aria-expanded="false" aria-haspopup="true">
+					<span class="lang-flag" id="lang-flag">EN</span>
+					<svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+				</button>
+				<div class="lang-dropdown" id="lang-dropdown">
+					<button class="lang-option" data-lang="en"><span class="lang-flag">EN</span> English</button>
+					<button class="lang-option" data-lang="zh"><span class="lang-flag">ZH</span> 中文</button>
+					<button class="lang-option" data-lang="hi"><span class="lang-flag">HI</span> हिन्दी</button>
+					<button class="lang-option" data-lang="es"><span class="lang-flag">ES</span> Español</button>
+					<button class="lang-option" data-lang="fr"><span class="lang-flag">FR</span> Français</button>
+					<button class="lang-option" data-lang="ar"><span class="lang-flag">AR</span> العربية</button>
+					<button class="lang-option" data-lang="bn"><span class="lang-flag">BN</span> বাংলা</button>
+					<button class="lang-option" data-lang="pt"><span class="lang-flag">PT</span> Português</button>
+					<button class="lang-option" data-lang="ru"><span class="lang-flag">RU</span> Русский</button>
+					<button class="lang-option" data-lang="ja"><span class="lang-flag">JA</span> 日本語</button>
+				</div>
 			</div>
-		</div>
-		<div class="network-toggle">
-			<button class="network-btn" id="network-mainnet-btn" data-network="mainnet">
-				<span class="network-dot mainnet"></span>
-				<span data-i18n="mainnet">Mainnet</span>
+			<div class="network-toggle" role="group" aria-label="Network mode">
+				<button class="network-btn" id="network-mainnet-btn" data-network="mainnet"><span class="network-dot mainnet"></span><span data-i18n="mainnet">Mainnet</span></button>
+				<button class="network-btn active" id="network-testnet-btn" data-network="testnet"><span class="network-dot testnet"></span><span data-i18n="testnet">Testnet</span></button>
+			</div>
+			<span class="network-badge" id="network-badge" style="display:none"><span class="dot"></span> <span data-i18n="notConnected">Not Connected</span></span>
+			<select id="wallet-chain" class="wallet-chain" aria-label="Switch wallet network" hidden></select>
+			<button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme">
+				<svg id="icon-sun" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="6.34" y1="17.66" x2="4.93" y2="19.07"/><line x1="19.07" y1="4.93" x2="17.66" y2="6.34"/></svg>
+				<svg id="icon-moon" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
 			</button>
-			<button class="network-btn active" id="network-testnet-btn" data-network="testnet">
-				<span class="network-dot testnet"></span>
-				<span data-i18n="testnet">Testnet</span>
-			</button>
+			<button class="btn btn-primary btn-sm nav-cta" id="connect-btn" data-i18n="connectWallet">Connect Wallet</button>
 		</div>
-		<span class="network-badge" id="network-badge" style="display:none">
-			<span class="dot"></span> <span data-i18n="notConnected">Not Connected</span>
-		</span>
-		<select id="wallet-chain" class="wallet-chain" aria-label="Switch wallet network" hidden></select>
-		<button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme">
-			<svg id="icon-sun" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="6.34" y1="17.66" x2="4.93" y2="19.07"/><line x1="19.07" y1="4.93" x2="17.66" y2="6.34"/></svg>
-			<svg id="icon-moon" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-		</button>
-		<button class="btn btn-primary btn-sm" id="connect-btn" data-i18n="connectWallet">Connect Wallet</button>
 	</div>
 </nav>
 
 <main>
-	<div class="bridge-layout">
-	<div class="bridge-card">
-		<div class="card-header">
-			<h1 data-i18n="crossChainBridge">Cross-Chain Bridge</h1>
-			<div class="bridge-mode" id="bridge-mode" role="group" aria-label="Network mode">
-				<button type="button" class="mode-pill active" id="mode-testnet" data-i18n="testnet">Testnet</button>
-				<button type="button" class="mode-pill" id="mode-mainnet" data-i18n="mainnet">Mainnet</button>
-			</div>
-			<select id="token-select" class="token-picker">
-				<option value="USDC">USDC · CCTP V2</option>
-				<option value="ETH">ETH · Native</option>
-			</select>
-		</div>
-
-		<div class="chain-selectors">
-			<select id="from-chain" class="chain-select" aria-label="Source chain"></select>
-		<button type="button" class="chain-arrow" id="swap-chains-btn" aria-label="Swap source and destination chains" title="Swap chains">
-			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-				<polyline points="7 3 7 21"/>
-				<polyline points="3 17 7 21 11 17"/>
-				<polyline points="17 21 17 3"/>
-				<polyline points="13 7 17 3 21 7"/>
-			</svg>
-		</button>
-		<select id="to-chain" class="chain-select" aria-label="Destination chain"></select>
-		</div>
-
-		<div id="bridge-area">
-			<div class="input-group">
-				<label for="amount" data-i18n="amount">Amount</label>
-				<div class="input-wrap">
-					<input type="text" id="amount" placeholder="0.00" autocomplete="off" spellcheck="false">
-					<span class="token-tag" id="token-tag">
-						<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%232775CA'/%3E%3Cpath d='M16 7v18M20.8 11.2c-.8-1.2-2.6-1.9-4.8-1.9-2.7 0-4.7 1.3-4.7 3.3 0 4.4 9.6 2.4 9.6 6.7 0 2.1-2.1 3.4-5.1 3.4-2.5 0-4.3-.9-5.1-2.2' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" alt="">
-						<span id="token-symbol">USDC</span>
-					</span>
+	<!-- HERO : asymmetric split - copy left, bridge interface right -->
+	<section class="hero">
+		<div class="hero-grid">
+			<div class="hero-copy">
+				<div class="hero-kicker">
+					Circle CCTP V2 · Arc Testnet Domain 26
 				</div>
-				<div class="balance-row">
-					<span><span data-i18n="balance">Balance</span>: <span id="from-balance">0.00</span></span>
-					<span class="preset-btns">
-						<button class="preset-btn" data-pct="25">25%</button>
-						<button class="preset-btn" data-pct="50">50%</button>
-						<button class="preset-btn" data-pct="75">75%</button>
-						<button class="max-btn" id="max-btn">MAX</button>
-					</span>
+				<h1 class="hero-title">
+					USDC moves <em>in one second</em>
+				</h1>
+				<p class="hero-sub">Burn on source, mint on destination. No wrappers, no pools. Deterministic finality and USDC as native gas on Arc.</p>
+				<div class="hero-actions">
+					<a class="btn btn-primary" href="#bridge">Bridge USDC</a>
+					<a class="btn btn-ghost" href="https://docs.arc.io" target="_blank" rel="noopener">Read Arc docs</a>
 				</div>
 			</div>
 
-			<div class="gas-estimate">
-				<span data-i18n="estGasFee">Estimated Gas Fee (source)</span>
-				<span id="gas-fee">N/A</span>
-			</div>
-			<div class="gas-estimate">
-				<span data-i18n="cctpFee">CCTP Fast-Transfer Fee (USDC)</span>
-				<span id="gas-fee-usdc">N/A</span>
-			</div>
-			<div class="gas-estimate" id="forward-row">
-				<label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer">
-					<input type="checkbox" id="forward-toggle" checked>
-					<span data-i18n="forwardingService">Forwarding Service — Circle submits the mint for you (extra fee, no destination gas needed)</span>
-				</label>
-			</div>
-
-				<div class="pending-resume" id="pending-resume" style="display:none">
-				<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem">
-					<span class="pending-text" style="font-size:0.7rem;color:var(--text2)" data-i18n="unfinishedBridge">Unfinished bridge detected</span>
-					<span style="display:flex;gap:0.4rem">
-						<button class="btn btn-primary btn-sm" id="resume-btn" data-i18n="resumeMint">Resume mint</button>
-						<button class="btn btn-sm" id="pending-dismiss" data-i18n="dismiss">Dismiss</button>
-					</span>
-				</div>
-			</div>
-
-				<div class="cctp-stepper reveal" id="cctp-stepper" style="display:none">
-				<div class="stepper-step" id="step-burn">
-					<div class="stepper-dot"></div>
-					<div class="stepper-label" data-i18n="burn">Burn</div>
-				</div>
-				<div class="stepper-line" id="line-burn"></div>
-				<div class="stepper-step" id="step-attest">
-					<div class="stepper-dot"></div>
-					<div class="stepper-label" data-i18n="attestation">Attestation</div>
-				</div>
-				<div class="stepper-line" id="line-attest"></div>
-				<div class="stepper-step" id="step-mint">
-					<div class="stepper-dot"></div>
-					<div class="stepper-label" data-i18n="mint">Mint</div>
-				</div>
-			</div>
-
-			<button class="bridge-btn" id="bridge-btn" disabled data-i18n="enterAmount">Enter amount</button>
-
-			<div class="info-block reveal">
-				<h3 data-i18n="cctpContracts">CCTP V2 Contracts</h3>
-				<div class="contract-grid">
-					<div>
-						<div class="contract-col-title" id="from-chain-name">Ethereum</div>
-						<div class="contract-list" id="from-contracts"></div>
-						<div class="contract-meta">
-							Domain: <span id="from-domain"></span> · Chain: <span id="from-cid"></span>
+			<div class="hero-bridge" id="bridge">
+				<div class="bridge-layout">
+				<div class="bridge-card">
+					<div class="card-header">
+						<h2 data-i18n="crossChainBridge">Cross-Chain Bridge</h2>
+						<div class="card-header-right">
+							<div class="bridge-mode" id="bridge-mode" role="group" aria-label="Network mode">
+								<button type="button" class="mode-pill active" id="mode-testnet" data-i18n="testnet">Testnet</button>
+								<button type="button" class="mode-pill" id="mode-mainnet" data-i18n="mainnet">Mainnet</button>
+							</div>
+							<select id="token-select" class="token-picker" aria-label="Select token">
+								<option value="USDC">USDC · CCTP V2</option>
+								<option value="ETH">ETH · Native</option>
+							</select>
 						</div>
 					</div>
-					<div>
-						<div class="contract-col-title" id="to-chain-name">ARC</div>
-						<div class="contract-list" id="to-contracts"></div>
-						<div class="contract-meta">
-							Domain: <span id="to-domain"></span> · Chain: <span id="to-cid"></span>
+
+					<div class="chain-selectors">
+						<select id="from-chain" class="chain-select" aria-label="Source chain"></select>
+						<button type="button" class="chain-arrow" id="swap-chains-btn" aria-label="Swap source and destination chains" title="Swap chains">
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="7 3 7 21"/><polyline points="3 17 7 21 11 17"/><polyline points="17 21 17 3"/><polyline points="13 7 17 3 21 7"/></svg>
+						</button>
+						<select id="to-chain" class="chain-select" aria-label="Destination chain"></select>
+					</div>
+
+					<div id="bridge-area">
+						<div class="input-group">
+							<label for="amount" data-i18n="amount">Amount</label>
+							<div class="input-wrap">
+								<input type="text" id="amount" placeholder="0.00" autocomplete="off" spellcheck="false" inputmode="decimal">
+								<span class="token-tag" id="token-tag">
+									<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%232775CA'/%3E%3Cpath d='M16 7v18M20.8 11.2c-.8-1.2-2.6-1.9-4.8-1.9-2.7 0-4.7 1.3-4.7 3.3 0 4.4 9.6 2.4 9.6 6.7 0 2.1-2.1 3.4-5.1 3.4-2.5 0-4.3-.9-5.1-2.2' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" alt="">
+									<span id="token-symbol">USDC</span>
+								</span>
+							</div>
+							<div class="balance-row">
+								<span><span data-i18n="balance">Balance</span>: <span id="from-balance">0.00</span></span>
+								<span class="preset-btns">
+									<button class="preset-btn" data-pct="25">25%</button>
+									<button class="preset-btn" data-pct="50">50%</button>
+									<button class="preset-btn" data-pct="75">75%</button>
+									<button class="max-btn" id="max-btn">MAX</button>
+								</span>
+							</div>
+						</div>
+
+						<div class="gas-estimate">
+							<span data-i18n="estGasFee">Estimated Gas Fee (source)</span>
+							<span id="gas-fee">N/A</span>
+						</div>
+						<div class="gas-estimate">
+							<span data-i18n="cctpFee">CCTP Fast-Transfer Fee (USDC)</span>
+							<span id="gas-fee-usdc">N/A</span>
+						</div>
+						<div class="gas-estimate" id="forward-row">
+							<label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer">
+								<input type="checkbox" id="forward-toggle" checked>
+								<span data-i18n="forwardingService">Forwarding Service - Circle submits the mint for you (extra fee, no destination gas needed)</span>
+							</label>
+						</div>
+
+						<div class="pending-resume" id="pending-resume" style="display:none">
+							<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;width:100%">
+								<span class="pending-text" style="font-size:0.7rem;color:var(--text2)" data-i18n="unfinishedBridge">Unfinished bridge detected</span>
+								<span style="display:flex;gap:0.4rem">
+									<button class="btn btn-primary btn-sm" id="resume-btn" data-i18n="resumeMint">Resume mint</button>
+									<button class="btn btn-sm" id="pending-dismiss" data-i18n="dismiss">Dismiss</button>
+								</span>
+							</div>
+						</div>
+
+						<div class="cctp-stepper reveal" id="cctp-stepper" style="display:none">
+							<div class="stepper-step" id="step-burn"><div class="stepper-dot"></div><div class="stepper-label" data-i18n="burn">Burn</div></div>
+							<div class="stepper-line" id="line-burn"></div>
+							<div class="stepper-step" id="step-attest"><div class="stepper-dot"></div><div class="stepper-label" data-i18n="attestation">Attestation</div></div>
+							<div class="stepper-line" id="line-attest"></div>
+							<div class="stepper-step" id="step-mint"><div class="stepper-dot"></div><div class="stepper-label" data-i18n="mint">Mint</div></div>
+						</div>
+
+						<button class="bridge-btn" id="bridge-btn" disabled data-i18n="enterAmount">Enter amount</button>
+
+						<div class="info-block reveal">
+							<h3 data-i18n="cctpContracts">CCTP V2 Contracts</h3>
+							<div class="contract-grid">
+								<div>
+									<div class="contract-col-title" id="from-chain-name">Ethereum</div>
+									<div class="contract-list" id="from-contracts"></div>
+									<div class="contract-meta">Domain: <span id="from-domain"></span> · Chain: <span id="from-cid"></span></div>
+								</div>
+								<div>
+									<div class="contract-col-title" id="to-chain-name">ARC</div>
+									<div class="contract-list" id="to-contracts"></div>
+									<div class="contract-meta">Domain: <span id="to-domain"></span> · Chain: <span id="to-cid"></span></div>
+								</div>
+							</div>
+						</div>
+
+						<div class="info-block reveal">
+							<h3 data-i18n="txHistory">Transaction History</h3>
+							<div class="tx-history" id="tx-list"><div class="empty-state" data-i18n="noTxs">No transactions yet</div></div>
 						</div>
 					</div>
 				</div>
-			</div>
 
-			<div class="info-block reveal">
-				<h3 data-i18n="txHistory">Transaction History</h3>
-				<div class="tx-history" id="tx-list">
-					<div class="empty-state" data-i18n="noTxs">No transactions yet</div>
+				<div class="protocol-sidebar" id="protocol-sidebar">
+					<div class="protocol-header">
+						<h3 data-i18n="selectProtocol">Select Protocol</h3>
+						<span class="protocol-badge" id="protocol-badge">Relay</span>
+					</div>
+					<div class="protocol-table" role="radiogroup" aria-label="Select bridge protocol">
+						<div class="protocol-row protocol-row-header" aria-hidden="true"><span></span><span>Fee</span><span>Speed</span><span>Chains</span></div>
+						<button class="protocol-row active" data-protocol="relay" id="proto-relay" role="radio" aria-checked="true"><span class="protocol-name"><span class="protocol-icon">⚡</span>Relay</span><span class="protocol-fee">0%</span><span class="protocol-speed">&lt;3s</span><span class="protocol-chains">85+</span></button>
+						<button class="protocol-row" data-protocol="lifi" id="proto-lifi" role="radio" aria-checked="false"><span class="protocol-name"><span class="protocol-icon">🔗</span>Li.Fi</span><span class="protocol-fee">0.25%</span><span class="protocol-speed">~30s</span><span class="protocol-chains">60+</span></button>
+						<button class="protocol-row" data-protocol="cctp" id="proto-cctp" role="radio" aria-checked="false"><span class="protocol-name"><span class="protocol-icon">🔵</span>CCTP V2</span><span class="protocol-fee">~$0.10</span><span class="protocol-speed">~15min</span><span class="protocol-chains">10+</span></button>
+						<button class="protocol-row" data-protocol="across" id="proto-across" role="radio" aria-checked="false"><span class="protocol-name"><span class="protocol-icon">⛓️</span>Across</span><span class="protocol-fee">~0.05%</span><span class="protocol-speed">~2s</span><span class="protocol-chains">24+</span></button>
+						<button class="protocol-row" data-protocol="stargateV2" id="proto-stargate" role="radio" aria-checked="false" hidden><span class="protocol-name"><span class="protocol-icon">⚡</span>Stargate V2</span><span class="protocol-fee">~0.06%</span><span class="protocol-speed">~2min</span><span class="protocol-chains">15+</span></button>
+						<button class="protocol-row" data-protocol="socket" id="proto-bungee" role="radio" aria-checked="false"><span class="protocol-name"><span class="protocol-icon">🔌</span>Socket/Bungee</span><span class="protocol-fee">~0.2%</span><span class="protocol-speed">~1min</span><span class="protocol-chains">30+</span></button>
+					</div>
+					<div class="protocol-details" id="protocol-details">
+						<div class="protocol-detail-row"><span class="detail-label" data-i18n="estOutput">Est. Output</span><span class="detail-value" id="est-output">-</span></div>
+						<div class="protocol-detail-row"><span class="detail-label" data-i18n="estFee">Est. Fee</span><span class="detail-value" id="est-fee">-</span></div>
+						<div class="protocol-detail-row"><span class="detail-label" data-i18n="estTime">Est. Time</span><span class="detail-value" id="est-time">-</span></div>
+						<div class="protocol-detail-row"><span class="detail-label" data-i18n="route">Route</span><span class="detail-value" id="est-route">-</span></div>
+					</div>
+					<div class="protocol-info"><p id="protocol-desc" data-i18n="relayDesc">Fastest cross-chain bridge. Intent-based, p50 &lt;3s fill time. 0% fee for ETH to ETH.</p></div>
+				</div>
+				</div>
+
+				<div class="hero-bridge-foot">
+					<span>Contracts verified against <a href="https://docs.arc.io/arc/references/contract-addresses" target="_blank" rel="noopener">docs.arc.io</a> · Explorer <a href="https://testnet.arcscan.app" target="_blank" rel="noopener">ArcScan</a></span>
+					<span class="foot-sep"></span>
+					<span class="foot-faucet"><a href="https://faucet.circle.com" target="_blank" rel="noopener">Faucet</a> for testnet USDC</span>
 				</div>
 			</div>
 		</div>
-	</div>
+	</section>
 
-	<!-- Protocol Selector Sidebar -->
-	<div class="protocol-sidebar" id="protocol-sidebar">
-		<div class="protocol-header">
-			<h3 data-i18n="selectProtocol">Select Protocol</h3>
-			<span class="protocol-badge" id="protocol-badge">Relay</span>
+	<!-- METRICS STRIP -->
+	<section class="metrics-wrap">
+		<div class="metrics">
+			<div class="metric"><span class="metric-k">Finality</span><span class="metric-v">&lt;1s</span><span class="metric-d">Deterministic, no reorgs</span></div>
+			<div class="metric"><span class="metric-k">Throughput</span><span class="metric-v">3000+ TPS</span><span class="metric-d">20 validators, 0.5s blocks</span></div>
+			<div class="metric"><span class="metric-k">Gas</span><span class="metric-v">USDC</span><span class="metric-d">No ETH needed on Arc</span></div>
+			<div class="metric"><span class="metric-k">CCTP Domain</span><span class="metric-v">26</span><span class="metric-d">Arc Testnet, canonical mint</span></div>
 		</div>
+	</section>
 
-		<div class="protocol-table" role="radiogroup" aria-label="Select bridge protocol">
-			<div class="protocol-row protocol-row-header" aria-hidden="true">
-				<span></span>
-				<span>Fee</span>
-				<span>Speed</span>
-				<span>Chains</span>
-			</div>
-			<button class="protocol-row active" data-protocol="relay" id="proto-relay" role="radio" aria-checked="true">
-				<span class="protocol-name">
-					<span class="protocol-icon">⚡</span>
-					Relay
-				</span>
-				<span class="protocol-fee">0%</span>
-				<span class="protocol-speed">&lt;3s</span>
-				<span class="protocol-chains">85+</span>
-			</button>
-			<button class="protocol-row" data-protocol="lifi" id="proto-lifi" role="radio" aria-checked="false">
-				<span class="protocol-name">
-					<span class="protocol-icon">🔗</span>
-					Li.Fi
-				</span>
-				<span class="protocol-fee">0.25%</span>
-				<span class="protocol-speed">~30s</span>
-				<span class="protocol-chains">60+</span>
-			</button>
-			<button class="protocol-row" data-protocol="cctp" id="proto-cctp" role="radio" aria-checked="false">
-				<span class="protocol-name">
-					<span class="protocol-icon">🔵</span>
-					CCTP V2
-				</span>
-				<span class="protocol-fee">~$0.10</span>
-				<span class="protocol-speed">~15min</span>
-				<!-- 10 = enabled mainnet chains with CCTP V2 contracts in js/config.js
-					(ethereum, base, arbitrum, optimism, polygon, bsc, avalanche,
-					linea, scroll, blast) — was a stale "5" -->
-				<span class="protocol-chains">10+</span>
-			</button>
-<button class="protocol-row" data-protocol="across" id="proto-across" role="radio" aria-checked="false">
-				<span class="protocol-name">
-					<span class="protocol-icon">⛓️</span>
-					Across
-				</span>
-				<span class="protocol-fee">~0.05%</span>
-				<span class="protocol-speed">~2s</span>
-				<span class="protocol-chains">24+</span>
-			</button>
-			<!-- Fail-closed (frontend audit 2026-08): Stargate V2 hidden while its
-				router address/ABI are unverified — see CONFIG.ethBridge.stargateV2
-				in js/config.js for the re-enable path (flip disabled:false AND
-				remove hidden here). Row kept so re-enabling is one flag. -->
-			<button class="protocol-row" data-protocol="stargateV2" id="proto-stargate" role="radio" aria-checked="false" hidden>
-				<span class="protocol-name">
-					<span class="protocol-icon">⚡</span>
-					Stargate V2
-				</span>
-				<span class="protocol-fee">~0.06%</span>
-				<span class="protocol-speed">~2min</span>
-				<span class="protocol-chains">15+</span>
-			</button>
-			<button class="protocol-row" data-protocol="socket" id="proto-bungee" role="radio" aria-checked="false">
-				<span class="protocol-name">
-					<span class="protocol-icon">🔌</span>
-					Socket/Bungee
-				</span>
-				<span class="protocol-fee">~0.2%</span>
-				<span class="protocol-speed">~1min</span>
-				<span class="protocol-chains">30+</span>
-			</button>
+	<!-- BENTO : Why Arc + How stablecoin model works -->
+	<section class="section">
+		<div class="section-head">
+			<h2 class="section-title">Built for stablecoin settlement</h2>
+			<p class="section-sub">Arc separates consensus from execution. You get sub second finality, USDC denominated fees, and a single canonical USDC without wrappers.</p>
 		</div>
+		<div class="bento">
+			<article class="bento-cell bento-hero">
+				<div class="bento-text">
+					<h3>Deterministic finality</h3>
+					<p>Malachite BFT finalizes every block in under one second. One confirmation on Arc carries the same guarantee as dozens on other chains.</p>
+					<ul class="bento-list">
+						<li>Single confirmation for bridges</li>
+						<li>No reorg handling needed</li>
+						<li>Immediate offchain effects</li>
+					</ul>
+				</div>
+				<div class="bento-media">
+					<img src="https://picsum.photos/seed/warparc-finality/640/480" alt="Abstract network finality" width="640" height="480" loading="lazy">
+				</div>
+			</article>
+			<article class="bento-cell">
+				<div class="bento-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M7 7V5a5 5 0 0 1 10 0v2"/><circle cx="12" cy="13.5" r="2"/></svg></div>
+				<h3>USDC is the gas token</h3>
+				<p>Pay fees in dollars, not volatility. The same balance powers native sends and ERC20 transfers at 18 and 6 decimals.</p>
+			</article>
+			<article class="bento-cell tinted">
+				<div class="bento-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3z"/></svg></div>
+				<h3>EWMA smoothed fees</h3>
+				<p>Base fee targets about one cent per transaction. Short spikes do not become fee spikes. Tips are optional.</p>
+				<div class="mini-stat"><span>20 Gwei</span> floor</div>
+			</article>
+			<article class="bento-cell with-image">
+				<img src="https://picsum.photos/seed/warparc-arcinfra/640/420" alt="Infrastructure detail" width="640" height="420" loading="lazy">
+				<div class="with-image-body">
+					<h3>CCTP burn and mint</h3>
+					<p>USDC never locks. It burns on source and mints natively on destination. No wrapped USDC, no liquidity pools.</p>
+				</div>
+			</article>
+		</div>
+	</section>
 
-		<div class="protocol-details" id="protocol-details">
-			<div class="protocol-detail-row">
-				<span class="detail-label" data-i18n="estOutput">Est. Output</span>
-				<span class="detail-value" id="est-output">—</span>
+	<!-- HOW IT WORKS : avoiding 3 equal cards -->
+	<section class="section steps-section">
+		<div class="section-head">
+			<h2 class="section-title">Move funds in three steps</h2>
+		</div>
+		<div class="steps">
+			<div class="step">
+				<div class="step-head"><span class="step-index">01</span><span class="step-title">Approve and burn</span></div>
+				<p>Approve TokenMessenger V2 and call depositForBurn. With Forwarding Service the burn includes the Circle fee so the recipient receives the full amount.</p>
+				<div class="step-code">depositForBurnWithHook(amount, domain, recipient, usdc, 0x00, maxFee, 1000, hook)</div>
 			</div>
-			<div class="protocol-detail-row">
-				<span class="detail-label" data-i18n="estFee">Est. Fee</span>
-				<span class="detail-value" id="est-fee">—</span>
+			<div class="step">
+				<div class="step-head"><span class="step-index">02</span><span class="step-title">Attestation by Circle</span></div>
+				<p>Circle Iris signs the message. Poll the attestation API or let the Forwarding Service submit the mint for you.</p>
+				<div class="step-meta">Iris API and Forwarding Service, about 15 min standard, under 3s via Relay for EVM routes</div>
 			</div>
-			<div class="protocol-detail-row">
-				<span class="detail-label" data-i18n="estTime">Est. Time</span>
-				<span class="detail-value" id="est-time">—</span>
-			</div>
-			<div class="protocol-detail-row">
-				<span class="detail-label" data-i18n="route">Route</span>
-				<span class="detail-value" id="est-route">—</span>
+			<div class="step">
+				<div class="step-head"><span class="step-index">03</span><span class="step-title">Mint on destination</span></div>
+				<p>Call receiveMessage on the destination MessageTransmitter V2. Gas is paid on destination unless you used forwarding.</p>
+				<div class="step-meta">One confirmation on Arc is final. Check ArcScan for the mint.</div>
 			</div>
 		</div>
+	</section>
 
-		<div class="protocol-info">
-			<p id="protocol-desc" data-i18n="relayDesc">Fastest cross-chain bridge. Intent-based, p50 &lt;3s fill time. 0% fee for ETH→ETH.</p>
+	<!-- CHAINS -->
+	<section class="section chains-section">
+		<div class="section-head row-head">
+			<div>
+				<h2 class="section-title">Supported chains</h2>
+				<p class="section-sub">Mainnet and testnet pairs. CCTP for every Arc route. Relay and aggregators for EVM to EVM.</p>
+			</div>
+			<div class="chain-legend">
+				<span>Arc</span>
+				<span>EVM</span>
+			</div>
 		</div>
-	</div>
-	</div>
+		<div class="chain-wall">
+			<span class="chain-chip arc">Arc Testnet <em>5042002</em></span>
+			<span class="chain-chip">Ethereum</span>
+			<span class="chain-chip">Base</span>
+			<span class="chain-chip">Arbitrum</span>
+			<span class="chain-chip">Optimism</span>
+			<span class="chain-chip">Polygon</span>
+			<span class="chain-chip">Avalanche</span>
+			<span class="chain-chip">Linea</span>
+			<span class="chain-chip muted">BSC · disabled until domain verified</span>
+			<span class="chain-chip muted">Scroll · disabled</span>
+			<span class="chain-chip muted">Blast · disabled</span>
+		</div>
+		<div class="chain-note">All CCTP domains and contract addresses are verified against <a href="https://developers.circle.com/cctp/concepts/supported-chains-and-domains" target="_blank" rel="noopener">Circle supported chains</a> and <a href="https://docs.arc.io/arc/references/contract-addresses" target="_blank" rel="noopener">Arc contract addresses</a>. Unknown values are never guessed.</div>
+	</section>
+
 </main>
 
 <footer>
-	<span data-i18n="footerText">WarpArc Bridge · USDC via Circle CCTP V2</span>
-	<div class="footer-links">
-		<a href="https://status.circle.com" target="_blank" rel="noopener" data-i18n="systemStatus">System Status</a>
-		<a href="https://testnet.arcscan.app" target="_blank" rel="noopener">ArcScan</a>
-		<a href="https://faucet.circle.com" target="_blank" rel="noopener" data-i18n="faucet">Faucet</a>
+	<div class="footer-inner">
+		<div class="footer-brand">
+			<span class="footer-mark" aria-hidden="true">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.6" fill="var(--ink)"/><rect x="14" y="3" width="7" height="7" rx="1.6" fill="var(--ink)" opacity="0.38"/><rect x="3" y="14" width="7" height="7" rx="1.6" fill="var(--text3)"/><rect x="14" y="14" width="7" height="7" rx="1.6" fill="var(--text3)" opacity="0.42"/></svg>
+			</span>
+			<div>
+				<div class="footer-title">WarpArc Bridge</div>
+				<div class="footer-sub">USDC via Circle CCTP V2</div>
+			</div>
+		</div>
+		<div class="footer-links">
+			<a href="https://status.circle.com" target="_blank" rel="noopener" data-i18n="systemStatus">System Status</a>
+			<a href="https://testnet.arcscan.app" target="_blank" rel="noopener">ArcScan</a>
+			<a href="https://faucet.circle.com" target="_blank" rel="noopener" data-i18n="faucet">Faucet</a>
+			<a href="https://docs.arc.io" target="_blank" rel="noopener">Docs</a>
+		</div>
+	</div>
+	<div class="footer-bottom">
+		<span data-i18n="footerText">WarpArc Bridge · USDC via Circle CCTP V2</span>
+		<span class="footer-meta">Testnet first, fail closed, no secrets in repository</span>
 	</div>
 </footer>
 
@@ -305,23 +353,18 @@
 	<div class="wallet-panel" role="dialog" aria-modal="true" aria-labelledby="wallet-modal-title">
 		<header>
 			<h2 id="wallet-modal-title">Connect Wallet</h2>
-			<button type="button" class="wallet-close" id="wallet-modal-close" aria-label="Close">
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-			</button>
+			<button type="button" class="wallet-close" id="wallet-modal-close" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
 		</header>
 		<section>
 			<h3>Installed</h3>
 			<ul id="wallet-list-installed" class="wallet-list"></ul>
 		</section>
 		<section>
-			<h3>Mobile &amp; Extension-free</h3>
+			<h3>Mobile and extension free</h3>
 			<ul id="wallet-list-remote" class="wallet-list">
 				<li class="wallet-row" id="wc-row" role="button" tabindex="0">
 					<img class="wallet-icon" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='8' width='24' height='17' rx='3' fill='%232775CA'/%3E%3Crect x='4' y='8' width='24' height='6' rx='3' fill='%231E5FA8'/%3E%3Ccircle cx='23' cy='19' r='2.2' fill='%23FFFFFF'/%3E%3C/svg%3E">
-					<span class="wallet-meta">
-						<span class="wallet-name">WalletConnect</span>
-						<span class="wallet-sub">Scan QR with any mobile wallet</span>
-					</span>
+					<span class="wallet-meta"><span class="wallet-name">WalletConnect</span><span class="wallet-sub">Scan QR with any mobile wallet</span></span>
 					<svg class="wallet-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 				</li>
 			</ul>
