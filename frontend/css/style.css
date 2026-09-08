@@ -281,8 +281,26 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;gap:0}
 .contract-list{display:flex;flex-direction:column;gap:0.3rem}
 .contract-item{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:0.65rem;align-items:baseline;font-size:0.70rem}
 .contract-item .contract-label{color:var(--text4);white-space:nowrap}
-.contract-item .contract-addr{color:var(--text3);font-family:var(--font-mono);font-size:0.66rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.contract-item .contract-addr{color:var(--text3);font-family:var(--font-mono);font-size:0.66rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;text-decoration:none}
 .contract-item .contract-addr:hover{color:var(--accent-strong)}
+/* Explorer links (route row + badge) */
+.explorer-row{
+	display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;
+	margin:-0.55rem 0 1.05rem;font-size:0.68rem;color:var(--text4);
+}
+.explorer-row[hidden]{display:none}
+.explorer-link{
+	display:inline-flex;align-items:center;gap:0.25rem;
+	color:var(--text3);font-family:var(--font-mono);font-size:0.66rem;
+	padding:0.22rem 0.55rem;border-radius:6px;border:1px solid var(--border);
+	background:rgba(255,255,255,0.02);text-decoration:none;transition:color 0.15s,border-color 0.15s,background 0.15s;
+}
+.explorer-link:hover{color:var(--ink);border-color:var(--border-strong);background:rgba(255,255,255,0.05);text-decoration:none}
+[data-theme="light"] .explorer-link{background:#fff}
+.explorer-link[hidden]{display:none}
+.explorer-arrow{color:var(--text4);font-size:0.62rem;flex-shrink:0}
+.badge-explorer{color:inherit;text-decoration:none}
+.badge-explorer:hover{color:var(--accent-hover);text-decoration:none}
 .tx-history{margin-top:0.55rem;max-height:180px;overflow-y:auto;scrollbar-width:thin}
 .tx-item{display:grid;grid-template-columns:8px minmax(0,1fr) auto;align-items:center;column-gap:0.7rem;padding:0.5rem 0.35rem;border-bottom:1px solid var(--border-subtle);font-size:0.72rem}
 .tx-item:last-child{border-bottom:none}

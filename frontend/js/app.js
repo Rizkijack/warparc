@@ -1533,7 +1533,13 @@ function onAccountChange() {
 
 		const chain = getChainConfig(state.chainId);
 		if (chain) {
-			badge.innerHTML = `<span class="dot"></span> ${chain.shortName}`;
+			const chainExplorer = explorerUrl(chain);
+			if (chainExplorer) {
+				// Badge links to the explorer of the chain the wallet is ON
+				badge.innerHTML = `<span class="dot"></span> <a href="${chainExplorer}" target="_blank" rel="noopener" class="badge-explorer" title="Open ${chain.name} explorer">${chain.shortName} ↗</a>`;
+			} else {
+				badge.innerHTML = `<span class="dot"></span> ${chain.shortName}`;
+			}
 			badge.style.display = "flex";
 		} else {
 			badge.innerHTML = `<span style="background:var(--red);width:6px;height:6px;border-radius:50%;display:inline-block"></span> ${t("unsupportedChain")}`;
@@ -1684,6 +1690,32 @@ function truncateUnits(value, decimals, places) {
 	}
 }
 
+// Blockchain explorer links for the chains currently selected in the UI.
+// Fail-closed: a chain without a verified explorer URL (e.g. arcMainnet
+// pre-launch, explorer: null) simply gets no link instead of a broken one.
+function explorerUrl(chain, path) {
+	if (!chain || !chain.explorer || !chain.explorer.startsWith("https://")) return null;
+	if (!path) return chain.explorer;
+	return chain.explorer + "/" + String(path).replace(/^\/+/, "");
+}
+
+function explorerHostname(url) {
+	try { return new URL(url).hostname; } catch { return url; }
+}
+
+function setExplorerLink(anchor, chain) {
+	if (!anchor) return;
+	const url = explorerUrl(chain);
+	if (url) {
+		anchor.href = url;
+		anchor.textContent = (chain.shortName || explorerHostname(url)) + " ↗";
+		anchor.title = "Open " + (chain.name || explorerHostname(url)) + " explorer";
+		anchor.hidden = false;
+	} else {
+		anchor.hidden = true;
+	}
+}
+
 function updateContractInfo() {
 	const fromKey = el("from-chain").value;
 	const toKey = el("to-chain").value;
@@ -1703,6 +1735,16 @@ function updateContractInfo() {
 	el("to-domain").textContent = toChain.cctpDomain != null ? toChain.cctpDomain : "—";
 	el("from-cid").textContent = fromChain.chainId;
 	el("to-cid").textContent = toChain.chainId;
+
+	// Explorer links follow the ACTIVE from/to pair (mainnet or testnet mode)
+	setExplorerLink(el("from-explorer"), fromChain);
+	setExplorerLink(el("to-explorer"), toChain);
+	const row = el("explorer-row");
+	if (row) {
+		const anyVisible = (el("from-explorer") && !el("from-explorer").hidden) ||
+			(el("to-explorer") && !el("to-explorer").hidden);
+		row.hidden = !anyVisible;
+	}
 }
 
 function renderContractList(chainKey) {
@@ -1733,12 +1775,30 @@ function renderContractList(chainKey) {
 		labelSpan.textContent = label;
 		item.appendChild(labelSpan);
 
-		const addrSpan = document.createElement("span");
-		addrSpan.className = "contract-addr";
-		addrSpan.textContent = addr || "not deployed";
-		addrSpan.title = addr || "not deployed";
-		if (addr) addrSpan.addEventListener("click", () => copyAddr(addr));
-		item.appendChild(addrSpan);
+		// Address opens on the chain's explorer when one is verified; falls back
+		// to copy-on-click for chains without an explorer URL (fail-closed).
+		const addrUrl = explorerUrl(chain, "address/" + addr);
+		if (addr && addrUrl) {
+			const link = document.createElement("a");
+			link.className = "contract-addr";
+			link.href = addrUrl;
+			link.target = "_blank";
+			link.rel = "noopener";
+			link.textContent = addr;
+			link.title = "View " + label + " on " + (chain.name || explorerHostname(chain.explorer));
+			link.addEventListener("click", (e) => {
+				// Still copy on click for convenience — navigation opens in a new tab.
+				copyAddr(addr);
+			});
+			item.appendChild(link);
+		} else {
+			const addrSpan = document.createElement("span");
+			addrSpan.className = "contract-addr";
+			addrSpan.textContent = addr || "not deployed";
+			addrSpan.title = addr || "not deployed";
+			if (addr) addrSpan.addEventListener("click", () => copyAddr(addr));
+			item.appendChild(addrSpan);
+		}
 
 		container.appendChild(item);
 	});
