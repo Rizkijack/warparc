@@ -4,12 +4,12 @@
 
 	var STORAGE_KEY = 'warparc:theme';
 	var THEMES = {
-		light: { meta: '#F5F7FA' },
-		dark: { meta: '#0B111E' }
+		light: { meta: '#ffffff' },
+		dark: { meta: '#08090a' }
 	};
 
 	function normalize(value) {
-		return (value === 'light' || value === 'dark') ? value : 'light';
+		return (value === 'light' || value === 'dark') ? value : 'dark';
 	}
 
 	function apply(theme) {
@@ -35,7 +35,7 @@
 		try {
 			return normalize(window.localStorage.getItem(STORAGE_KEY));
 		} catch (e) {
-			return 'light';
+			return 'dark';
 		}
 	}
 
@@ -68,7 +68,7 @@
 
 	window.addEventListener('storage', function (e) {
 		if (e.key === STORAGE_KEY) {
-			apply(e.newValue === 'light' || e.newValue === 'dark' ? e.newValue : 'light');
+			apply(e.newValue === 'light' || e.newValue === 'dark' ? e.newValue : 'dark');
 		}
 	});
 })();
